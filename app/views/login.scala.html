@@ -1,0 +1,14 @@
+@(attemptedPath: String, attemptedHost: String)
+
+
+@main("Login form") {
+    <form action="/login" method="POST">
+        You tried to get to @attemptedPath on @attemptedHost <br />
+
+        Username: <input type="text" name="username" /> <br />
+        Password: <input type="password" name="password" /> <br />
+        <input type="hidden" name="attemptedPath" value="@attemptedPath" />
+        <input type="hidden" name="attemptedHost" value="@attemptedHost" />
+        <input type="submit" value="GO" />
+    </form>
+}
