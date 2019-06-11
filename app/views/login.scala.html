@@ -1,14 +1,26 @@
-@(attemptedPath: String, attemptedHost: String)
+@(form: Form[LoginData], redirectUrl: String, postUrl: Call)(implicit request: MessagesRequestHeader)
 
 
 @main("Login form") {
-    <form action="/login" method="POST">
-        You tried to get to @attemptedPath on @attemptedHost <br />
+    @request.flash.data.map{ case (name, value) =>
+        <div>@name: @value</div>
+    }
 
-        Username: <input type="text" name="username" /> <br />
-        Password: <input type="password" name="password" /> <br />
-        <input type="hidden" name="attemptedPath" value="@attemptedPath" />
-        <input type="hidden" name="attemptedHost" value="@attemptedHost" />
-        <input type="submit" value="GO" />
-    </form>
+    @if(form.hasGlobalErrors) {
+        @form.globalErrors.map { error: FormError =>
+            <div>
+                Error: @error.key: @error.message
+            </div>
+        }
+    }
+
+    @helper.form(postUrl, 'id -> "login_form") {
+        @helper.CSRF.formField
+
+        @helper.inputText(form("username"), 'id -> "username", 'size -> 20)
+        @helper.inputPassword(form("password"), 'id -> "password", 'size -> 20)
+        <input type="hidden" name="redirectUrl" value="@redirectUrl" />
+
+        <button>Login</button>
+    }
 }

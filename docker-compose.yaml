@@ -14,7 +14,7 @@ services:
         image: traefik
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock:ro
-            - /Users/bschwartz/traefik_config:/etc/traefik
+            - ./traefik.toml:/etc/traefik/traefik.toml
         ports:
             - 80:80
             - 443:443

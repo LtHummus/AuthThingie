@@ -1,0 +1,26 @@
+debug = true
+
+logLevel = "DEBUG" #DEBUG, INFO, WARN, ERROR, FATAL, PANIC
+InsecureSkipVerify = true
+defaultEntryPoints = ["http"]
+
+# WEB interface of Traefik - it will show web page with overview of frontend and backend configurations
+[api]
+  entryPoint = "traefik"
+  dashboard = true
+  address = ":8080"
+
+# Force HTTPS
+[entryPoints]
+  [entryPoints.http]
+  address = ":80"
+
+
+# Connection to docker host system (docker.sock)
+[docker]
+endpoint = "unix:///var/run/docker.sock"
+domain = "example.com"
+watch = true
+# This will hide all docker containers that don't have explicitly
+# set label to "enable"
+exposedbydefault = false

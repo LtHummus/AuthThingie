@@ -1,15 +1,28 @@
 package controllers
 
+import java.net.URI
+
 import javax.inject._
 import play.api._
+import play.api.data._
+import play.api.data.Forms._
 import play.api.mvc._
 
-/**
- * This controller creates an `Action` to handle HTTP requests to the
- * application's home page.
- */
+case class LoginData(username: String, password: String, redirectUrl: Option[String])
+
+
 @Singleton
-class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) with Logging {
+class HomeController @Inject()(cc: MessagesControllerComponents) extends MessagesAbstractController(cc) {
+
+  private val logger = play.api.Logger(this.getClass)
+
+  val loginForm: Form[LoginData] = Form(
+    mapping(
+      "username" -> nonEmptyText,
+      "password" -> nonEmptyText,
+      "redirectUrl" -> optional(text)
+    )(LoginData.apply)(LoginData.unapply)
+  )
 
   /**
    * Create an Action to render an HTML page.
@@ -22,14 +35,34 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     Ok(views.html.index())
   }
 
-  def login() = Action { implicit request: Request[AnyContent] =>
-    Ok("???")
+  def login() = Action { implicit request: MessagesRequest[AnyContent] =>
+    val error = {
+      formWithErrors: Form[LoginData] =>
+        //we don't have the redirect url potentially, so pull it from the session
+        BadRequest(views.html.login(formWithErrors, request.session.get("redirectUrl").getOrElse(""), routes.HomeController.login()))
+    }
+
+
+    val success = { data: LoginData =>
+
+      logger.info("Parsed successfully")
+      logger.info(s"Username: ${data.username}")
+
+      if (data.username == "test" && data.password == "test") {
+        Redirect(data.redirectUrl.getOrElse("/"), SEE_OTHER).withCookies(Cookie("valid", "ok", maxAge = Some(60), httpOnly = true, domain = Some("example.com")))
+      } else {
+        Unauthorized(views.html.login(loginForm.fill(data.copy(password = "")), request.session.get("redirectUrl").getOrElse(""), routes.HomeController.login()))
+          .flashing("message" -> "Incorrect username/password")
+      }
+    }
+
+    loginForm.bindFromRequest.fold(error, success)
   }
 
-  def showLoginForm() = Action { implicit request: Request[AnyContent] =>
-    val host = request.queryString.get("host").head.head
-    val path = request.queryString.get("path").head.head
-    Unauthorized(views.html.login(host, path))
+  def showLoginForm() = Action { implicit request: MessagesRequest[AnyContent] =>
+    val redirectUrl: String = request.queryString.get("redirect").head.head
+    Unauthorized(views.html.login(loginForm, redirectUrl, routes.HomeController.login()))
+      .withSession("redirectUrl" -> redirectUrl)
   }
 
   def auth() = Action { implicit request: Request[AnyContent] =>
@@ -44,15 +77,21 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     logger.warn(s"Got source host $sourceHost")
 
+    val uri = new URI("http", sourceHost, sourcePath.getOrElse("/"), null).toURL.toString
+
     val queryParams: Map[String, Seq[String]] = Map(
-      "host" -> Seq(sourceHost),
-      "path" -> Seq(sourcePath.getOrElse("/"))
+      "redirect" -> Seq(uri),
     )
 
     if (sourcePath.contains("/")) {
-      Ok("")
+      NoContent
     } else {
-      Redirect("http://auth.example.com/login", queryParams)
+      if (request.cookies.get("valid").map(_.value).contains("ok")) {
+        NoContent
+      } else {
+        Redirect("http://auth.example.com/login", queryParams)
+      }
+
     }
   }
 }

@@ -7,7 +7,7 @@
 GET     /                           controllers.HomeController.index
 GET     /auth                       controllers.HomeController.auth
 GET     /login                      controllers.HomeController.showLoginForm
-POST    /login                      controllers.HomeController.login
-
++ nocsrf
+POST  /login              controllers.HomeController.login
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
