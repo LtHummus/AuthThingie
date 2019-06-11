@@ -49,7 +49,7 @@ class HomeController @Inject()(cc: MessagesControllerComponents) extends Message
       logger.info(s"Username: ${data.username}")
 
       if (data.username == "test" && data.password == "test") {
-        Redirect(data.redirectUrl.getOrElse("/"), SEE_OTHER).withCookies(Cookie("valid", "ok", maxAge = Some(60), httpOnly = true, domain = Some("example.com")))
+        Redirect(data.redirectUrl.getOrElse("/"), SEE_OTHER).withSession(request.session + ("authenticated" -> "ok"))
       } else {
         Unauthorized(views.html.login(loginForm.fill(data.copy(password = "")), request.session.get("redirectUrl").getOrElse(""), routes.HomeController.login()))
           .flashing("message" -> "Incorrect username/password")
@@ -62,7 +62,7 @@ class HomeController @Inject()(cc: MessagesControllerComponents) extends Message
   def showLoginForm() = Action { implicit request: MessagesRequest[AnyContent] =>
     val redirectUrl: String = request.queryString.get("redirect").head.head
     Unauthorized(views.html.login(loginForm, redirectUrl, routes.HomeController.login()))
-      .withSession("redirectUrl" -> redirectUrl)
+      .withSession(request.session + ("redirectUrl" -> redirectUrl))
   }
 
   def auth() = Action { implicit request: Request[AnyContent] =>
@@ -86,7 +86,7 @@ class HomeController @Inject()(cc: MessagesControllerComponents) extends Message
     if (sourcePath.contains("/")) {
       NoContent
     } else {
-      if (request.cookies.get("valid").map(_.value).contains("ok")) {
+      if (request.session.data.get("authenticated").contains("ok")) {
         NoContent
       } else {
         Redirect("http://auth.example.com/login", queryParams)
