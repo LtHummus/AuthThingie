@@ -10,7 +10,6 @@ defaultEntryPoints = ["http"]
   dashboard = true
   address = ":8080"
 
-# Force HTTPS
 [entryPoints]
   [entryPoints.http]
   address = ":80"

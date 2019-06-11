@@ -3,18 +3,19 @@ package controllers
 import java.net.URI
 
 import javax.inject._
-import play.api._
 import play.api.data._
 import play.api.data.Forms._
 import play.api.mvc._
+import services.pathmatching.PathMatcher
+import services.usermatching.UserMatcher
 
 case class LoginData(username: String, password: String, redirectUrl: Option[String])
 
 
 @Singleton
-class HomeController @Inject()(cc: MessagesControllerComponents) extends MessagesAbstractController(cc) {
+class HomeController @Inject()(pathMatcher: PathMatcher, userMatcher: UserMatcher, cc: MessagesControllerComponents) extends MessagesAbstractController(cc) {
 
-  private val logger = play.api.Logger(this.getClass)
+  private val Logger = play.api.Logger(this.getClass)
 
   val loginForm: Form[LoginData] = Form(
     mapping(
@@ -45,10 +46,10 @@ class HomeController @Inject()(cc: MessagesControllerComponents) extends Message
 
     val success = { data: LoginData =>
 
-      logger.info("Parsed successfully")
-      logger.info(s"Username: ${data.username}")
+      Logger.info("Parsed successfully")
+      Logger.info(s"Username: ${data.username}")
 
-      if (data.username == "test" && data.password == "test") {
+      if (userMatcher.validUser(data.username, data.password)) {
         Redirect(data.redirectUrl.getOrElse("/"), SEE_OTHER).withSession(request.session + ("authenticated" -> "ok"))
       } else {
         Unauthorized(views.html.login(loginForm.fill(data.copy(password = "")), request.session.get("redirectUrl").getOrElse(""), routes.HomeController.login()))
@@ -59,6 +60,11 @@ class HomeController @Inject()(cc: MessagesControllerComponents) extends Message
     loginForm.bindFromRequest.fold(error, success)
   }
 
+  def logout() = Action { implicit request: MessagesRequest[AnyContent] =>
+    Logger.info("Logging out")
+    Ok("Logged out").withNewSession
+  }
+
   def showLoginForm() = Action { implicit request: MessagesRequest[AnyContent] =>
     val redirectUrl: String = request.queryString.get("redirect").head.head
     Unauthorized(views.html.login(loginForm, redirectUrl, routes.HomeController.login()))
@@ -66,16 +72,10 @@ class HomeController @Inject()(cc: MessagesControllerComponents) extends Message
   }
 
   def auth() = Action { implicit request: Request[AnyContent] =>
-    logger.warn("Hello world")
-
-    val headerList = request.headers.headers.map { case (k, v) => s"$k => $v"}.mkString("\n")
-
     val headerMap = request.headers.toMap
 
     val sourceHost = headerMap("X-Forwarded-Host").head
     val sourcePath = headerMap("X-Forwarded-Uri").headOption
-
-    logger.warn(s"Got source host $sourceHost")
 
     val uri = new URI("http", sourceHost, sourcePath.getOrElse("/"), null).toURL.toString
 
@@ -83,7 +83,9 @@ class HomeController @Inject()(cc: MessagesControllerComponents) extends Message
       "redirect" -> Seq(uri),
     )
 
-    if (sourcePath.contains("/")) {
+    val isPublic = pathMatcher.isPublic("https", sourceHost, sourcePath.getOrElse("/"))
+
+    if (isPublic) {
       NoContent
     } else {
       if (request.session.data.get("authenticated").contains("ok")) {
@@ -91,7 +93,7 @@ class HomeController @Inject()(cc: MessagesControllerComponents) extends Message
       } else {
         Redirect("http://auth.example.com/login", queryParams)
       }
-
     }
+
   }
 }
