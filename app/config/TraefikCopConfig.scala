@@ -13,8 +13,10 @@ class TraefikCopConfig @Inject() () {
 
   private val ConfigTree = ConfigFactory.parseFile(new File(sys.env("CONFIG_FILE_PATH")))
 
-  def getPathRules: List[PathRule] = ConfigTree.get[List[PathRule]]("rules").value
-  //def getUsers: Map[String, String] = ConfigTree.get[Map[String, String]]("users").value
-  def getUsers: List[User] = ConfigTree.get[List[User]]("users").value
+  //these technically could be lazy, but I want checking to happen on startup
+  val getPathRules: List[PathRule] = ConfigTree.get[List[PathRule]]("rules").value
+  val getUsers: List[User] = ConfigTree.get[List[User]]("users").value
+  val getSiteUrl: String = ConfigTree.get[String]("auth_url").value
+  val getRealm: String = ConfigTree.get[String]("realm").value
 
 }

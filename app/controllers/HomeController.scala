@@ -2,6 +2,7 @@ package controllers
 
 import java.net.URI
 
+import config.TraefikCopConfig
 import javax.inject._
 import play.api.data._
 import play.api.data.Forms._
@@ -13,7 +14,7 @@ case class LoginData(username: String, password: String, redirectUrl: Option[Str
 
 
 @Singleton
-class HomeController @Inject()(pathMatcher: PathMatcher, userMatcher: UserMatcher, cc: MessagesControllerComponents) extends MessagesAbstractController(cc) {
+class HomeController @Inject()(config: TraefikCopConfig, pathMatcher: PathMatcher, userMatcher: UserMatcher, cc: MessagesControllerComponents) extends MessagesAbstractController(cc) {
 
   private val Logger = play.api.Logger(this.getClass)
 
@@ -93,8 +94,8 @@ class HomeController @Inject()(pathMatcher: PathMatcher, userMatcher: UserMatche
 
     (user, rule) match {
       case (None, Some(r)) if r.public             => NoContent //permitted, not logged in, but destination is public
-      case (None, Some(r)) if !r.public            => Redirect("http://auth.example.com/login", queryParams) //redirect to login, user needs to log in
-      case (None, None)                            => Redirect("http://auth.example.com/login", queryParams) //not logged in, wants access to admin only page. Redirect to login
+      case (None, Some(r)) if !r.public            => Redirect(s"${config.getSiteUrl}/login", queryParams) //redirect to login, user needs to log in
+      case (None, None)                            => Redirect(s"${config.getSiteUrl}/login", queryParams) //not logged in, wants access to admin only page. Redirect to login
       case (Some(u), None) if !u.admin             => Unauthorized(views.html.denied("You do not have permission for this resource"))
       case (Some(u), None) if u.admin              => NoContent //permitted, no rule, but user is admin
       case (Some(u), Some(r)) if u.isPermitted(r)  => NoContent //user is allowed
