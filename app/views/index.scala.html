@@ -1,5 +1,11 @@
-@()
+@import services.pathmatching.PathRule
+@(rules: Seq[PathRule])
 
 @main("Welcome to Play") {
   <h1>Welcome to Play!</h1>
+
+  @for(rule <- rules) {
+    <li>@rule.name -- @rule.permittedRoles</li>
+  }
+
 }

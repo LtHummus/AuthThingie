@@ -6,8 +6,8 @@ import javax.inject._
 import play.api.data._
 import play.api.data.Forms._
 import play.api.mvc._
-import services.pathmatching.PathMatcher
-import services.usermatching.UserMatcher
+import services.pathmatching.{PathMatcher, PathRule}
+import services.usermatching.{User, UserMatcher}
 
 case class LoginData(username: String, password: String, redirectUrl: Option[String])
 
@@ -33,7 +33,7 @@ class HomeController @Inject()(pathMatcher: PathMatcher, userMatcher: UserMatche
    * a path of `/`.
    */
   def index() = Action { implicit request: Request[AnyContent] =>
-    Ok(views.html.index())
+    Ok(views.html.index(pathMatcher.Rules))
   }
 
   def login() = Action { implicit request: MessagesRequest[AnyContent] =>
@@ -50,7 +50,7 @@ class HomeController @Inject()(pathMatcher: PathMatcher, userMatcher: UserMatche
       Logger.info(s"Username: ${data.username}")
 
       if (userMatcher.validUser(data.username, data.password)) {
-        Redirect(data.redirectUrl.getOrElse("/"), SEE_OTHER).withSession(request.session + ("authenticated" -> "ok"))
+        Redirect(data.redirectUrl.getOrElse("/"), SEE_OTHER).withSession(request.session + ("authenticated" -> "ok") + ("user" -> data.username))
       } else {
         Unauthorized(views.html.login(loginForm.fill(data.copy(password = "")), request.session.get("redirectUrl").getOrElse(""), routes.HomeController.login()))
           .flashing("message" -> "Incorrect username/password")
@@ -83,16 +83,22 @@ class HomeController @Inject()(pathMatcher: PathMatcher, userMatcher: UserMatche
       "redirect" -> Seq(uri),
     )
 
-    val isPublic = pathMatcher.isPublic("https", sourceHost, sourcePath.getOrElse("/"))
+    val user: Option[User] = request.session.get("user") match {
+      case None           => None
+      case Some(username) => userMatcher.getUser(username)
+    }
 
-    if (isPublic) {
-      NoContent
-    } else {
-      if (request.session.data.get("authenticated").contains("ok")) {
-        NoContent
-      } else {
-        Redirect("http://auth.example.com/login", queryParams)
-      }
+
+    val rule: Option[PathRule] = pathMatcher.getRule("https", sourceHost, sourcePath.getOrElse("/"))
+
+    (user, rule) match {
+      case (None, Some(r)) if r.public             => NoContent //permitted, not logged in, but destination is public
+      case (None, Some(r)) if !r.public            => Redirect("http://auth.example.com/login", queryParams) //redirect to login, user needs to log in
+      case (None, None)                            => Redirect("http://auth.example.com/login", queryParams) //not logged in, wants access to admin only page. Redirect to login
+      case (Some(u), None) if !u.admin             => Unauthorized(views.html.denied("You do not have permission for this resource"))
+      case (Some(u), None) if u.admin              => NoContent //permitted, no rule, but user is admin
+      case (Some(u), Some(r)) if u.isPermitted(r)  => NoContent //user is allowed
+      case (Some(u), Some(r)) if !u.isPermitted(r) => Unauthorized(views.html.denied("You do not have permission for this resource"))
     }
 
   }

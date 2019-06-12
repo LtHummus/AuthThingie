@@ -2,7 +2,7 @@ package services.pathmatching
 
 import scala.util.matching.Regex
 
-case class PathRule(name: String, protocol: Option[String], server: Option[String], path: Option[String], public: Boolean) {
+case class PathRule(name: String, protocol: Option[String], server: Option[String], path: Option[String], public: Boolean, permittedRoles: List[String]) {
   private val protocolRegex = protocol.map(_.r)
   private val serverRegex = server.map(_.r)
   private val pathRegex = path.map(_.r)
