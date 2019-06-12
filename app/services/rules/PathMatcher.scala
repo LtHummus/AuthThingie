@@ -1,4 +1,4 @@
-package services.pathmatching
+package services.rules
 
 import config.TraefikCopConfig
 import javax.inject.{Inject, Singleton}

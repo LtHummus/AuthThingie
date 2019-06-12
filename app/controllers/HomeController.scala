@@ -7,8 +7,8 @@ import javax.inject._
 import play.api.data._
 import play.api.data.Forms._
 import play.api.mvc._
-import services.pathmatching.{PathMatcher, PathRule}
-import services.usermatching.{User, UserMatcher}
+import services.rules.{PathMatcher, PathRule}
+import services.users.{User, UserMatcher}
 
 case class LoginData(username: String, password: String, redirectUrl: Option[String])
 

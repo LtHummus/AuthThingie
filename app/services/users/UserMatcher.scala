@@ -1,4 +1,4 @@
-package services.usermatching
+package services.users
 
 import config.TraefikCopConfig
 import javax.inject.{Inject, Singleton}

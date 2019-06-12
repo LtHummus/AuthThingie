@@ -1,6 +1,6 @@
-package services.usermatching
+package services.users
 
-import services.pathmatching.PathRule
+import services.rules.PathRule
 
 case class User(username: String, passwordHash: String, admin: Boolean, roles: List[String]) {
 

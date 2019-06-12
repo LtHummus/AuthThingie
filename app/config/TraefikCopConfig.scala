@@ -4,9 +4,9 @@ import java.io.File
 
 import com.typesafe.config.ConfigFactory
 import javax.inject.{Inject, Singleton}
-import services.pathmatching.PathRule
+import services.rules.PathRule
 import configs.syntax._
-import services.usermatching.User
+import services.users.User
 
 @Singleton
 class TraefikCopConfig @Inject() () {

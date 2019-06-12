@@ -1,4 +1,4 @@
-package services.pathmatching
+package services.rules
 
 import scala.util.matching.Regex
 
