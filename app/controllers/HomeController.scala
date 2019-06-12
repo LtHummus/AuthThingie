@@ -7,6 +7,8 @@ import javax.inject._
 import play.api.data._
 import play.api.data.Forms._
 import play.api.mvc._
+import services.decoding.RequestDecoder
+import services.ruleresolving.{Allowed, Denied, RedirectToLogin, RuleResolver}
 import services.rules.{PathMatcher, PathRule}
 import services.users.{User, UserMatcher}
 
@@ -14,7 +16,12 @@ case class LoginData(username: String, password: String, redirectUrl: Option[Str
 
 
 @Singleton
-class HomeController @Inject()(config: TraefikCopConfig, pathMatcher: PathMatcher, userMatcher: UserMatcher, cc: MessagesControllerComponents) extends MessagesAbstractController(cc) {
+class HomeController @Inject()(config: TraefikCopConfig,
+                               resolver: RuleResolver,
+                               decoder: RequestDecoder,
+                               pathMatcher: PathMatcher,
+                               userMatcher: UserMatcher,
+                               cc: MessagesControllerComponents) extends MessagesAbstractController(cc) {
 
   private val Logger = play.api.Logger(this.getClass)
 
@@ -34,7 +41,7 @@ class HomeController @Inject()(config: TraefikCopConfig, pathMatcher: PathMatche
    * a path of `/`.
    */
   def index() = Action { implicit request: Request[AnyContent] =>
-    Ok(views.html.index(pathMatcher.Rules))
+    Ok(views.html.index(config.getPathRules))
   }
 
   def login() = Action { implicit request: MessagesRequest[AnyContent] =>
@@ -47,12 +54,10 @@ class HomeController @Inject()(config: TraefikCopConfig, pathMatcher: PathMatche
 
     val success = { data: LoginData =>
 
-      Logger.info("Parsed successfully")
-      Logger.info(s"Username: ${data.username}")
-
       if (userMatcher.validUser(data.username, data.password)) {
         Redirect(data.redirectUrl.getOrElse("/"), SEE_OTHER).withSession(request.session + ("authenticated" -> "ok") + ("user" -> data.username))
       } else {
+        Logger.warn(s"Bad login attempt for user ${data.username} from ${request.remoteAddress}")
         Unauthorized(views.html.login(loginForm.fill(data.copy(password = "")), request.session.get("redirectUrl").getOrElse(""), routes.HomeController.login()))
           .flashing("message" -> "Incorrect username/password")
       }
@@ -73,33 +78,31 @@ class HomeController @Inject()(config: TraefikCopConfig, pathMatcher: PathMatche
   }
 
   def auth() = Action { implicit request: Request[AnyContent] =>
-    val headerMap = request.headers.toMap
 
-    val sourceHost = headerMap("X-Forwarded-Host").head
-    val sourcePath = headerMap("X-Forwarded-Uri").headOption
+    //decode request to find out where the user was heading...
+    val requestInfo = decoder.decodeRequestHeaders(request.headers)
 
-    val uri = new URI("http", sourceHost, sourcePath.getOrElse("/"), null).toURL.toString
+    //does that destination match a rule we know about?
+    val rule: Option[PathRule] = pathMatcher.getRule(requestInfo.protocol, requestInfo.host, requestInfo.path)
 
-    val queryParams: Map[String, Seq[String]] = Map(
-      "redirect" -> Seq(uri),
-    )
-
+    //figure out if the user is logged in
     val user: Option[User] = request.session.get("user") match {
       case None           => None
       case Some(username) => userMatcher.getUser(username)
     }
 
+    //figure out what to do and return the proper response
+    resolver.resolveUserAccessForRule(user, rule) match {
+      case Allowed =>
+        NoContent
 
-    val rule: Option[PathRule] = pathMatcher.getRule("https", sourceHost, sourcePath.getOrElse("/"))
+      case RedirectToLogin =>
+        val destinationUri = new URI(requestInfo.protocol, requestInfo.host, requestInfo.path, null).toURL.toString
+        val queryParams: Map[String, Seq[String]] = Map("redirect" -> Seq(destinationUri))
+        Redirect(s"${config.getSiteUrl}/login", queryParams)
 
-    (user, rule) match {
-      case (None, Some(r)) if r.public             => NoContent //permitted, not logged in, but destination is public
-      case (None, Some(r)) if !r.public            => Redirect(s"${config.getSiteUrl}/login", queryParams) //redirect to login, user needs to log in
-      case (None, None)                            => Redirect(s"${config.getSiteUrl}/login", queryParams) //not logged in, wants access to admin only page. Redirect to login
-      case (Some(u), None) if !u.admin             => Unauthorized(views.html.denied("You do not have permission for this resource"))
-      case (Some(u), None) if u.admin              => NoContent //permitted, no rule, but user is admin
-      case (Some(u), Some(r)) if u.isPermitted(r)  => NoContent //user is allowed
-      case (Some(u), Some(r)) if !u.isPermitted(r) => Unauthorized(views.html.denied("You do not have permission for this resource"))
+      case Denied =>
+        Unauthorized(views.html.denied("You do not have permission for this resource"))
     }
 
   }
