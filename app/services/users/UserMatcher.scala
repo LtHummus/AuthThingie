@@ -2,9 +2,10 @@ package services.users
 
 import config.TraefikCopConfig
 import javax.inject.{Inject, Singleton}
+import services.validator.HashValidator
 
 @Singleton
-class UserMatcher @Inject() (config: TraefikCopConfig) {
+class UserMatcher @Inject()(config: TraefikCopConfig, hashValidator: HashValidator) {
 
   private val Users: List[User] = config.getUsers
 
@@ -13,7 +14,7 @@ class UserMatcher @Inject() (config: TraefikCopConfig) {
   def validUser(username: String, password: String): Boolean = {
     userMap.get(username) match {
       case None       => false
-      case Some(user) => password == user.passwordHash ///hoooo boy this needs fixing, but this is still proof of concept
+      case Some(user) => hashValidator.validateHash(user.passwordHash, password)
     }
   }
 
