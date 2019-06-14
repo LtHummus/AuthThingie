@@ -72,9 +72,15 @@ class HomeController @Inject()(config: TraefikCopConfig,
   }
 
   def showLoginForm() = Action { implicit request: MessagesRequest[AnyContent] =>
-    val redirectUrl: String = request.queryString.get("redirect").head.head
+    val redirectUrl: String = request.session.get("redirect").getOrElse("/")
     Unauthorized(views.html.login(loginForm, redirectUrl, routes.HomeController.login()))
       .withSession(request.session + ("redirectUrl" -> redirectUrl))
+  }
+
+  def loginRedirect() = Action { implicit request: MessagesRequest[AnyContent] =>
+    val redirectUrl: String = request.session.get("redirect").getOrElse("i dunno")
+    Unauthorized(views.html.login_needed(redirectUrl))
+
   }
 
   def auth() = Action { implicit request: Request[AnyContent] =>
@@ -98,8 +104,7 @@ class HomeController @Inject()(config: TraefikCopConfig,
 
       case RedirectToLogin =>
         val destinationUri = new URI(requestInfo.protocol, requestInfo.host, requestInfo.path, null).toURL.toString
-        val queryParams: Map[String, Seq[String]] = Map("redirect" -> Seq(destinationUri))
-        Redirect(s"${config.getSiteUrl}/login", queryParams)
+        Redirect(s"${config.getSiteUrl}/needed").withSession("redirect" -> destinationUri)
 
       case Denied =>
         Unauthorized(views.html.denied("You do not have permission for this resource"))

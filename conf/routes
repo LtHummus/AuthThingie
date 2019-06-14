@@ -6,9 +6,9 @@
 # An example controller showing a sample home page
 GET     /                           controllers.HomeController.index
 GET     /auth                       controllers.HomeController.auth
+GET     /needed                     controllers.HomeController.loginRedirect
 GET     /login                      controllers.HomeController.showLoginForm
-+ nocsrf
-POST  /login              controllers.HomeController.login
+POST    /login                      controllers.HomeController.login
 
 GET    /logout                     controllers.HomeController.logout
 # Map static resources from the /public folder to the /assets URL path

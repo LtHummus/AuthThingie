@@ -1,0 +1,19 @@
+@(redirectUrl: String)
+
+@main("You need to log in...") {
+    <h1>The page you tried to access requires you to log in</h1>
+    <p>Redirecting you to the login page...</p>
+
+    <p>URL attempted: @redirectUrl</p>
+
+    <p><a href="/login">Or click here to just go...</a></p>
+
+    <script>
+        window.onload = function() {
+            setTimeout(function() {
+                window.location.href="/login";
+            }, 5000);
+        };
+
+    </script>
+}
