@@ -12,7 +12,7 @@ private[validator] object HashAlgorithm {
       Apr1Hash(hash)
     } else if (hash.startsWith("{SHA}")) {
       Sha1Hash(hash)
-    } else if (hash.startsWith("$2y$")) {
+    } else if (hash.startsWith("$2y$")) { //there are technically other versions of bcrypt...are they used?
       BcryptHash(hash)
     } else {
       PlainTextPassword(hash)
