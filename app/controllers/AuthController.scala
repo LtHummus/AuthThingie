@@ -39,7 +39,7 @@ class AuthController @Inject() (decoder: RequestDecoder,
 
       case RedirectToLogin =>
         val destinationUri = new URI(requestInfo.protocol, requestInfo.host, requestInfo.path, null).toURL.toString
-        Redirect(s"${config.getSiteUrl}/needed").withSession("redirect" -> destinationUri)
+        Redirect(s"${config.getSiteUrl}/needed", FOUND).withSession("redirect" -> destinationUri)
 
       case Denied =>
         Unauthorized(views.html.denied("You do not have permission for this resource"))

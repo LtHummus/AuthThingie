@@ -1,11 +1,13 @@
 @import services.rules.PathRule
-@(rules: Seq[PathRule])
+@(username: Option[String])
 
 @main("Welcome to Play") {
   <h1>Welcome to Play!</h1>
 
-  @for(rule <- rules) {
-    <li>@rule.name -- @rule.permittedRoles</li>
+  @if(username.isEmpty) {
+    <h2>Not logged in</h2>
+  } else {
+    <h2>Logged in as @username.get</h2>
+    <h3><a href="/logout">Click here to logout</a></h3>
   }
-
 }

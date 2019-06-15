@@ -22,7 +22,7 @@ class HomeController @Inject()(config: TraefikCopConfig,
    * a path of `/`.
    */
   def index() = Action { implicit request: Request[AnyContent] =>
-    Ok(views.html.index(config.getPathRules))
+    Ok(views.html.index(request.session.get("user")))
   }
 
 

@@ -30,9 +30,7 @@ class LoginController @Inject() (userMatcher: UserMatcher, cc: MessagesControlle
   }
 
   def loginRedirect() = Action { implicit request: MessagesRequest[AnyContent] =>
-    val redirectUrl: String = request.session.get("redirect").getOrElse("i dunno")
-    Unauthorized(views.html.login_needed(redirectUrl))
-
+    Redirect(routes.LoginController.login(), FOUND)
   }
 
   def login() = Action { implicit request: MessagesRequest[AnyContent] =>
