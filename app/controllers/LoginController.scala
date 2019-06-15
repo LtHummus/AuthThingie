@@ -44,7 +44,7 @@ class LoginController @Inject() (userMatcher: UserMatcher, cc: MessagesControlle
     val success = { data: LoginData =>
 
       if (userMatcher.validUser(data.username, data.password)) {
-        Redirect(data.redirectUrl.getOrElse("/"), SEE_OTHER).withSession(request.session + ("authenticated" -> "ok") + ("user" -> data.username))
+        Redirect(data.redirectUrl.getOrElse("/"), FOUND).withSession(request.session + ("authenticated" -> "ok") + ("user" -> data.username))
       } else {
         Logger.warn(s"Bad login attempt for user ${data.username} from ${request.remoteAddress}")
         Unauthorized(views.html.login(loginForm.fill(data.copy(password = "")), request.session.get("redirectUrl").getOrElse(""), routes.LoginController.login()))
