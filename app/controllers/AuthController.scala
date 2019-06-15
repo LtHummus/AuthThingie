@@ -19,34 +19,55 @@ class AuthController @Inject() (decoder: RequestDecoder,
                                 resolver: RuleResolver,
                                 cc: ControllerComponents) extends AbstractController(cc) {
 
+  private val Logger = play.api.Logger(this.getClass)
+
+  sealed trait CredentialSource
+  case object Session extends CredentialSource
+  case object BasicAuth extends CredentialSource
+  case object NoCredentials extends CredentialSource
+
+  private def pullLoginInfoFromRequest[T](implicit request: Request[T]): (Option[User], CredentialSource) = {
+    (request.session.get("user"), request.headers.get(AUTHORIZATION)) match {
+      case (Some(username), _)   => (userMatcher.getUser(username), Session) //logged in via session, continue on
+      case (_, Some(authHeader)) =>
+        val rawAuthData = authHeader.replaceFirst("Basic ", "")
+        val Array(username, password) = new String(Base64.decodeBase64(rawAuthData)).split(":", 2)
+        val potentialUser = userMatcher.validUser(username, password)
+        if (potentialUser.isEmpty) {
+          Logger.warn(s"Bad login attempt for user $username from ${request.headers("X-Forwarded-For")}")
+        }
+        (potentialUser, BasicAuth)
+      case _                     => (None, NoCredentials)
+    }
+  }
 
   def auth() = Action { implicit request: Request[AnyContent] =>
     //decode request to find out where the user was heading...
     val requestInfo = decoder.decodeRequestHeaders(request.headers)
+    Logger.debug(s"Decoded request: protocol = ${requestInfo.protocol}; host = ${requestInfo.host}; path = ${requestInfo.path}")
 
     //does that destination match a rule we know about?
     val rule: Option[PathRule] = pathMatcher.getRule(requestInfo.protocol, requestInfo.host, requestInfo.path)
+    Logger.debug(s"Detected rule: ${rule.map(_.name)}")
 
     //figure out if the user is logged in or gave us basic-auth credentials
-    val user: Option[User] = (request.session.get("user"), request.headers.get(AUTHORIZATION)) match {
-      case (Some(username), _)   => userMatcher.getUser(username) //logged in via session, continue on
-      case (_, Some(authHeader)) =>
-        val rawAuthData = authHeader.replaceFirst("Basic ", "")
-        val Array(username, password) = new String(Base64.decodeBase64(rawAuthData)).split(":", 2)
-        userMatcher.validUser(username, password)
-      case _                     => None
-    }
+    val (user, credentialSource) = pullLoginInfoFromRequest
+    Logger.debug(s"Logged in user: ${user.map(_.username)}")
+
 
     //figure out what to do and return the proper response
     resolver.resolveUserAccessForRule(user, rule) match {
       case Allowed =>
+        Logger.debug("Access allowed")
         NoContent
 
-      case Denied if user.isEmpty =>
+      case Denied if credentialSource == Session =>
+        Logger.debug("Access denied, redirecting to login page")
         val destinationUri = new URI(requestInfo.protocol, requestInfo.host, requestInfo.path, null).toURL.toString
         Redirect(s"${config.getSiteUrl}/needed", FOUND).withSession("redirect" -> destinationUri)
 
       case _ =>
+        Logger.debug("Access denied. Showing error")
         Unauthorized(views.html.denied("You do not have permission for this resource"))
     }
 

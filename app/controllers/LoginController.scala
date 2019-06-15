@@ -46,7 +46,7 @@ class LoginController @Inject() (userMatcher: UserMatcher, cc: MessagesControlle
       if (userMatcher.validUser(data.username, data.password).isDefined) {
         Redirect(data.redirectUrl.getOrElse("/"), FOUND).withSession(request.session + ("authenticated" -> "ok") + ("user" -> data.username))
       } else {
-        Logger.warn(s"Bad login attempt for user ${data.username} from ${request.remoteAddress}")
+        Logger.warn(s"Bad login attempt for user ${data.username} from ${request.headers("X-Forwarded-For")}")
         Unauthorized(views.html.login(loginForm.fill(data.copy(password = "")), request.session.get("redirectUrl").getOrElse(""), routes.LoginController.login()))
           .flashing("message" -> "Incorrect username/password")
       }
