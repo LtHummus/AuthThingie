@@ -43,7 +43,7 @@ class LoginController @Inject() (userMatcher: UserMatcher, cc: MessagesControlle
 
     val success = { data: LoginData =>
 
-      if (userMatcher.validUser(data.username, data.password)) {
+      if (userMatcher.validUser(data.username, data.password).isDefined) {
         Redirect(data.redirectUrl.getOrElse("/"), FOUND).withSession(request.session + ("authenticated" -> "ok") + ("user" -> data.username))
       } else {
         Logger.warn(s"Bad login attempt for user ${data.username} from ${request.remoteAddress}")

@@ -1,9 +1,6 @@
 package services.validator
 
-import javax.inject.{Inject, Singleton}
-
-@Singleton
-class HashValidator @Inject() () {
+object HashValidator {
   def validateHash(hash: String, guess: String): Boolean = {
     HashAlgorithm.getHashAlgorithm(hash).guessCorrect(guess)
   }
