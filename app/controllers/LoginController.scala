@@ -19,7 +19,7 @@ class LoginController @Inject() (userMatcher: UserMatcher, cc: MessagesControlle
   )
 
   def logout() = Action { implicit request: MessagesRequest[AnyContent] =>
-    Logger.info("Logging out")
+    Logger.info(s"Logging out ${request.session.get("user")}")
     Ok("Logged out").withNewSession
   }
 
@@ -44,6 +44,7 @@ class LoginController @Inject() (userMatcher: UserMatcher, cc: MessagesControlle
     val success = { data: LoginData =>
 
       if (userMatcher.validUser(data.username, data.password).isDefined) {
+        Logger.info(s"Successful auth for user ${data.username} from ${request.headers("X-Forwarded-For")}")
         Redirect(data.redirectUrl.getOrElse("/"), FOUND).withSession(request.session + ("user" -> data.username))
       } else {
         Logger.warn(s"Bad login attempt for user ${data.username} from ${request.headers("X-Forwarded-For")}")
