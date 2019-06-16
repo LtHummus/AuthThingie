@@ -54,21 +54,21 @@ class AuthController @Inject() (decoder: RequestDecoder,
     val (user, credentialSource) = pullLoginInfoFromRequest
     Logger.debug(s"Logged in user: ${user.map(_.username)}")
 
-
     //figure out what to do and return the proper response
     resolver.resolveUserAccessForRule(user, rule) match {
       case Allowed =>
         Logger.debug("Access allowed")
         NoContent
 
-      case Denied if credentialSource == Session =>
+      case Denied if credentialSource == BasicAuth || user.isDefined =>
+        Logger.debug("Access denied. Showing error")
+        Unauthorized(views.html.denied("You do not have permission for this resource"))
+
+      case _ =>
         Logger.debug("Access denied, redirecting to login page")
         val destinationUri = new URI(requestInfo.protocol, requestInfo.host, requestInfo.path, null).toURL.toString
         Redirect(s"${config.getSiteUrl}/needed", FOUND).withSession("redirect" -> destinationUri)
 
-      case _ =>
-        Logger.debug("Access denied. Showing error")
-        Unauthorized(views.html.denied("You do not have permission for this resource"))
     }
 
   }
