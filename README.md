@@ -32,14 +32,14 @@ play {
 "rules": [
   {
     "name": "/bin* on everything",
-    "path": "\\/bin.*",
+    "pathPattern": "/bin*",
     "public": true,
     "permittedRoles": ["a"]
   },
   {
     "name": "test.example.com root",
-    "host": "test.example.com",
-    "path": "/",
+    "hostPattern": "test.example.com",
+    "pathPattern": "/",
     "public": true,
     "permittedRoles": ["a", "b"]
   }
@@ -59,7 +59,7 @@ play {
 
 Everything should be more or less self-explanatory at this point. Essentially, you have your users and your rules. Every user needs an `htpasswdLine` (essentially the output generated from `htpasswd -nB <username>`), a flag indicating if they are an admin, and a list of roles that the user has.
 
-Each rule has a `name`, a list of `permittedRoles` (which can be empty for admin only), a `public` flag (public means everyone is allowed, logged in or not), and then at least one of `host`, `path`, or `protocol` to match against. Any of those three not specified means "ANY". Everything is specified using Java regular expression syntax (on the todo list is a rule tester). Any path that matches no rules is implicitly "admin-only." Admin users implicitly have access to everything.
+Each rule has a `name`, a list of `permittedRoles` (which can be empty for admin only), a `public` flag (public means everyone is allowed, logged in or not), and then at least one of `hostPattern`, `pathPattern`, or `protocolPattern` to match against. Any of those three not specified means "ANY". Everything is specified using simple wildcards: `?` matches a single character, and `*` matches many characters (on the todo list is a rule tester). Any path that matches no rules is implicitly "admin-only." Admin users implicitly have access to everything.
 
 Additionally, credentials can be passed in using basic-auth (via the `Authorization` header). This is useful if you have an app that interacts with a service behind your authentication but can't handle the redirects properly.
 

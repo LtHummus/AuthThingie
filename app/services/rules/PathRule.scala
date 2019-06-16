@@ -1,20 +1,23 @@
 package services.rules
 
-import scala.util.matching.Regex
+import org.apache.commons.io.{FilenameUtils, IOCase}
 
-case class PathRule(name: String, protocol: Option[String], host: Option[String], path: Option[String], public: Boolean, permittedRoles: List[String]) {
-  private val protocolRegex = protocol.map(_.r)
-  private val hostRegex = host.map(_.r)
-  private val pathRegex = path.map(_.r)
+object PathRule {
+  private val Logger = play.api.Logger(this.getClass)
+}
 
-  private def matches(subject: String, goal: Option[Regex]): Boolean = {
-    goal match {
-      case None        => true //nothing specified always matches
-      case Some(regex) => regex.pattern.matcher(subject).matches()
+case class PathRule(name: String, protocolPattern: Option[String], hostPattern: Option[String], pathPattern: Option[String], public: Boolean, permittedRoles: List[String]) {
+  import PathRule._
+
+  private def matches(subject: String, pattern: Option[String]): Boolean = {
+    pattern match {
+      case None                => Logger.debug(s"$subject matches because no pattern"); true //nothing specified always matches
+      case Some(actualPattern) => Logger.debug(s"checking if $subject matches $actualPattern"); FilenameUtils.wildcardMatch(subject, actualPattern, IOCase.INSENSITIVE)
     }
   }
 
   def matches(protocol: String, host: String, path: String): Boolean = {
-    matches(protocol, protocolRegex) && matches(host, hostRegex) && matches(path, pathRegex)
+    Logger.debug(s"Checking rule: $name")
+    matches(protocol, protocolPattern) && matches(host, hostPattern) && matches(path, pathPattern)
   }
 }
