@@ -17,7 +17,7 @@
     @helper.form(postUrl, 'id -> "login_form") {
         @helper.CSRF.formField
 
-        @helper.inputText(form("username"), 'id -> "username", 'size -> 20)
+        @helper.inputText(form("username"), 'id -> "username", 'size -> 20, 'autofocus -> "autofocus")
         @helper.inputPassword(form("password"), 'id -> "password", 'size -> 20)
         <input type="hidden" name="redirectUrl" value="@redirectUrl" />
 

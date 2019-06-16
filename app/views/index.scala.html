@@ -1,11 +1,12 @@
 @import services.rules.PathRule
 @(username: Option[String])
 
-@main("Welcome to Play") {
-  <h1>Welcome to Play!</h1>
+@main("Authentication") {
+  <h1>Welcome to the auth thingie!</h1>
 
   @if(username.isEmpty) {
     <h2>Not logged in</h2>
+    <h3><a href="/login">Click here to login</a></h3>
   } else {
     <h2>Logged in as @username.get</h2>
     <h3><a href="/logout">Click here to logout</a></h3>
