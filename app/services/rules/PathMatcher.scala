@@ -10,7 +10,7 @@ class PathMatcher @Inject() (config: TraefikCopConfig) {
   private val Logger = play.api.Logger(this.getClass)
 
   def getRule(protocol: String, host: String, path: String): Option[PathRule] = {
-    Logger.debug(s"Checking against protocol = `$protocol` & server = `$host` & path = `$path`")
+    Logger.debug(s"Checking against protocol = `$protocol` & host = `$host` & path = `$path`")
     config.getPathRules.find(_.matches(protocol, host, path))
   }
 

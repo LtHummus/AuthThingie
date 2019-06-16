@@ -38,7 +38,7 @@ play {
   },
   {
     "name": "test.example.com root",
-    "server": "test.example.com",
+    "host": "test.example.com",
     "path": "/",
     "public": true,
     "permittedRoles": ["a", "b"]
@@ -59,7 +59,7 @@ play {
 
 Everything should be more or less self-explanatory at this point. Essentially, you have your users and your rules. Every user needs an `htpasswdLine` (essentially the output generated from `htpasswd -nB <username>`), a flag indicating if they are an admin, and a list of roles that the user has.
 
-Each rule has a `name`, a list of `permittedRoles` (which can be empty for admin only), a `public` flag (public means everyone is allowed, logged in or not), and then at least one of `server`, `path`, or `protocol` to match against. Any of those three not specified means "ANY". Everything is specified using Java regular expression syntax (on the todo list is a rule tester). Any path that matches no rules is implicitly "admin-only." Admin users implicitly have access to everything.
+Each rule has a `name`, a list of `permittedRoles` (which can be empty for admin only), a `public` flag (public means everyone is allowed, logged in or not), and then at least one of `host`, `path`, or `protocol` to match against. Any of those three not specified means "ANY". Everything is specified using Java regular expression syntax (on the todo list is a rule tester). Any path that matches no rules is implicitly "admin-only." Admin users implicitly have access to everything.
 
 Additionally, credentials can be passed in using basic-auth (via the `Authorization` header). This is useful if you have an app that interacts with a service behind your authentication but can't handle the redirects properly.
 
@@ -72,7 +72,7 @@ This is meant to be used with traefik's forward authentication plugin. If you ju
 127.0.0.1 auth.example.com
 ```
 
-to your computer's hosts file, then run `./build.sh` to boot everything (you will need `sbt` installed to compile the service). Run `docker-compose down` to tear everything down when you are done. In this example config, the root of `test.example.com` is allowed by everyone and `/bin` is allowed on any server. Going anywhere else should redirect you to the login page. The username/password for the sample config is username `ben` and password is `abc`.
+to your computer's hosts file, then run `./build.sh` to boot everything (you will need `sbt` installed to compile the service). Run `docker-compose down` to tear everything down when you are done. In this example config, the root of `test.example.com` is allowed by everyone and `/bin` is allowed on any host. Going anywhere else should redirect you to the login page. The username/password for the sample config is username `ben` and password is `abc`.
 
 ## Here be dragons!
 **Remember! This is a work in progress!**
