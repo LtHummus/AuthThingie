@@ -31,8 +31,9 @@ class HomeController @Inject()(config: TraefikCopConfig,
 
     val isAdmin = loggedInUser.exists(_.admin)
     val rules = if (isAdmin) config.getPathRules else List()
+    val allUsers = if (isAdmin) config.getUsers else List()
 
-    Ok(views.html.index(request.session.get("user"), rules))
+    Ok(views.html.index(loggedInUser, rules, allUsers))
   }
 
 

@@ -1,19 +1,20 @@
 @import services.rules.PathRule
-@(username: Option[String], rules: List[PathRule])
+@import services.users.User
+@(user: Option[User], rules: List[PathRule], users: List[User])
 
 @main("Authentication") {
   <h1>Welcome to the auth thingie!</h1>
 
-  @if(username.isEmpty) {
+  @if(user.isEmpty) {
     <h2>Not logged in</h2>
     <h3><a href="/login">Click here to login</a></h3>
   } else {
-    <h2>Logged in as @username.get</h2>
+    <h2>Logged in as @user.get.username</h2>
     <h3><a href="/logout">Click here to logout</a></h3>
 
     @if(rules.nonEmpty) {
       <h2>Path Rules</h2>
-      <table class="rule_table"> <!-- these attributes are deprecated but i dunno -->
+      <table class="rule_table">
         <tr>
           <th>Name</th>
           <th>Protocol</th>
@@ -44,6 +45,30 @@
           </td>
         </tr>
       }
+      </table>
+    }
+
+    @if(users.nonEmpty) {
+      <h2>Users</h2>
+      <table class="user_table">
+        <tr>
+          <th>Username</th>
+          <th>Is Admin?</th>
+          <th>Roles</th>
+        </tr>
+        @for(user <- users) {
+          <tr>
+            <td>
+              @user.username
+            </td>
+            <td>
+              @user.admin.toString
+            </td>
+            <td>
+              @user.roles.mkString("[", ", ", "]")
+            </td>
+          </tr>
+        }
       </table>
     }
 

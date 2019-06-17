@@ -10,3 +10,7 @@ th, td {
 table, th, td {
     border: 1px solid black;
 }
+
+body {
+    padding: 15px;
+}
