@@ -7,8 +7,7 @@ import javax.inject.{Inject, Singleton}
 class UserMatcher @Inject()(config: TraefikCopConfig) {
 
   private val Users: List[User] = config.getUsers
-
-  lazy val userMap: Map[String, User] = Users.groupBy(_.username).mapValues(_.head)
+  private lazy val userMap: Map[String, User] = Users.groupBy(_.username).mapValues(_.head)
 
   def validUser(username: String, password: String): Option[User] = {
     userMap.get(username) match {
