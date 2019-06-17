@@ -6,10 +6,13 @@ import config.TraefikCopConfig
 import javax.inject.{Inject, Singleton}
 import org.apache.commons.codec.binary.Base64
 import play.api.mvc.{AbstractController, AnyContent, ControllerComponents, Request}
+import play.api.libs.json._
 import services.decoding.RequestDecoder
 import services.ruleresolving.{Allowed, Denied, RuleResolver}
 import services.rules.{PathMatcher, PathRule}
 import services.users.{User, UserMatcher}
+
+import scala.util.Try
 
 @Singleton
 class AuthController @Inject() (decoder: RequestDecoder,
@@ -38,6 +41,22 @@ class AuthController @Inject() (decoder: RequestDecoder,
         }
         (potentialUser, BasicAuth)
       case _                     => (None, NoCredentials)
+    }
+  }
+
+  def testUrl() = Action { implicit request: Request[AnyContent] =>
+    val urlFromQueryString = request.queryString.get("url").map(_.head)
+
+    val parsedUrl = for {
+      urlFromRequest <- urlFromQueryString.toRight(new Exception("No valid URL specified"))
+      parsedUrl <- Try(new URI(urlFromRequest)).toEither
+    } yield parsedUrl
+
+    parsedUrl match {
+      case Left(error) => BadRequest(Json.toJson(Map("error" -> error.getMessage)))
+      case Right(url) =>
+        val matchedRule = pathMatcher.getRule(url)
+        Ok(Json.toJson(Map("rule_name" -> matchedRule.map(_.name).orNull)))
     }
   }
 

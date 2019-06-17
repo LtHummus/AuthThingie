@@ -12,42 +12,6 @@
     <h2>Logged in as @user.get.username</h2>
     <h3><a href="/logout">Click here to logout</a></h3>
 
-    @if(rules.nonEmpty) {
-      <h2>Path Rules</h2>
-      <table class="rule_table">
-        <tr>
-          <th>Name</th>
-          <th>Protocol</th>
-          <th>Host</th>
-          <th>Path</th>
-          <th>Public?</th>
-          <th>Permitted Roles</th>
-        </tr>
-      @for(rule <- rules) {
-        <tr>
-          <td>
-            @rule.name
-          </td>
-          <td>
-            @rule.protocolPattern.getOrElse("*")
-          </td>
-          <td>
-            @rule.hostPattern.getOrElse("*")
-          </td>
-          <td>
-            @rule.pathPattern.getOrElse("*")
-          </td>
-          <td>
-            @rule.public.toString
-          </td>
-          <td>
-            @rule.permittedRoles.mkString("[", ", ", "]")
-          </td>
-        </tr>
-      }
-      </table>
-    }
-
     @if(users.nonEmpty) {
       <h2>Users</h2>
       <table class="user_table">
@@ -70,6 +34,46 @@
           </tr>
         }
       </table>
+    }
+
+    @if(rules.nonEmpty) {
+      <h2>Path Rules</h2>
+      <table class="rule_table">
+        <tr>
+          <th>Name</th>
+          <th>Protocol</th>
+          <th>Host</th>
+          <th>Path</th>
+          <th>Public?</th>
+          <th>Permitted Roles</th>
+        </tr>
+        @for(rule <- rules) {
+          <tr>
+            <td>
+            @rule.name
+            </td>
+            <td>
+            @rule.protocolPattern.getOrElse("*")
+            </td>
+            <td>
+            @rule.hostPattern.getOrElse("*")
+            </td>
+            <td>
+            @rule.pathPattern.getOrElse("*")
+            </td>
+            <td>
+            @rule.public.toString
+            </td>
+            <td>
+            @rule.permittedRoles.mkString("[", ", ", "]")
+            </td>
+          </tr>
+        }
+      </table>
+
+      <!-- <h4>Rule Tester</h4>
+      <label for="url_to_test">URL to test: </label><input type="text" id="url_to_test" />
+      <button>Test it!</button> -->
     }
 
   }
