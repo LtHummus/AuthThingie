@@ -45,18 +45,25 @@ class AuthController @Inject() (decoder: RequestDecoder,
   }
 
   def testUrl() = Action { implicit request: Request[AnyContent] =>
-    val urlFromQueryString = request.queryString.get("url").map(_.head)
+    val (user, _) = pullLoginInfoFromRequest
+    Logger.debug(s"Logged in user: ${user.map(_.username)}")
 
-    val parsedUrl = for {
-      urlFromRequest <- urlFromQueryString.toRight(new Exception("No valid URL specified"))
-      parsedUrl <- Try(new URI(urlFromRequest)).toEither
-    } yield parsedUrl
+    if (user.isEmpty) {
+      Unauthorized(Json.toJson(Map("error" -> "Not logged in")))
+    } else {
+      val urlFromQueryString = request.queryString.get("url").map(_.head)
 
-    parsedUrl match {
-      case Left(error) => BadRequest(Json.toJson(Map("error" -> error.getMessage)))
-      case Right(url) =>
-        val matchedRule = pathMatcher.getRule(url)
-        Ok(Json.toJson(Map("rule_name" -> matchedRule.map(_.name).orNull)))
+      val parsedUrl = for {
+        urlFromRequest <- urlFromQueryString.toRight(new Exception("No valid URL specified"))
+        parsedUrl <- Try(new URI(urlFromRequest)).toEither
+      } yield parsedUrl
+
+      parsedUrl match {
+        case Left(error) => BadRequest(Json.toJson(Map("error" -> error.getMessage)))
+        case Right(url) =>
+          val matchedRule = pathMatcher.getRule(url)
+          Ok(Json.toJson(Map("rule_name" -> matchedRule.map(_.name).orNull)))
+      }
     }
   }
 
