@@ -14,6 +14,8 @@ case class User(htpasswdLine: String, admin: Boolean, roles: List[String]) {
     (parts(0), parts(1))
   }
 
+  //note for later: should `isPermitted` be on the PathRule instead?
+
   def isPermitted(rule: PathRule): Boolean = admin || rule.public || rule.permittedRoles.intersect(roles).nonEmpty
   def passwordCorrect(guess: String): Boolean = HashValidator.validateHash(passwordHash, guess)
 }
