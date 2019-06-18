@@ -14,6 +14,9 @@ libraryDependencies += "commons-codec" % "commons-codec" % "1.12"
 libraryDependencies += "commons-io" % "commons-io" % "2.6"
 libraryDependencies += "at.favre.lib" % "bcrypt" % "0.8.0"
 
+libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.2" % "test"
+libraryDependencies += "org.mockito" %% "mockito-scala" % "1.5.11" % "test"
+
 // Adds additional packages into Twirl
 //TwirlKeys.templateImports += "com.lthummus.controllers._"
 

@@ -73,7 +73,7 @@ class AuthController @Inject() (decoder: RequestDecoder,
     Logger.debug(s"Decoded request: protocol = ${requestInfo.protocol}; host = ${requestInfo.host}; path = ${requestInfo.path}")
 
     //does that destination match a rule we know about?
-    val rule: Option[PathRule] = pathMatcher.getRule(requestInfo.protocol, requestInfo.host, requestInfo.path)
+    val rule: Option[PathRule] = pathMatcher.getRule(requestInfo)
     Logger.debug(s"Detected rule: ${rule.map(_.name)}")
 
     //figure out if the user is logged in or gave us basic-auth credentials

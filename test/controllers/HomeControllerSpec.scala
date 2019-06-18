@@ -1,9 +1,13 @@
 package controllers
 
+import config.AuthThingieConfig
+import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play._
-import org.scalatestplus.play.guice._
 import play.api.test._
 import play.api.test.Helpers._
+import org.mockito.Mockito._
+import services.rules.PathRule
+import services.users.{User, UserMatcher}
 
 /**
  * Add your spec here.
@@ -11,35 +15,61 @@ import play.api.test.Helpers._
  *
  * For more information, see https://www.playframework.com/documentation/latest/ScalaTestingWithScalaTest
  */
-class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
+class HomeControllerSpec extends PlaySpec with MockitoSugar {
 
   "HomeController GET" should {
 
-    "render the index page from a new instance of controller" in {
-      val controller = new HomeController(null, null, null, null, null, null)
+    "render the login page when a logged out user is there" in {
+      val fakeConfig = mock[AuthThingieConfig]
+      when(fakeConfig.getUsers) thenReturn List()
+      when(fakeConfig.getPathRules) thenReturn List()
+
+      val fakeUserMatcher = mock[UserMatcher]
+
+      val controller = new HomeController(fakeConfig, fakeUserMatcher, Helpers.stubMessagesControllerComponents())
       val home = controller.index().apply(FakeRequest(GET, "/"))
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include ("Welcome to Play")
+      contentAsString(home) must include ("Welcome to the auth thingie!")
+      contentAsString(home) must include ("Click here to login")
     }
 
-    "render the index page from the application" in {
-      val controller = inject[HomeController]
-      val home = controller.index().apply(FakeRequest(GET, "/"))
+    "render some path rules and user info when logged in as admin" in {
+      val fakeConfig = mock[AuthThingieConfig]
+      when(fakeConfig.getUsers) thenReturn List(User("test:foo", admin = true, List()))
+      when(fakeConfig.getPathRules) thenReturn List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
+
+      val fakeUserMatcher = mock[UserMatcher]
+      when (fakeUserMatcher.getUser("test")) thenReturn Some(User("test:foo", admin = true, List()))
+
+      val controller = new HomeController(fakeConfig, fakeUserMatcher, Helpers.stubMessagesControllerComponents())
+      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test"))
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include ("Welcome to Play")
+      contentAsString(home) must include ("Welcome to the auth thingie!")
+      contentAsString(home) must include ("<h2>Users</h2>") //users header
+      contentAsString(home) must include ("<h2>Path Rules</h2>") //path rules header
+
     }
 
-    "render the index page from the router" in {
-      val request = FakeRequest(GET, "/")
-      val home = route(app, request).get
+    "render no path rules and no user info when not admin" in {
+      val fakeConfig = mock[AuthThingieConfig]
+      when(fakeConfig.getUsers) thenReturn List(User("test:foo", admin = false, List()))
+      when(fakeConfig.getPathRules) thenReturn List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
+
+      val fakeUserMatcher = mock[UserMatcher]
+      when (fakeUserMatcher.getUser("test")) thenReturn Some(User("test:foo", admin = false, List()))
+
+      val controller = new HomeController(fakeConfig, fakeUserMatcher, Helpers.stubMessagesControllerComponents())
+      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test"))
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include ("Welcome to Play")
+      contentAsString(home) must include ("Welcome to the auth thingie!")
+      contentAsString(home) mustNot include ("<h2>Users</h2>") //users header
+      contentAsString(home) mustNot include ("<h2>Path Rules</h2>") //path rules header
     }
   }
 }
