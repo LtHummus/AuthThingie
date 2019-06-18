@@ -15,7 +15,7 @@ play {
   }
 
   http {
-    secret.key = "9IoC0znSqS4oaSd7KaR3yeoXy4yET3XD"
+    secret.key = "SAMPLE_SECRET_KEY"
 
     session {
       domain = "example.com"
@@ -57,7 +57,7 @@ play {
 "realm": "example.com"
 ``` 
 
-Everything should be more or less self-explanatory at this point. Essentially, you have your users and your rules. Every user needs an `htpasswdLine` (essentially the output generated from `htpasswd -nB <username>`), a flag indicating if they are an admin, and a list of roles that the user has.
+Everything should be more or less self-explanatory at this point. Essentially, you have your users and your rules. Every user needs an `htpasswdLine` (essentially the output generated from `htpasswd -nB <username>`), a flag indicating if they are an admin, and a list of roles that the user has. Note you will need to set some things in the `play` section (TODO: make it so you don't have to do that): notably the domain for the session, the secret key (please don't use the one in the sample file; just any long, randomly generated string will do), and the hostnames the server will live under (`auth.example.com` and perhaps `auth:9000` so Traefik can talk to it internally). 
 
 Each rule has a `name`, a list of `permittedRoles` (which can be empty for admin only), a `public` flag (public means everyone is allowed, logged in or not), and then at least one of `hostPattern`, `pathPattern`, or `protocolPattern` to match against. Any of those three not specified means "ANY". Everything is specified using simple wildcards: `?` matches a single character, and `*` matches many characters (on the todo list is a rule tester). Any path that matches no rules is implicitly "admin-only." Admin users implicitly have access to everything.
 
