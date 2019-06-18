@@ -2,7 +2,7 @@ package controllers
 
 import java.net.URI
 
-import config.TraefikCopConfig
+import config.AuthThingieConfig
 import javax.inject.{Inject, Singleton}
 import org.apache.commons.codec.binary.Base64
 import play.api.mvc.{AbstractController, AnyContent, ControllerComponents, Request}
@@ -18,7 +18,7 @@ import scala.util.Try
 class AuthController @Inject() (decoder: RequestDecoder,
                                 userMatcher: UserMatcher,
                                 pathMatcher: PathMatcher,
-                                config: TraefikCopConfig,
+                                config: AuthThingieConfig,
                                 resolver: RuleResolver,
                                 cc: ControllerComponents) extends AbstractController(cc) {
 

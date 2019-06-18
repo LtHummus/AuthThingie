@@ -9,7 +9,7 @@ import configs.syntax._
 import services.users.User
 
 @Singleton
-class TraefikCopConfig @Inject() () {
+class AuthThingieConfig @Inject()() {
 
   private val ConfigTree = ConfigFactory.parseFile(new File(sys.env("CONFIG_FILE_PATH")))
 

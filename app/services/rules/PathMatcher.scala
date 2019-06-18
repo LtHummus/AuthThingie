@@ -2,12 +2,12 @@ package services.rules
 
 import java.net.URI
 
-import config.TraefikCopConfig
+import config.AuthThingieConfig
 import javax.inject.{Inject, Singleton}
 import services.decoding.RequestInfo
 
 @Singleton
-class PathMatcher @Inject() (config: TraefikCopConfig) {
+class PathMatcher @Inject() (config: AuthThingieConfig) {
 
   private val Logger = play.api.Logger(this.getClass)
 

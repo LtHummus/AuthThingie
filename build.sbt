@@ -1,4 +1,4 @@
-name := """traefikcop"""
+name := """auththingie"""
 organization := "com.lthummus"
 
 version := "1.0-SNAPSHOT"

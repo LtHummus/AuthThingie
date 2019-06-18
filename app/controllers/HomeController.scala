@@ -1,6 +1,6 @@
 package controllers
 
-import config.TraefikCopConfig
+import config.AuthThingieConfig
 import javax.inject._
 import play.api.mvc._
 import services.users.UserMatcher
@@ -8,7 +8,7 @@ case class LoginData(username: String, password: String, redirectUrl: Option[Str
 
 
 @Singleton
-class HomeController @Inject()(config: TraefikCopConfig,
+class HomeController @Inject()(config: AuthThingieConfig,
                                userMatcher: UserMatcher,
                                cc: MessagesControllerComponents) extends MessagesAbstractController(cc) {
 

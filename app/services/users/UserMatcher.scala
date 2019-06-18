@@ -1,10 +1,10 @@
 package services.users
 
-import config.TraefikCopConfig
+import config.AuthThingieConfig
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class UserMatcher @Inject()(config: TraefikCopConfig) {
+class UserMatcher @Inject()(config: AuthThingieConfig) {
 
   private val Users: List[User] = config.getUsers
   private lazy val userMap: Map[String, User] = Users.groupBy(_.username).mapValues(_.head)
