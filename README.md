@@ -31,17 +31,32 @@ play {
 
 "rules": [
   {
-    "name": "/bin* on everything",
-    "pathPattern": "/bin*",
+    "name": "/css* on test.example.com",
+    "pathPattern": "/css*",
+    "hostPattern": "test.example.com",
     "public": true,
-    "permittedRoles": ["a"]
+    "permittedRoles": []
+  },
+  {
+      "name": "/js* on test.example.com",
+      "pathPattern": "/js*",
+      "hostPattern": "test.example.com",
+      "public": true,
+      "permittedRoles": []
+  },
+  {
+      "name": "/animals* on test.example.com",
+      "pathPattern": "/animals*",
+      "hostPattern": "test.example.com",
+      "public": false,
+      "permittedRoles": ["animal_role"]
   },
   {
     "name": "test.example.com root",
     "hostPattern": "test.example.com",
     "pathPattern": "/",
     "public": true,
-    "permittedRoles": ["a", "b"]
+    "permittedRoles": []
   }
 ]
 
@@ -49,7 +64,12 @@ play {
   {
     "htpasswdLine": "ben:$2y$05$WvtSdzLmwYqZqUe/EdLt1uG250dUmHAdQ4nKEDP.J5KRM2u3JbTCS",
     "admin": true,
-    "roles": ["c"]
+    "roles": []
+  },
+  {
+    "htpasswdLine": "dog:$2y$05$/WME1Gi5RRG/or8To0BjQewJ6lg0z/IyaRjLyhW8yx0ygVwMoJjGO",
+    "admin": false,
+    "roles": ["animal_role"]
   }
 ]
 
@@ -72,7 +92,7 @@ This is meant to be used with traefik's forward authentication plugin. If you ju
 127.0.0.1 auth.example.com
 ```
 
-to your computer's hosts file, then run `./build.sh` to boot everything (you will need `sbt` installed to compile the service). Run `docker-compose down` to tear everything down when you are done. In this example config, the root of `test.example.com` is allowed by everyone and `/bin` is allowed on any host. Going anywhere else should redirect you to the login page. The username/password for the sample config is username `ben` and password is `abc`.
+to your computer's hosts file, then run `./build.sh` to boot everything (you will need `sbt` installed to compile the service). Run `docker-compose down` to tear everything down when you are done. In this example config, the root of `test.example.com` is allowed by everyone. Going anywhere else should redirect you to the login page. The username/password for the admin user in the sample config is username `ben` and password is `abc`. There is also the account `dog` with the password `woof` that can only access the animal section of the sample website. (See https://github.com/LtHummus/SampleSite for more info on the sample site).
 
 ## Here be dragons!
 **Remember! This is a work in progress!**

@@ -24,14 +24,8 @@ services:
             - 443:443
             - 8080:8080
 
-    simple:
-        image: python:2.7
-        command:
-            - "python"
-            - "-m"
-            - "SimpleHTTPServer"
-        ports:
-            - 8000:8000 
+    sample:
+        image: lthummus/samplesite
         labels:
             traefik.enable: true
             traefik.frontend.rule: "Host: test.example.com"
