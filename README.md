@@ -103,3 +103,11 @@ Create a `auththingie_config.conf` file somewhere on your file system. Create th
 **Remember! This is a work in progress!**
  
 This is like 95% experimental right now. There are definitely some things that are rough around the edges. You can run this if you want (let me know how it goes!), but this is definitely an "at your own risk" situation.
+
+## TODO List
+
+In no particular order...
+
+* Make it not look terrible
+* Perhaps read config from a database?
+* 2FA Support
