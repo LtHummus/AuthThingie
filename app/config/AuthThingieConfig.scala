@@ -16,7 +16,6 @@ class AuthThingieConfig @Inject()() {
   //these technically could be lazy, but I want checking to happen on startup
   val getPathRules: List[PathRule] = ConfigTree.get[List[PathRule]]("rules").value
   val getUsers: List[User] = ConfigTree.get[List[User]]("users").value
-  val getSiteUrl: String = ConfigTree.get[String]("auth_url").value
-  val getRealm: String = ConfigTree.get[String]("realm").value
+  val getSiteUrl: String = ConfigTree.get[String]("auth_site_url").value
 
 }

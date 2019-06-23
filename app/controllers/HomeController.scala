@@ -4,7 +4,7 @@ import config.AuthThingieConfig
 import javax.inject._
 import play.api.mvc._
 import services.users.UserMatcher
-case class LoginData(username: String, password: String, redirectUrl: Option[String])
+case class LoginData(username: String, password: String)
 
 
 @Singleton

@@ -38,7 +38,7 @@ class RuleResolverSpec extends PlaySpec {
       resolver.resolveUserAccessForRule(Some(admin), None) must be (Allowed)
     }
 
-    "follow rules of rules" in {
+    "follow order of rules" in {
       resolver.resolveUserAccessForRule(Some(userWithNone), Some(privateRuleWithA)) must be (Denied)
       resolver.resolveUserAccessForRule(Some(userWithA), Some(privateRuleWithA)) must be (Allowed)
       resolver.resolveUserAccessForRule(Some(userWithB), Some(privateRuleWithA)) must be (Denied)

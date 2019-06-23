@@ -107,6 +107,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar {
       val result = controller.auth().apply(FakeRequest(GET, "/auth"))
 
       status(result) mustBe FOUND
+      redirectLocation(result) mustBe Some("/needed?redirect=https%3A%2F%2Ftest.example.com%2F")
     }
 
     "properly decode basic auth headers" in {

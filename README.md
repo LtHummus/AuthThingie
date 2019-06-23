@@ -15,7 +15,7 @@ play {
   }
 
   http {
-    secret.key = "SAMPLE_SECRET_KEY"
+    secret.key = "SECRET" # should be replaced with a randomly generated, long string
 
     session {
       domain = "example.com"
@@ -73,15 +73,16 @@ play {
   }
 ]
 
-"auth_url": "http://auth.example.com"
-"realm": "example.com"
+"auth_site_url": "http://auth.example.com"
 ``` 
 
 Everything should be more or less self-explanatory at this point. Essentially, you have your users and your rules. Every user needs an `htpasswdLine` (essentially the output generated from `htpasswd -nB <username>`), a flag indicating if they are an admin, and a list of roles that the user has. Note you will need to set some things in the `play` section (TODO: make it so you don't have to do that): notably the domain for the session, the secret key (please don't use the one in the sample file; just any long, randomly generated string will do), and the hostnames the server will live under (`auth.example.com` and perhaps `auth:9000` so Traefik can talk to it internally). 
 
 Each rule has a `name`, a list of `permittedRoles` (which can be empty for admin only), a `public` flag (public means everyone is allowed, logged in or not), and then at least one of `hostPattern`, `pathPattern`, or `protocolPattern` to match against. Any of those three not specified means "ANY". Everything is specified using simple wildcards: `?` matches a single character, and `*` matches many characters (on the todo list is a rule tester). Any path that matches no rules is implicitly "admin-only." Admin users implicitly have access to everything.
 
-Additionally, credentials can be passed in using basic-auth (via the `Authorization` header). This is useful if you have an app that interacts with a service behind your authentication but can't handle the redirects properly.
+`auth_site_url` should be the public URL of the authentication site. Note you will also have to add the proper domains to your `play.filters.hosts` section of the config file. You should add all hostnames that this site can potentially be reached from (both inside your docker network and outside). Alternatively, you can add `play.filters.enabled -= play.filters.hosts.AllowedHostsFilter` to the config file to disable the hosts filter completely. You will need to set your domain for the `play.http.session.domain` entry.
+
+When logging in is needed, the user will automatically be redirected to a login page. Once logged in, the user will be redirected back to where they were going (if they have permission). Additionally, credentials can be passed in using basic-auth (via the `Authorization` header). This is useful if you have an app that interacts with a service behind your authentication but can't handle the redirects properly.
 
 ## Deployment
 
@@ -97,4 +98,4 @@ to your computer's hosts file, then run `./build.sh` to boot everything (you wil
 ## Here be dragons!
 **Remember! This is a work in progress!**
  
-This is like 95% experimental right now. There are definitely some things that are rough around the edges. You can run this if you want (let me know how it goes!), but this is definitely an "at your own risk" situation. 
+This is like 95% experimental right now. There are definitely some things that are rough around the edges. You can run this if you want (let me know how it goes!), but this is definitely an "at your own risk" situation.
