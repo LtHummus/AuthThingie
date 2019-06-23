@@ -95,6 +95,10 @@ This is meant to be used with traefik's forward authentication plugin. If you ju
 
 to your computer's hosts file, then run `./build.sh` to boot everything (you will need `sbt` installed to compile the service). Run `docker-compose down` to tear everything down when you are done. In this example config, the root of `test.example.com` is allowed by everyone. Going anywhere else should redirect you to the login page. The username/password for the admin user in the sample config is username `ben` and password is `abc`. There is also the account `dog` with the password `woof` that can only access the animal section of the sample website. (See https://github.com/LtHummus/SampleSite for more info on the sample site).
 
+### Deployment for real
+
+Create a `auththingie_config.conf` file somewhere on your file system. Create the docker container from the image and mount that config file in the container. Set the environment variable `AUTHTHINGIE_CONFIG_FILE_PATH` to point to where the config file lives in the container. Set your Traefik config to point forward authentication to `/auth` on the server See the included `docker-compose.yaml` file for a complete example. Note the `traefik.frontend.auth.forward.address: "http://auth:9000/auth"` label on the sample website.
+
 ## You are likely to be eaten by a grue
 **Remember! This is a work in progress!**
  

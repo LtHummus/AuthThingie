@@ -2,13 +2,10 @@ version: '3'
 services:
     auth:
         image: lthummus/auththingie
-        ports: 
-            - 9000:9000
-            - 9443:9443
         volumes:
             - ./auththingie_config.conf:/auththingie_config.conf
         environment:
-            - CONFIG_FILE_PATH=/auththingie_config.conf
+            - AUTHTHINGIE_CONFIG_FILE_PATH=/auththingie_config.conf
         labels:
             traefik.enable: true
             traefik.frontend.rule: "Host: auth.example.com"
