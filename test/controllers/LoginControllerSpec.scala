@@ -62,8 +62,8 @@ class LoginControllerSpec extends PlaySpec with MockitoSugar {
       val result = controller.logout().apply(FakeRequest(GET, "/logout").withSession("user" -> "someone"))
 
       status(result) mustBe OK
-      contentType(result) mustBe Some("text/plain")
-      contentAsString(result) mustBe "Logged out"
+      contentType(result) mustBe Some("text/html")
+      contentAsString(result) must include("Logged out")
       session(result) mustBe Session()
     }
   }

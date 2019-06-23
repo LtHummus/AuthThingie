@@ -1,14 +1,12 @@
 package controllers
 
-import java.net.URLEncoder
-
 import config.AuthThingieConfig
 import javax.inject.Inject
 import play.api.data.Forms._
 import play.api.data._
 import play.api.mvc.{AnyContent, MessagesAbstractController, MessagesControllerComponents, MessagesRequest}
-import play.api.mvc.Call
 import services.users.UserMatcher
+import util.CallImplicits._
 
 class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMatcher, cc: MessagesControllerComponents) extends MessagesAbstractController(cc) {
 
@@ -26,7 +24,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
       case Some(user) => Logger.info(s"Logging out $user")
       case None       => Logger.info("Log out called with no user")
     }
-    Ok("Logged out").withNewSession
+    Ok(views.html.logged_out("Logged out successfully", routes.HomeController.index())).withNewSession
   }
 
   def showLoginForm() = Action { implicit request: MessagesRequest[AnyContent] =>
@@ -60,22 +58,5 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
     }
 
     loginForm.bindFromRequest.fold(error, success)
-  }
-
-  implicit class QueryStringableCall(x: Call) {
-    def appendQueryString(queryString: Map[String, Seq[String]]): Call = {
-      val newUrl = x.url + Option(queryString)
-        .filterNot(_.isEmpty)
-        .map { params =>
-          (if (x.url.contains("?")) "&" else "?") + params.toSeq
-            .flatMap { pair =>
-              pair._2.map(value => (pair._1 + "=" + URLEncoder.encode(value, "utf-8")))
-            }
-            .mkString("&")
-        }
-        .getOrElse("")
-
-      x.copy(url = newUrl)
-    }
   }
 }

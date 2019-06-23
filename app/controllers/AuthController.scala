@@ -88,7 +88,8 @@ class AuthController @Inject() (decoder: RequestDecoder,
 
       case Denied if credentialSource == BasicAuth || user.isDefined =>
         Logger.debug("Access denied. Showing error")
-        Unauthorized(views.html.denied("You do not have permission for this resource"))
+        val printableUsername = user.map(_.username).getOrElse("<not logged in>")
+        Unauthorized(views.html.denied(s"You do not have permission for this resource. Currently logged in as $printableUsername"))
 
       case _ =>
         Logger.debug("Access denied, redirecting to login page")
