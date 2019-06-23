@@ -1,5 +1,6 @@
 package services.validator
 
+import java.security.MessageDigest
 import java.util
 
 import at.favre.lib.crypto.bcrypt.BCrypt
@@ -32,7 +33,7 @@ private[validator] case class Sha1Hash(hash: String) extends HashAlgorithm {
     val guessHash = DigestUtils.sha1(guess)
     val correctHash = Base64.decodeBase64(hash.drop(Sha1PrefixLength))
 
-    util.Arrays.equals(guessHash, correctHash)
+    MessageDigest.isEqual(guessHash, correctHash)
   }
 }
 
@@ -43,7 +44,7 @@ private[validator] case class Apr1Hash(hash: String) extends HashAlgorithm {
     hash match {
       case Apr1HashRegex(salt) =>
         val calculatedHash = Md5Crypt.apr1Crypt(guess, salt)
-        calculatedHash == hash
+        MessageDigest.isEqual(calculatedHash.getBytes, hash.getBytes)
       case _ => throw new Exception("Invalid hash in config file")
     }
   }
@@ -56,5 +57,5 @@ private[validator] case class BcryptHash(hash: String) extends HashAlgorithm {
 }
 
 private[validator] case class PlainTextPassword(correct: String) extends HashAlgorithm {
-  override def guessCorrect(guess: String): Boolean = guess == correct
+  override def guessCorrect(guess: String): Boolean = MessageDigest.isEqual(guess.getBytes, correct.getBytes)
 }
