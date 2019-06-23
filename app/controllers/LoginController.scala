@@ -19,7 +19,10 @@ class LoginController @Inject() (userMatcher: UserMatcher, cc: MessagesControlle
   )
 
   def logout() = Action { implicit request: MessagesRequest[AnyContent] =>
-    Logger.info(s"Logging out ${request.session.get("user")}")
+    request.session.get("user") match {
+      case Some(user) => Logger.info(s"Logging out $user")
+      case None       => Logger.info("Log out called with no user")
+    }
     Ok("Logged out").withNewSession
   }
 
