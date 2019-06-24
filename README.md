@@ -102,7 +102,7 @@ Create a `auththingie_config.conf` file somewhere on your file system. Create th
 ## You are likely to be eaten by a grue
 **Remember! This is a work in progress!**
  
-This is like 95% experimental right now. There are definitely some things that are rough around the edges. You can run this if you want (let me know how it goes!), but this is definitely an "at your own risk" situation.
+This is like 95% experimental right now. There are definitely some things that are rough around the edges. You can run this if you want (let me know how it goes!), but this is definitely an "at your own risk" situation. I'm reasonably sure that this works, but anyone can build a lock that they themselves can't break.
 
 ## TODO List
 

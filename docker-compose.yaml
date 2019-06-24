@@ -3,7 +3,7 @@ services:
     auth:
         image: lthummus/auththingie
         volumes:
-            - ./auththingie_config.conf:/auththingie_config.conf
+            - ./example/auththingie_config.conf:/auththingie_config.conf
         environment:
             - AUTHTHINGIE_CONFIG_FILE_PATH=/auththingie_config.conf
         labels:
@@ -15,7 +15,7 @@ services:
         image: traefik
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock:ro
-            - ./traefik.toml:/etc/traefik/traefik.toml
+            - ./example/traefik.toml:/etc/traefik/traefik.toml
         ports:
             - 80:80
             - 443:443
