@@ -3,32 +3,29 @@ package services.totp
 case class GeneratorConfig(username: String = "", forcedSecret: Option[String] = None)
 
 object GeneratorApp  {
-  private val Bold = "\033[0;1m"
-  private val Reset = "\033[0;0m"
+  private val Bold = "\u001b[0;1m"
+  private val Reset = "\u001b[0;0m"
 
   private def run(config: GeneratorConfig): Unit = {
     println("AuthThingie TOTP Generator")
     println(s"Generating for username $Bold${config.username}$Reset")
     println()
 
-    val totp = new TotpUtil()
-    val qr = new QrUtil()
+    val secret = config.forcedSecret.getOrElse(TotpUtil.generateSecret())
 
-    val secret = config.forcedSecret.getOrElse(totp.generateSecret())
+    val url = TotpUtil.totpUrl(config.username, "AuthThingie", secret)
 
-    val url = totp.totpUrl(config.username, "AuthThingie", secret)
-
-    val qrCodeMatrix = qr.generateQrCodeMatrix(url)
-    qr.printBitMatrix(qrCodeMatrix)
+    val qrCodeMatrix = QrUtil.generateQrCodeMatrix(url)
+    QrUtil.printBitMatrix(qrCodeMatrix)
 
     val startingInstant = System.currentTimeMillis()
     val ThirtySeconds = 30 * 1000
-    val codes = (0 until 5).map(x => totp.genOneTimePassword(secret, startingInstant + (ThirtySeconds * x))).mkString(", ")
+    val codes = (0 until 5).map(x => TotpUtil.genOneTimePassword(secret, startingInstant + (ThirtySeconds * x))).mkString(", ")
 
     println()
     println("Step 1: Scan the QR code above to your OTP app of choice")
     println(s"Step 2: Validate you are generating the correct codes. Here are the next 5 codes to be generated: $codes")
-    println(s"Step 3: Add the following to the user value in your AuthThingie config for the user ${config.username}: ${Bold}totp_secret = $secret$Reset")
+    println(s"Step 3: Add the following to the user value in your AuthThingie config for the user ${config.username}: ${Bold}totpSecret = $secret$Reset")
   }
 
   def main(args: Array[String]): Unit = {

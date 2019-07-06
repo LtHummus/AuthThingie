@@ -47,7 +47,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar {
 
       val requestInfo = RequestInfo("https", "test.example.com", "/")
       val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
-      val user = User("test:test", admin = true, List())
+      val user = User("test:test", admin = true, None, List())
 
       when(fakeRequestDecoder.decodeRequestHeaders(ArgumentMatchers.any())) thenReturn requestInfo
       when(fakePathMatcher.getRule(requestInfo)) thenReturn Some(pathRule)
@@ -72,7 +72,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar {
 
       val requestInfo = RequestInfo("https", "test.example.com", "/")
       val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
-      val user = User("test:test", admin = true, List())
+      val user = User("test:test", admin = true, None, List())
 
       when(fakeRequestDecoder.decodeRequestHeaders(ArgumentMatchers.any())) thenReturn requestInfo
       when(fakePathMatcher.getRule(requestInfo)) thenReturn Some(pathRule)
@@ -97,7 +97,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar {
 
       val requestInfo = RequestInfo("https", "test.example.com", "/")
       val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
-      val user = User("test:test", admin = true, List())
+      val user = User("test:test", admin = true, None, List())
 
       when(fakeRequestDecoder.decodeRequestHeaders(ArgumentMatchers.any())) thenReturn requestInfo
       when(fakePathMatcher.getRule(requestInfo)) thenReturn Some(pathRule)
@@ -120,7 +120,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar {
 
       val requestInfo = RequestInfo("https", "test.example.com", "/")
       val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = true, List())
-      val user = User("test:test", admin = true, List())
+      val user = User("test:test", admin = true, None, List())
 
       when(fakeRequestDecoder.decodeRequestHeaders(ArgumentMatchers.any())) thenReturn requestInfo
       when(fakePathMatcher.getRule(requestInfo)) thenReturn Some(pathRule)
@@ -143,7 +143,7 @@ class AuthControllerSpec extends PlaySpec with MockitoSugar {
 
       val requestInfo = RequestInfo("https", "test.example.com", "/")
       val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = true, List())
-      val user = User("test:test", admin = true, List())
+      val user = User("test:test", admin = true, None, List())
 
       when(fakeRequestDecoder.decodeRequestHeaders(ArgumentMatchers.any())) thenReturn requestInfo
       when(fakePathMatcher.getRule(requestInfo)) thenReturn Some(pathRule)

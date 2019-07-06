@@ -5,11 +5,9 @@ import java.security.SecureRandom
 
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-import javax.inject.{Inject, Singleton}
 import org.apache.commons.codec.binary.Base32
 
-@Singleton
-class TotpUtil @Inject() () {
+object TotpUtil {
 
   private val TimeStepMillis = 30000
   private val Algorithm = "HmacSHA1"

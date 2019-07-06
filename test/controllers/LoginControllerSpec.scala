@@ -17,7 +17,7 @@ class LoginControllerSpec extends PlaySpec with MockitoSugar {
       val fakeComponents = Helpers.stubMessagesControllerComponents()
       val fakeConfig = mock[AuthThingieConfig]
 
-      when(fakeUserMatcher.validUser("user", "pass")) thenReturn Some(User("user:pass", admin = true, List()))
+      when(fakeUserMatcher.validUser("user", "pass")) thenReturn Some(User("user:pass", admin = true, None, List()))
 
       val controller = new LoginController(fakeConfig, fakeUserMatcher, fakeComponents)
       val result = controller.login().apply(CSRFTokenHelper.addCSRFToken(FakeRequest(POST, "/login?redirect=http://foo.example.com")
