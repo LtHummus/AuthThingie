@@ -37,11 +37,11 @@ class HomeControllerSpec extends PlaySpec with MockitoSugar {
 
     "render some path rules and user info when logged in as admin" in {
       val fakeConfig = mock[AuthThingieConfig]
-      when(fakeConfig.getUsers) thenReturn List(User("test:foo", admin = true, List()))
+      when(fakeConfig.getUsers) thenReturn List(User("test:foo", admin = true, None, List()))
       when(fakeConfig.getPathRules) thenReturn List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
 
       val fakeUserMatcher = mock[UserMatcher]
-      when (fakeUserMatcher.getUser("test")) thenReturn Some(User("test:foo", admin = true, List()))
+      when (fakeUserMatcher.getUser("test")) thenReturn Some(User("test:foo", admin = true, None, List()))
 
       val controller = new HomeController(fakeConfig, fakeUserMatcher, Helpers.stubMessagesControllerComponents())
       val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test"))
@@ -56,11 +56,11 @@ class HomeControllerSpec extends PlaySpec with MockitoSugar {
 
     "render no path rules and no user info when not admin" in {
       val fakeConfig = mock[AuthThingieConfig]
-      when(fakeConfig.getUsers) thenReturn List(User("test:foo", admin = false, List()))
+      when(fakeConfig.getUsers) thenReturn List(User("test:foo", admin = false, None, List()))
       when(fakeConfig.getPathRules) thenReturn List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
 
       val fakeUserMatcher = mock[UserMatcher]
-      when (fakeUserMatcher.getUser("test")) thenReturn Some(User("test:foo", admin = false, List()))
+      when (fakeUserMatcher.getUser("test")) thenReturn Some(User("test:foo", admin = false, None, List()))
 
       val controller = new HomeController(fakeConfig, fakeUserMatcher, Helpers.stubMessagesControllerComponents())
       val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test"))

@@ -18,6 +18,7 @@
         <tr>
           <th>Username</th>
           <th>Is Admin?</th>
+          <th>Uses TOTP?</th>
           <th>Roles</th>
         </tr>
         @for(user <- users) {
@@ -27,6 +28,9 @@
             </td>
             <td>
               @user.admin.toString
+            </td>
+            <td>
+              @user.usesTotp
             </td>
             <td>
               @user.roles.mkString("[", ", ", "]")

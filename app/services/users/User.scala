@@ -1,9 +1,10 @@
 package services.users
 
 import services.rules.PathRule
+import services.totp.TotpUtil
 import services.validator.HashValidator
 
-case class User(htpasswdLine: String, admin: Boolean, roles: List[String]) {
+case class User(htpasswdLine: String, admin: Boolean, totpSecret: Option[String], roles: List[String]) {
 
   val (username, passwordHash) = getCredentialParts
 
@@ -16,6 +17,12 @@ case class User(htpasswdLine: String, admin: Boolean, roles: List[String]) {
 
   //note for later: should `isPermitted` be on the PathRule instead?
 
+  def usesTotp: Boolean = totpSecret.isDefined
   def isPermitted(rule: PathRule): Boolean = admin || rule.public || rule.permittedRoles.intersect(roles).nonEmpty
   def passwordCorrect(guess: String): Boolean = HashValidator.validateHash(passwordHash, guess)
+
+  def totpCorrect(guess: String, leniency: Int = 1): Boolean = totpSecret match {
+    case None         => require(requirement = false, s"TOTP verification attempted on user $username without one"); false
+    case Some(secret) => TotpUtil.validateOneTimePassword(secret, guess, leniency)
+  }
 }

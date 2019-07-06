@@ -7,8 +7,8 @@ import services.rules.PathRule
 
 class UserSpec extends PlaySpec with MockitoSugar {
 
-  private val TestUser = User("test:$2y$05$x64wEIDNwkjRvbfRPheBfOa4E0.Z/V64Gu0aorNu5iEhsLmoNxCRq", admin = false, List("a", "b"))
-  private val AdminUser = User("admin:$2y$05$ktjBjGePZrol6bMrLKaWJOrK3a3xfX.ju1JCmxTowQnmr4VaT6xTC", admin = true, List())
+  private val TestUser = User("test:$2y$05$x64wEIDNwkjRvbfRPheBfOa4E0.Z/V64Gu0aorNu5iEhsLmoNxCRq", admin = false, None, List("a", "b"))
+  private val AdminUser = User("admin:$2y$05$ktjBjGePZrol6bMrLKaWJOrK3a3xfX.ju1JCmxTowQnmr4VaT6xTC", admin = true, None, List())
 
   private val PublicTestRule = PathRule("abc", None, None, None, public = true, List())
   private val PrivateATestRule = PathRule("abc", None, None, None, public = false, List("a"))
