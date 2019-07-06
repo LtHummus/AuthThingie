@@ -35,11 +35,10 @@ class AuthController @Inject() (decoder: RequestDecoder,
       case (_, Some(authHeader)) =>
         val rawAuthData = authHeader.replaceFirst("Basic ", "")
         val Array(username, password) = new String(Base64.decodeBase64(rawAuthData)).split(":", 2)
-        val potentialUser = userMatcher.validUser(username, password)
-        if (potentialUser.isEmpty) {
-          Logger.warn(s"Bad login attempt for user $username from ${request.headers("X-Forwarded-For")}")
+        userMatcher.validUser(username, password) match {
+          case Some(user) if user.doesNotUseTotp => (Some(user), BasicAuth)
+          case _                                 => (None, NoCredentials) //TODO: see if 2fa code has been appended to password for accounts that use it
         }
-        (potentialUser, BasicAuth)
       case _                     => (None, NoCredentials)
     }
   }

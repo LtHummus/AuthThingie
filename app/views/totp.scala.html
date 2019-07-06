@@ -1,0 +1,24 @@
+@(form: Form[TotpData], postUrl: Call)(implicit request: MessagesRequestHeader)
+
+
+@main("TOTP") {
+    @request.flash.data.map{ case (name, value) =>
+    <div>@name: @value</div>
+    }
+
+    @if(form.hasGlobalErrors) {
+        @form.globalErrors.map { error: FormError =>
+            <div>
+                Error: @error.key: @error.message
+            </div>
+        }
+    }
+
+    @helper.form(postUrl, 'id -> "totp_form") {
+        @helper.CSRF.formField
+
+        @helper.inputText(form("totpCode"), 'id -> "totpCode", 'size -> 10, 'autofocus -> "autofocus", '_label -> "OTP Code")
+
+        <button>Go</button>
+    }
+}

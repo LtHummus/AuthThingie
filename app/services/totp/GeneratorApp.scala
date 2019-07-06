@@ -25,7 +25,7 @@ object GeneratorApp  {
     println()
     println("Step 1: Scan the QR code above to your OTP app of choice")
     println(s"Step 2: Validate you are generating the correct codes. Here are the next 5 codes to be generated: $codes")
-    println(s"Step 3: Add the following to the user value in your AuthThingie config for the user ${config.username}: ${Bold}totpSecret = $secret$Reset")
+    println(s"Step 3: Add the following to the user value in your AuthThingie config for the user ${config.username}: ${Bold}totpSecret:  $secret$Reset")
   }
 
   def main(args: Array[String]): Unit = {

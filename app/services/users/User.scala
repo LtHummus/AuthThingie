@@ -18,6 +18,7 @@ case class User(htpasswdLine: String, admin: Boolean, totpSecret: Option[String]
   //note for later: should `isPermitted` be on the PathRule instead?
 
   def usesTotp: Boolean = totpSecret.isDefined
+  def doesNotUseTotp: Boolean = !usesTotp
   def isPermitted(rule: PathRule): Boolean = admin || rule.public || rule.permittedRoles.intersect(roles).nonEmpty
   def passwordCorrect(guess: String): Boolean = HashValidator.validateHash(passwordHash, guess)
 
