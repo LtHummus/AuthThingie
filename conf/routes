@@ -9,6 +9,8 @@ GET     /auth                       controllers.AuthController.auth
 GET     /needed                     controllers.LoginController.loginRedirect
 GET     /login                      controllers.LoginController.showLoginForm
 POST    /login                      controllers.LoginController.login
+GET     /totp                       controllers.LoginController.showTotpForm
+POST    /totp                       controllers.LoginController.totp
 GET     /test                       controllers.AuthController.testUrl
 
 GET     /logout                     controllers.LoginController.logout

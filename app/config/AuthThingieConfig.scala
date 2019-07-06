@@ -23,5 +23,6 @@ class AuthThingieConfig @Inject()() {
   val getPathRules: List[PathRule] = ConfigTree.get[List[PathRule]]("rules").value
   val getUsers: List[User] = ConfigTree.get[List[User]]("users").value
   val getSiteUrl: String = ConfigTree.get[String]("auth_site_url").value
+  val forceRedirectToHttps: Boolean = ConfigTree.get[Boolean]("forceRedirectToHttps").valueOrElse(false)
 
 }
