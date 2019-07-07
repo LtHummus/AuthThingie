@@ -1,25 +1,27 @@
 package controllers
 
 import config.AuthThingieConfig
-import org.scalatest.mockito.MockitoSugar
+import org.mockito.IdiomaticMockito
 import org.scalatestplus.play._
 import play.api.test._
 import play.api.test.Helpers._
-import org.mockito.Mockito._
 import play.api.mvc.Session
 import services.users.{User, UserMatcher}
 
-class LoginControllerSpec extends PlaySpec with MockitoSugar {
+class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
+  trait Setup {
+    val fakeUserMatcher = mock[UserMatcher]
+    val fakeComponents = Helpers.stubMessagesControllerComponents()
+    val fakeConfig = mock[AuthThingieConfig]
+
+    val controller = new LoginController(fakeConfig, fakeUserMatcher, fakeComponents)
+
+  }
 
   "Login Handler" should {
-    "validate login info" in {
-      val fakeUserMatcher = mock[UserMatcher]
-      val fakeComponents = Helpers.stubMessagesControllerComponents()
-      val fakeConfig = mock[AuthThingieConfig]
+    "validate login info" in new Setup() {
+      fakeUserMatcher.validUser("user", "pass") returns Some(User("user:pass", admin = true, None, List()))
 
-      when(fakeUserMatcher.validUser("user", "pass")) thenReturn Some(User("user:pass", admin = true, None, List()))
-
-      val controller = new LoginController(fakeConfig, fakeUserMatcher, fakeComponents)
       val result = controller.login().apply(CSRFTokenHelper.addCSRFToken(FakeRequest(POST, "/login?redirect=http://foo.example.com")
         .withHeaders("X-Forwarded-For" -> "127.0.0.1")
         .withFormUrlEncodedBody("username" -> "user",
@@ -31,14 +33,10 @@ class LoginControllerSpec extends PlaySpec with MockitoSugar {
       redirectLocation(result) mustBe Some("http://foo.example.com")
     }
 
-    "reject invalid login info" in {
-      val fakeUserMatcher = mock[UserMatcher]
-      val fakeComponents = Helpers.stubMessagesControllerComponents()
-      val fakeConfig = mock[AuthThingieConfig]
+    "reject invalid login info" in new Setup() {
 
-      when(fakeUserMatcher.validUser("user", "pass")) thenReturn None
+      fakeUserMatcher.validUser("user", "pass") returns None
 
-      val controller = new LoginController(fakeConfig, fakeUserMatcher, fakeComponents)
       val result = controller.login().apply(CSRFTokenHelper.addCSRFToken(FakeRequest(POST, "/login?redirect=someUrl")
         .withHeaders("X-Forwarded-For" -> "127.0.0.1")
         .withFormUrlEncodedBody("username" -> "user",
@@ -52,13 +50,7 @@ class LoginControllerSpec extends PlaySpec with MockitoSugar {
 
 
   "Logout Handler" should {
-    "be able to logout" in {
-      val fakeUserMatcher = mock[UserMatcher]
-      val fakeComponents = Helpers.stubMessagesControllerComponents()
-      val fakeConfig = mock[AuthThingieConfig]
-
-      val controller = new LoginController(fakeConfig, fakeUserMatcher, fakeComponents)
-
+    "be able to logout" in new Setup() {
       val result = controller.logout().apply(FakeRequest(GET, "/logout").withSession("user" -> "someone"))
 
       status(result) mustBe OK

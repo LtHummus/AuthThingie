@@ -1,12 +1,10 @@
 package services.rules
 
 import config.AuthThingieConfig
-import org.scalatest.mockito.MockitoSugar
+import org.mockito.IdiomaticMockito
 import org.scalatestplus.play.PlaySpec
 
-import org.mockito.Mockito._
-
-class PathSpec extends PlaySpec with MockitoSugar {
+class PathSpec extends PlaySpec with IdiomaticMockito {
 
   private val allOnTestExampleCom = PathRule("all on test.example.com", None, Some("test.example.com"), None, public = false, List())
   private val binStarOnAnything = PathRule("/bin* on anything", None, None, Some("/bin*"), public = false, List())
@@ -14,7 +12,7 @@ class PathSpec extends PlaySpec with MockitoSugar {
   private val bStarOnFooExampleCom = PathRule("/bar* on foo.example.com", None, Some("foo.example.com"), Some("/b*"), public = false, List())
 
   private val fakeConfig = mock[AuthThingieConfig]
-  when(fakeConfig.getPathRules) thenReturn List(allOnTestExampleCom, binStarOnAnything, barOnFooExampleCom, bStarOnFooExampleCom)
+  fakeConfig.getPathRules returns List(allOnTestExampleCom, binStarOnAnything, barOnFooExampleCom, bStarOnFooExampleCom)
 
   private val matcher = new PathMatcher(fakeConfig)
 
