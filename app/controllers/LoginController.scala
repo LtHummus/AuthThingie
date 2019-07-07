@@ -13,6 +13,12 @@ case class TotpData(totpCode: String)
 
 class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMatcher, cc: MessagesControllerComponents) extends MessagesAbstractController(cc) {
 
+  private val PartialAuthUsername = "partialAuthUsername"
+  private val Redirect = "redirect"
+  private val XForwardedFor = "X-Forwarded-For"
+  private val PartialAuthTimeout = "partialAuthTimeout"
+
+
   private val Logger = play.api.Logger(this.getClass)
   private val PartialAuthExpirationTime = 5 * 60 * 1000 //5 minutes in milliseconds
 
@@ -37,9 +43,10 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
     Ok(views.html.logged_out("Logged out successfully", routes.HomeController.index())).withNewSession
   }
 
+
   def showLoginForm() = Action { implicit request: MessagesRequest[AnyContent] =>
-    val redirectUrl: String = request.queryString.get("redirect").flatMap(_.headOption).getOrElse(config.getSiteUrl)
-    Unauthorized(views.html.login(loginForm, redirectUrl, routes.LoginController.login().appendQueryString(Map("redirect" -> Seq(redirectUrl)))))
+    val redirectUrl: String = request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(config.getSiteUrl)
+    Unauthorized(views.html.login(loginForm, redirectUrl, routes.LoginController.login().appendQueryString(Map(Redirect -> Seq(redirectUrl))))).withSession(request.session - PartialAuthUsername)
   }
 
   def loginRedirect() = Action { implicit request: MessagesRequest[AnyContent] =>
@@ -47,26 +54,31 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
   }
 
   def showTotpForm() = Action { implicit request: MessagesRequest[AnyContent] =>
-    val redirectUrl: String = request.queryString.get("redirect").flatMap(_.headOption).getOrElse(config.getSiteUrl)
-    Ok(views.html.totp(totpForm, routes.LoginController.totp().appendQueryString(Map("redirect" -> Seq(redirectUrl)))))
+    if (request.session.get("").isEmpty) {
+      Unauthorized("Error: No partially authed username.")
+    } else {
+      val redirectUrl: String = request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(config.getSiteUrl)
+      Ok(views.html.totp(totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl)))))
+    }
   }
+
 
   def totp() = Action { implicit request: MessagesRequest[AnyContent] =>
     val error = {
       formWithErrors: Form[TotpData] =>
-        val redirectUrl = request.queryString.get("redirect").flatMap(_.headOption).getOrElse(config.getSiteUrl)
+        val redirectUrl = request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(config.getSiteUrl)
         Logger.warn("Unable to parse 2FA form.")
         for (error <- formWithErrors.errors) {
           Logger.warn(s"${error.key} -> ${error.message}")
         }
-        BadRequest(views.html.totp(formWithErrors, routes.LoginController.totp().appendQueryString(Map("redirect" -> Seq(redirectUrl)))))
+        BadRequest(views.html.totp(formWithErrors, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl)))))
     }
 
     val success = { data: TotpData =>
-      val redirectUrl = request.queryString.get("redirect").flatMap(_.headOption).getOrElse(config.getSiteUrl)
+      val redirectUrl = request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(config.getSiteUrl)
 
       val knownUser = for {
-        potentialUser <- request.session.get("partialAuthUsername")
+        potentialUser <- request.session.get(PartialAuthUsername)
         user <- userMatcher.getUser(potentialUser)
       } yield {
         user
@@ -74,18 +86,18 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
 
       knownUser match {
         case Some(user) if user.totpCorrect(data.totpCode) =>
-          val givenTimeout = request.session.get("partialAuthTimeout").map(_.toLong).getOrElse(0L)
+          val givenTimeout = request.session.get(PartialAuthTimeout).map(_.toLong).getOrElse(0L)
           if (System.currentTimeMillis() < givenTimeout) {
-            Logger.info(s"Successful auth for user ${user.username} from ${request.headers("X-Forwarded-For")}")
+            Logger.info(s"Successful auth for user ${user.username} from ${request.headers(XForwardedFor)}")
             Redirect(redirectUrl, FOUND).withSession("user" -> user.username)
           } else {
-            Logger.warn(s"Auth too delayed for user ${user.username} from ${request.headers("X-Forwarded-For")}")
+            Logger.warn(s"Auth too delayed for user ${user.username} from ${request.headers(XForwardedFor)}")
             Unauthorized("TOTP authentication too delayed").withNewSession
           }
 
         case Some(user) =>
-          Logger.warn(s"Bad login attempt for user ${user.username} from ${request.headers("X-Forwarded-For")}")
-          Unauthorized(views.html.totp(totpForm, routes.LoginController.totp().appendQueryString(Map("redirect" -> Seq(redirectUrl))))).withSession(request.session)
+          Logger.warn(s"Bad login attempt for user ${user.username} from ${request.headers(XForwardedFor)}")
+          Unauthorized(views.html.totp(totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))))).withSession(request.session)
         case None => Logger.warn("Couldn't find a partially authed username for validation"); BadRequest("Couldn't find a partially authed username for validation")
       }
     }
@@ -96,25 +108,25 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
   def login() = Action { implicit request: MessagesRequest[AnyContent] =>
     val error = {
       formWithErrors: Form[LoginData] =>
-        val redirectUrl = request.queryString.get("redirect").flatMap(_.headOption).getOrElse(config.getSiteUrl)
-        BadRequest(views.html.login(formWithErrors, redirectUrl, routes.LoginController.login().appendQueryString(Map("redirect" -> Seq(redirectUrl)))))
+        val redirectUrl = request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(config.getSiteUrl)
+        BadRequest(views.html.login(formWithErrors, redirectUrl, routes.LoginController.login().appendQueryString(Map(Redirect -> Seq(redirectUrl)))))
     }
 
 
     val success = { data: LoginData =>
-      val redirectUrl = request.queryString.get("redirect").flatMap(_.headOption).getOrElse(config.getSiteUrl)
+      val redirectUrl = request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(config.getSiteUrl)
 
       userMatcher.validUser(data.username, data.password) match {
         case Some(user) if user.doesNotUseTotp =>
-          Logger.info(s"Successful auth for user ${user.username} from ${request.headers("X-Forwarded-For")}")
+          Logger.info(s"Successful auth for user ${user.username} from ${request.headers(XForwardedFor)}")
           Redirect(redirectUrl, FOUND).withSession("user" -> user.username)
         case Some(user) if user.usesTotp =>
           Logger.info(s"Successful username/password combo for ${user.username}. Forwarding for 2FA")
           val timeout = System.currentTimeMillis() + PartialAuthExpirationTime
-          Redirect(routes.LoginController.totp().appendQueryString(Map("redirect" -> Seq(redirectUrl)))).withSession("partialAuthUsername" -> user.username, "partialAuthTimeout" -> timeout.toString)
+          Redirect(routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl)))).withSession(PartialAuthUsername -> user.username, PartialAuthTimeout -> timeout.toString)
         case None =>
-          Logger.warn(s"Bad login attempt for user ${data.username} from ${request.headers("X-Forwarded-For")}")
-          Unauthorized(views.html.login(loginForm.fill(data.copy(password = "")), request.session.get("redirectUrl").getOrElse(""), routes.LoginController.login().appendQueryString(Map("redirect" -> Seq(redirectUrl)))))
+          Logger.warn(s"Bad login attempt for user ${data.username} from ${request.headers(XForwardedFor)}")
+          Unauthorized(views.html.login(loginForm.fill(data.copy(password = "")), request.session.get(Redirect + "Url").getOrElse(""), routes.LoginController.login().appendQueryString(Map(Redirect -> Seq(redirectUrl)))))
       }
     }
 

@@ -43,7 +43,7 @@ object TotpUtil {
     val value = ((hash(offset) & 0x7F) << 24) |
       ((hash(offset + 1) & 0xFF) << 16) |
       ((hash(offset + 2) & 0xFF) << 8) |
-      (hash(offset + 0x03) & 0xFF)
+      (hash(offset + 3) & 0xFF)
 
     val otp = value % Modulus
 
