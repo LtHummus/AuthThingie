@@ -64,6 +64,7 @@ play {
   {
     "htpasswdLine": "ben:$2y$05$WvtSdzLmwYqZqUe/EdLt1uG250dUmHAdQ4nKEDP.J5KRM2u3JbTCS",
     "admin": true,
+    "totpSecret": "T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH",
     "roles": []
   },
   {
@@ -83,6 +84,10 @@ Each rule has a `name`, a list of `permittedRoles` (which can be empty for admin
 `auth_site_url` should be the public URL of the authentication site. Note you will also have to add the proper domains to your `play.filters.hosts` section of the config file. You should add all hostnames that this site can potentially be reached from (both inside your docker network and outside). Alternatively, you can add `play.filters.disabled += play.filters.hosts.AllowedHostsFilter` to the config file to disable the hosts filter completely. You will need to set your domain for the `play.http.session.domain` entry.
 
 When logging in is needed, the user will automatically be redirected to a login page. Once logged in, the user will be redirected back to where they were going (if they have permission). Additionally, credentials can be passed in using basic-auth (via the `Authorization` header). This is useful if you have an app that interacts with a service behind your authentication but can't handle the redirects properly.
+
+## TOTP
+
+AuthThingie supports Time-Based One-Time Passowrds. They do require some special setup. AuthThingie includes a script to help generate secrets and set up your app of choice. Once you have AuthThingie up and running in a docker container, you can generate everything with `docker exec -it <container name> generate_totp <username>` (if you are using Docker Compose, you can do `docker-compose exec auth generate_totp <username>`). This will generate a random secret for you and give you instructions on what to do next. The app will also display a QR code in your terminal for scanning in to your authentication application as well as a field to add to your config file. Scan the code, update the config file, then restart the container and you should be good to go.
 
 ## Deployment
 
