@@ -80,13 +80,13 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
             Redirect(redirectUrl, FOUND).withSession("user" -> user.username)
           } else {
             Logger.warn(s"Auth too delayed for user ${user.username} from ${request.headers("X-Forwarded-For")}")
-            Redirect(routes.LoginController.showLoginForm().appendQueryString(Map("redirect" -> Seq(redirectUrl)))).withNewSession
+            Unauthorized("TOTP authentication too delayed").withNewSession
           }
 
         case Some(user) =>
           Logger.warn(s"Bad login attempt for user ${user.username} from ${request.headers("X-Forwarded-For")}")
           Unauthorized(views.html.totp(totpForm, routes.LoginController.totp().appendQueryString(Map("redirect" -> Seq(redirectUrl))))).withSession(request.session)
-        case None => BadRequest("Couldn't find a partially authed username for validation")
+        case None => Logger.warn("Couldn't find a partially authed username for validation"); BadRequest("Couldn't find a partially authed username for validation")
       }
     }
 
@@ -115,7 +115,6 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
         case None =>
           Logger.warn(s"Bad login attempt for user ${data.username} from ${request.headers("X-Forwarded-For")}")
           Unauthorized(views.html.login(loginForm.fill(data.copy(password = "")), request.session.get("redirectUrl").getOrElse(""), routes.LoginController.login().appendQueryString(Map("redirect" -> Seq(redirectUrl)))))
-            .flashing("message" -> "Incorrect username/password")
       }
     }
 

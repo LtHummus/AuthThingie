@@ -50,8 +50,7 @@ object TotpUtil {
     (("0" * PasswordLength) + otp.toString).takeRight(PasswordLength)
   }
 
-  def validateOneTimePassword(secret: String, guess: String, leniency: Int = 1): Boolean = {
-    val startInstant = System.currentTimeMillis()
+  def validateOneTimePassword(secret: String, guess: String, leniency: Int = 1, startInstant: Long = System.currentTimeMillis()): Boolean = {
     val validInstants = (-leniency to leniency).map(x => startInstant + (x * TimeStepMillis))
     val validOtps = validInstants.map(genOneTimePassword(secret, _)).toSet
 
