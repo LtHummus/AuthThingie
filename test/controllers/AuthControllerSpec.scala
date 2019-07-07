@@ -13,18 +13,18 @@ import services.users.{User, UserMatcher}
 
 class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMatchersSugar {
 
-  "AuthController /auth" should {
+  trait Setup {
+    val fakeRequestDecoder = mock[RequestDecoder]
+    val fakeUserMatcher = mock[UserMatcher]
+    val fakePathMatcher = mock[PathMatcher]
+    val fakeConfig = mock[AuthThingieConfig]
+    val fakeResolver = mock[RuleResolver]
+    val fakeComponents = Helpers.stubControllerComponents()
 
-    trait Setup {
-      val fakeRequestDecoder = mock[RequestDecoder]
-      val fakeUserMatcher = mock[UserMatcher]
-      val fakePathMatcher = mock[PathMatcher]
-      val fakeConfig = mock[AuthThingieConfig]
-      val fakeResolver = mock[RuleResolver]
-      val fakeComponents = Helpers.stubControllerComponents()
+    val controller = new AuthController(fakeRequestDecoder, fakeUserMatcher, fakePathMatcher, fakeConfig, fakeResolver, fakeComponents)
+  }
 
-      val controller = new AuthController(fakeRequestDecoder, fakeUserMatcher, fakePathMatcher, fakeConfig, fakeResolver, fakeComponents)
-    }
+  "Normal auth flow" should {
 
     "properly let people in when the matcher says so" in new Setup() {
       val requestInfo = RequestInfo("https", "test.example.com", "/")
