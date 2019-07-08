@@ -54,7 +54,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
   }
 
   def showTotpForm() = Action { implicit request: MessagesRequest[AnyContent] =>
-    if (request.session.get("").isEmpty) {
+    if (request.session.get(PartialAuthUsername).isEmpty) {
       Unauthorized("Error: No partially authed username.")
     } else {
       val redirectUrl: String = request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(config.getSiteUrl)
@@ -75,31 +75,32 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
     }
 
     val success = { data: TotpData =>
-      val redirectUrl = request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(config.getSiteUrl)
+      val givenTimeout = request.session.get(PartialAuthTimeout).map(_.toLong).getOrElse(0L)
 
-      val knownUser = for {
-        potentialUser <- request.session.get(PartialAuthUsername)
-        user <- userMatcher.getUser(potentialUser)
-      } yield {
-        user
-      }
+      if (System.currentTimeMillis() > givenTimeout) {
+        Unauthorized("TOTP authentication too delayed. Log in again").withNewSession
+      } else {
+        val redirectUrl = request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(config.getSiteUrl)
 
-      knownUser match {
-        case Some(user) if user.totpCorrect(data.totpCode) =>
-          val givenTimeout = request.session.get(PartialAuthTimeout).map(_.toLong).getOrElse(0L)
-          if (System.currentTimeMillis() < givenTimeout) {
+        val knownUser = for {
+          potentialUser <- request.session.get(PartialAuthUsername)
+          user <- userMatcher.getUser(potentialUser)
+        } yield {
+          user
+        }
+
+        knownUser match {
+          case Some(user) if user.totpCorrect(data.totpCode) =>
             Logger.info(s"Successful auth for user ${user.username} from ${request.headers(XForwardedFor)}")
             Redirect(redirectUrl, FOUND).withSession("user" -> user.username)
-          } else {
-            Logger.warn(s"Auth too delayed for user ${user.username} from ${request.headers(XForwardedFor)}")
-            Unauthorized("TOTP authentication too delayed").withNewSession
-          }
 
-        case Some(user) =>
-          Logger.warn(s"Bad login attempt for user ${user.username} from ${request.headers(XForwardedFor)}")
-          Unauthorized(views.html.totp(totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))))).withSession(request.session)
-        case None => Logger.warn("Couldn't find a partially authed username for validation"); BadRequest("Couldn't find a partially authed username for validation")
+          case Some(user) =>
+            Logger.warn(s"Bad login attempt for user ${user.username} from ${request.headers(XForwardedFor)}")
+            Unauthorized(views.html.totp(totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))))).withSession(request.session)
+          case None => Logger.warn("Couldn't find a partially authed username for validation"); BadRequest("Couldn't find a partially authed username for validation")
+        }
       }
+
     }
 
     totpForm.bindFromRequest.fold(error, success)
