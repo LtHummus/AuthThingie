@@ -1,5 +1,7 @@
 package services.totp
 
+import scala.concurrent.duration._
+
 case class GeneratorConfig(username: String = "", forcedSecret: Option[String] = None)
 
 object GeneratorApp  {
@@ -19,7 +21,7 @@ object GeneratorApp  {
     QrUtil.printBitMatrix(qrCodeMatrix)
 
     val startingInstant = System.currentTimeMillis()
-    val ThirtySeconds = 30 * 1000
+    val ThirtySeconds = 30.seconds.toMillis
     val codes = (0 until 5).map(x => TotpUtil.genOneTimePassword(secret, startingInstant + (ThirtySeconds * x))).mkString(", ")
 
     println()

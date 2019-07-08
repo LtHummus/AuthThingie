@@ -1,12 +1,13 @@
 package services.totp
 
 import org.scalatestplus.play.PlaySpec
+import scala.concurrent.duration._
 
 class TotpUtilSpec extends PlaySpec {
   private val Secret = "T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH"
   private val Time = 1562531180143L //648026
-  private val PrevTime = Time - (30 * 1000) //101297
-  private val LateTime = Time + (30 * 1000) //791466
+  private val PrevTime = Time - 30.seconds.toMillis //101297
+  private val LateTime = Time + 30.seconds.toMillis //791466
 
   "TotpUtil" should {
     "generate a known code" in {
