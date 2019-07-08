@@ -7,6 +7,7 @@ import play.api.data._
 import play.api.mvc.{AnyContent, MessagesAbstractController, MessagesControllerComponents, MessagesRequest}
 import services.users.UserMatcher
 import util.CallImplicits._
+import scala.concurrent.duration._
 
 case class LoginData(username: String, password: String)
 case class TotpData(totpCode: String)
@@ -20,7 +21,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
 
 
   private val Logger = play.api.Logger(this.getClass)
-  private val PartialAuthExpirationTime = 5 * 60 * 1000 //5 minutes in milliseconds
+  private val PartialAuthExpirationTime = 5.minutes.toMillis
 
   val totpForm: Form[TotpData] = Form(
     mapping(

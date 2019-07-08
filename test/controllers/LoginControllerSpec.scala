@@ -8,6 +8,7 @@ import play.api.test.Helpers._
 import play.api.mvc.Session
 import services.totp.TotpUtil
 import services.users.{User, UserMatcher}
+import scala.concurrent.duration._
 
 class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
   trait Setup {
@@ -97,7 +98,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
     "correctly validate totp code" in new Setup() {
       fakeUserMatcher.getUser("test") returns Some(User("test:test", admin = true, Some("T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH"), List()))
 
-      val authExpiration = System.currentTimeMillis() + (5 * 60 * 1000)
+      val authExpiration = System.currentTimeMillis() + 5.minutes.toMillis
       val correctCode = TotpUtil.genOneTimePassword("T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH", System.currentTimeMillis())
 
       val result = controller.totp().apply(CSRFTokenHelper.addCSRFToken(FakeRequest(POST, "/totp?redirect=someUrl")
@@ -112,7 +113,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
     "respect auth timeout" in new Setup() {
       fakeUserMatcher.getUser("test") returns Some(User("test:test", admin = true, Some("T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH"), List()))
 
-      val authExpiration = System.currentTimeMillis() - (5 * 60 * 1000)
+      val authExpiration = System.currentTimeMillis() - 5.minutes.toMillis
       val correctCode = TotpUtil.genOneTimePassword("T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH", System.currentTimeMillis())
 
       val result = controller.totp().apply(CSRFTokenHelper.addCSRFToken(FakeRequest(POST, "/totp?redirect=someUrl")
