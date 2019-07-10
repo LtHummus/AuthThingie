@@ -10,9 +10,9 @@ object QrUtil {
   private val BlackSquare = "\u001b[40m  \u001b[0m"
   private val WhiteSquare = "\u001b[47m  \u001b[0m"
 
-  def generateQrCodeMatrix(contents: String): BitMatrix = {
+  def generateQrCodeMatrix(contents: String, marginSize: Int = 1): BitMatrix = {
     val hints = new util.EnumMap[EncodeHintType, Any](classOf[EncodeHintType])
-    hints.put(EncodeHintType.MARGIN, 2)
+    hints.put(EncodeHintType.MARGIN, marginSize)
 
     val writer = new QRCodeWriter
     writer.encode(contents, BarcodeFormat.QR_CODE, 25, 25, hints)

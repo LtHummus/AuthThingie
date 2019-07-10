@@ -2,7 +2,7 @@ package services.totp
 
 import scala.concurrent.duration._
 
-case class GeneratorConfig(username: String = "", forcedSecret: Option[String] = None)
+case class GeneratorConfig(username: String = "", forcedSecret: Option[String] = None, qrMargin: Int = 1)
 
 object GeneratorApp  {
   private val Bold = "\u001b[0;1m"
@@ -17,7 +17,7 @@ object GeneratorApp  {
 
     val url = TotpUtil.totpUrl(config.username, "AuthThingie", secret)
 
-    val qrCodeMatrix = QrUtil.generateQrCodeMatrix(url)
+    val qrCodeMatrix = QrUtil.generateQrCodeMatrix(url, config.qrMargin)
     QrUtil.printBitMatrix(qrCodeMatrix)
 
     val startingInstant = System.currentTimeMillis()
@@ -37,6 +37,11 @@ object GeneratorApp  {
       opt[String]("force-secret")
         .action((x, c) => c.copy(forcedSecret = Some(x)))
         .text("Force TOTP secret. Only use if you know what you're doing!")
+
+      opt[Int]("qr-margin")
+        .hidden()
+        .action((x, c) => c.copy(qrMargin = x))
+        .text("Border to be drawn for QR code")
 
       arg[String]("username")
         .required()
