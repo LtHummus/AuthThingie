@@ -14,12 +14,10 @@
         }
     }
 
-    @helper.form(postUrl, 'id -> "login_form") {
-        @helper.CSRF.formField
-
-        @helper.inputText(form("username"), 'id -> "username", 'size -> 20, 'autofocus -> "autofocus")
-        @helper.inputPassword(form("password"), 'id -> "password", 'size -> 20)
-
-        <button>Login</button>
+    @b4.vertical.formCSRF(postUrl) { implicit vfc =>
+        @b4.text(form("username"), '_label -> "Username", 'placeholder -> "Username")
+        @b4.password(form("password"), '_label -> "Password", 'placeholder -> "Password")
+        @b4.submit('class -> "btn btn-primary"){ <i class="fa fa-ok"></i> Sign In }
     }
+
 }
