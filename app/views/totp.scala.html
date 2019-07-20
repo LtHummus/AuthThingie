@@ -14,11 +14,10 @@
         }
     }
 
-    @helper.form(postUrl, 'id -> "totp_form") {
-        @helper.CSRF.formField
+    @b4.vertical.formCSRF(postUrl) { implicit vfc =>
+        @b4.text(form("totpCode"), '_label -> "TOTP Code", 'size -> 10)
 
-        @helper.inputText(form("totpCode"), 'id -> "totpCode", 'size -> 10, 'autofocus -> "autofocus", '_label -> "OTP Code")
-
-        <button>Go</button>
+        @b4.submit('class -> "btn btn-primary"){ <i class="fa fa-ok"></i> Go }
     }
+
 }
