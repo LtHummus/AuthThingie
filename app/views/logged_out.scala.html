@@ -1,8 +1,11 @@
 @(message: String, homePage: Call)
 
 @main("Logged out") {
-    <h1>@message</h1>
-    <p>
-        <a href="@homePage">Perhaps you want to go home?</a>
-    </p>
+    <div class="col col-sm-6 offset-md-3">
+        <h1>@message</h1>
+        <p>
+            <a href="@homePage" class="btn btn-primary">Perhaps you want to go home?</a>
+        </p>
+    </div>
+
 }
