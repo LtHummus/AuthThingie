@@ -14,10 +14,13 @@
         }
     }
 
-    @b4.vertical.formCSRF(postUrl) { implicit vfc =>
-        @b4.text(form("totpCode"), '_label -> "TOTP Code", 'size -> 10)
+    <div class="col col-sm-6 offset-md-3 login-form">
+        <h3>Two-Factor Auth</h3>
 
-        @b4.submit('class -> "btn btn-primary"){ <i class="fa fa-ok"></i> Go }
-    }
+        @b4.vertical.formCSRF(postUrl) { implicit vfc =>
+            @b4.text(form("totpCode"), '_label -> "TOTP Code", 'size -> 10)
 
+            @b4.submit('class -> "btn btn-primary"){ <i class="fa fa-ok btn-submit"></i> Go }
+        }
+    </div>
 }
