@@ -113,6 +113,4 @@ This is like 95% experimental right now. There are definitely some things that a
 
 In no particular order...
 
-* Make it not look terrible
 * Perhaps read config from a database?
-* 2FA Support
