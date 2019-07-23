@@ -44,8 +44,8 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
       contentAsString(home) must include ("Welcome to AuthThingie!")
-      contentAsString(home) must include ("<caption>List of Users</caption>") //users header
-      contentAsString(home) must include ("<caption>List of Rules</caption>") //path rules header
+      contentAsString(home) must include ("<h3>Users</h3>") //users header
+      contentAsString(home) must include ("<h3>Rules</h3>") //path rules header
 
     }
 
@@ -60,8 +60,8 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
       contentAsString(home) must include ("Welcome to AuthThingie!")
-      contentAsString(home) mustNot include ("<h2>Users</h2>") //users header
-      contentAsString(home) mustNot include ("<h2>Path Rules</h2>") //path rules header
+      contentAsString(home) mustNot include ("<h3>Users</h3>") //users header
+      contentAsString(home) mustNot include ("<h3>Rules</h3>") //path rules header
     }
   }
 }

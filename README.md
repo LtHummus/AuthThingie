@@ -114,3 +114,27 @@ This is like 95% experimental right now. There are definitely some things that a
 In no particular order...
 
 * Perhaps read config from a database?
+
+## Credits
+
+* [Tara Favazza](https://twitter.com/aforgottentune) - Bootstrap Advice
+* [Josh Harrison](https://twitter.com/joshharrison) - Lots of beta testing and feedback
+
+### AuthThingie Uses Some Open Source Software
+
+|         |        |       |
+|---------|--------|-------|
+| **Play Framework** | Copyright 2009 - 2019 Lightbend Inc. | https://www.playframework.com/ |
+| **configs** | Copyright 2013 - 2016 Tsukasa Kitachi | https://github.com/kxbmap/configs
+| **Scalatest Play** | Copyright 2001 - 2016 Artima, Inc | https://github.com/playframework/scalatestplus-play
+| **Mockito Scala** | Copyright 2007 Mockito Contributors | https://github.com/mockito/mockito-scala
+| **Apache Commons** | Copyright 2002 - 2019 The Apache Software Foundation | http://commons.apache.org/
+| **Bcrypt Java** | Copyright 2018 Patrick Farve-Bulle | https://github.com/patrickfav/bcrypt
+| **zxing** | Copyright 2007 - 2019 | https://github.com/zxing/zxing
+| **scopt** | Copyright scopt contributors | https://github.com/scopt/scopt
+| **Play Bootstrap** | Copyright 2014 - 2019 Adrian Hurtado | https://adrianhurt.github.io/play-bootstrap/
+| **Boostrap** |  Copyright 2011 - 2019 Twitter; Copyright 2011 - 2019 The Bootstrap Authors | https://getbootstrap.com/
+| **Open Iconic** | Copyright 2014 Waybury | https://useiconic.com/open
+
+
+
