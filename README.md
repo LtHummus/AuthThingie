@@ -124,17 +124,17 @@ In no particular order...
 
 |         |        |       |
 |---------|--------|-------|
-| **Play Framework** | Copyright 2009 - 2019 Lightbend Inc. | https://www.playframework.com/ |
-| **configs** | Copyright 2013 - 2016 Tsukasa Kitachi | https://github.com/kxbmap/configs
-| **Scalatest Play** | Copyright 2001 - 2016 Artima, Inc | https://github.com/playframework/scalatestplus-play
-| **Mockito Scala** | Copyright 2007 Mockito Contributors | https://github.com/mockito/mockito-scala
-| **Apache Commons** | Copyright 2002 - 2019 The Apache Software Foundation | http://commons.apache.org/
-| **Bcrypt Java** | Copyright 2018 Patrick Farve-Bulle | https://github.com/patrickfav/bcrypt
-| **zxing** | Copyright 2007 - 2019 | https://github.com/zxing/zxing
-| **scopt** | Copyright scopt contributors | https://github.com/scopt/scopt
-| **Play Bootstrap** | Copyright 2014 - 2019 Adrian Hurtado | https://adrianhurt.github.io/play-bootstrap/
-| **Boostrap** |  Copyright 2011 - 2019 Twitter; Copyright 2011 - 2019 The Bootstrap Authors | https://getbootstrap.com/
-| **Open Iconic** | Copyright 2014 Waybury | https://useiconic.com/open
+| **Play Framework** | https://www.playframework.com/ | Copyright 2009 - 2019 Lightbend Inc.
+| **configs** | https://github.com/kxbmap/configs | Copyright 2013 - 2016 Tsukasa Kitachi
+| **Scalatest Play** | https://github.com/playframework/scalatestplus-play | Copyright 2001 - 2016 Artima, Inc 
+| **Mockito Scala** | https://github.com/mockito/mockito-scala | Copyright 2007 Mockito Contributors
+| **Apache Commons** | http://commons.apache.org/ | Copyright 2002 - 2019 The Apache Software Foundation 
+| **Bcrypt Java** | https://github.com/patrickfav/bcrypt | Copyright 2018 Patrick Farve-Bulle
+| **zxing** | https://github.com/zxing/zxing | Copyright 2007 - 2019 
+| **scopt** | https://github.com/scopt/scopt | Copyright scopt contributors
+| **Play Bootstrap** | https://adrianhurt.github.io/play-bootstrap/ | Copyright 2014 - 2019 Adrian Hurtado
+| **Boostrap** | https://getbootstrap.com/ | Copyright 2011 - 2019 Twitter; Copyright 2011 - 2019 The Bootstrap Authors
+| **Open Iconic** | https://useiconic.com/open | Copyright 2014 Waybury
 
 
 
