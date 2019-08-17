@@ -86,7 +86,6 @@
                 <th scope="col">Protocol</th>
                 <th scope="col">Host</th>
                 <th scope="col">Path</th>
-                <th scope="col">Public?</th>
                 <th scope="col">Permitted Roles</th>
               </tr>
             </thead>
@@ -107,14 +106,15 @@
                   </td>
                   <td>
                     @if(rule.public) {
-                      ✅
+                      <span class="badge badge-success">Public Access</span>
                     } else {
-                      ❌
-                    }
-                  </td>
-                  <td>
-                    @for(role <- rule.permittedRoles) {
-                      <span class="badge badge-primary">@role</span>
+                      @if(rule.permittedRoles.isEmpty) {
+                        <span class="badge badge-danger">Admin Only</span>
+                      } else {
+                        @for(role <- rule.permittedRoles) {
+                          <span class="badge badge-primary">@role</span>
+                        }
+                      }
                     }
                   </td>
                 </tr>

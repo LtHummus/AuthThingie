@@ -63,5 +63,65 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       contentAsString(home) mustNot include ("<h3>Users</h3>") //users header
       contentAsString(home) mustNot include ("<h3>Rules</h3>") //path rules header
     }
+
+    "render public access properly" in new Setup() {
+      fakeConfig.getUsers returns List(User("test:foo", admin = true, None, List()))
+      fakeConfig.getPathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
+
+      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
+
+      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test"))
+
+      status(home) mustBe OK
+      contentType(home) mustBe Some("text/html")
+      contentAsString(home) must include ("Welcome to AuthThingie!")
+      contentAsString(home) must include ("<span class=\"badge badge-success\">Public Access</span>")
+    }
+
+    "render admin only properly" in new Setup() {
+      fakeConfig.getUsers returns List(User("test:foo", admin = true, None, List()))
+      fakeConfig.getPathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = false, List()))
+
+      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
+
+      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test"))
+
+      status(home) mustBe OK
+      contentType(home) mustBe Some("text/html")
+      contentAsString(home) must include ("Welcome to AuthThingie!")
+      contentAsString(home) must include ("<span class=\"badge badge-danger\">Admin Only</span>")
+    }
+
+    "render role tags properly on path rules" in new Setup() {
+      fakeConfig.getUsers returns List(User("test:foo", admin = true, None, List()))
+      fakeConfig.getPathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = false, List("a", "b", "c")))
+
+      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
+
+      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test"))
+
+      status(home) mustBe OK
+      contentType(home) mustBe Some("text/html")
+      contentAsString(home) must include ("Welcome to AuthThingie!")
+      contentAsString(home) must include ("<span class=\"badge badge-primary\">a</span>")
+      contentAsString(home) must include ("<span class=\"badge badge-primary\">b</span>")
+    }
+
+    "render role tags properly on users" in new Setup() {
+      fakeConfig.getUsers returns List(User("test:foo", admin = true, None, List()))
+      fakeConfig.getPathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = false, List("d", "e", "f", "g")))
+
+      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List("a", "b", "c")))
+
+      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test"))
+
+      status(home) mustBe OK
+      contentType(home) mustBe Some("text/html")
+      contentAsString(home) must include ("Welcome to AuthThingie!")
+      contentAsString(home) must include ("<span class=\"badge badge-primary\">d</span>")
+      contentAsString(home) must include ("<span class=\"badge badge-primary\">e</span>")
+      contentAsString(home) must include ("<span class=\"badge badge-primary\">f</span>")
+      contentAsString(home) must include ("<span class=\"badge badge-primary\">g</span>")
+    }
   }
 }
