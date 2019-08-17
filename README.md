@@ -104,6 +104,8 @@ to your computer's hosts file, then run `./build.sh` to boot everything (you wil
 
 Create a `auththingie_config.conf` file somewhere on your file system. Create the docker container from the image and mount that config file in the container. Set the environment variable `AUTHTHINGIE_CONFIG_FILE_PATH` to point to where the config file lives in the container. Set your Traefik config to point forward authentication to `/auth` on the server See the included `docker-compose.yaml` file for a complete example. Note the `traefik.frontend.auth.forward.address: "http://auth:9000/auth"` label on the sample website.
 
+TIP: if you want your sessions to auto expire, add something like `maxAge = "12h"` to the `session` section inside the `http` section of the config file.
+
 ## You are likely to be eaten by a grue
 **Remember! This is a work in progress!**
  
