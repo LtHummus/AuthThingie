@@ -109,6 +109,10 @@ Create a `auththingie_config.conf` file somewhere on your file system. Create th
  
 This is like 95% experimental right now. There are definitely some things that are rough around the edges. You can run this if you want (let me know how it goes!), but this is definitely an "at your own risk" situation. I'm reasonably sure that this works, but anyone can build a lock that they themselves can't break.
 
+***Help, I'm in a redirect loop!***
+
+Add the auth server as a rule with public access.
+
 ## TODO List
 
 In no particular order...
