@@ -12,7 +12,7 @@ object CallImplicits {
         .map { params =>
           (if (x.url.contains("?")) "&" else "?") + params.toSeq
             .flatMap { pair =>
-              pair._2.map(value => (pair._1 + "=" + URLEncoder.encode(value, "utf-8")))
+              pair._2.map(value => pair._1 + "=" + URLEncoder.encode(value, "utf-8"))
             }
             .mkString("&")
         }

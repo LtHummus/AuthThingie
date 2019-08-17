@@ -49,20 +49,22 @@
                   </td>
                   <td>
                     @if(user.admin) {
-                      <span class="oi oi-circle-check" title="Yes" aria-hidden="true"></span>
+                      ✅
                     } else {
-                      <span class="oi oi-circle-x" title="No" aria-hidden="true"></span>
+                      ❌
                     }
                   </td>
                   <td>
                     @if(user.usesTotp) {
-                      <span class="oi oi-circle-check" title="Yes" aria-hidden="true"></span>
+                      ✅
                     } else {
-                      <span class="oi oi-circle-x" title="No" aria-hidden="true"></span>
+                      ❌
                     }
                   </td>
                   <td>
-                    @user.roles.mkString("[", ", ", "]")
+                    @for(role <- user.roles) {
+                        <span class="badge badge-primary">@role</span>
+                    }
                   </td>
                 </tr>
               }
@@ -105,13 +107,15 @@
                   </td>
                   <td>
                     @if(rule.public) {
-                      <span class="oi oi-circle-check" title="Yes" aria-hidden="true"></span>
+                      ✅
                     } else {
-                      <span class="oi oi-circle-x" title="No" aria-hidden="true"></span>
+                      ❌
                     }
                   </td>
                   <td>
-                    @rule.permittedRoles.mkString("[", ", ", "]")
+                    @for(role <- rule.permittedRoles) {
+                      <span class="badge badge-primary">@role</span>
+                    }
                   </td>
                 </tr>
               }
