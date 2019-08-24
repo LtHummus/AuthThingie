@@ -36,7 +36,6 @@
             <thead>
               <tr>
                 <th scope="col">Username</th>
-                <th scope="col">Is Admin?</th>
                 <th scope="col">Uses TOTP?</th>
                 <th scope="col">Roles</th>
               </tr>
@@ -48,13 +47,6 @@
                     @user.username
                   </td>
                   <td>
-                    @if(user.admin) {
-                      ✅
-                    } else {
-                      ❌
-                    }
-                  </td>
-                  <td>
                     @if(user.usesTotp) {
                       ✅
                     } else {
@@ -62,6 +54,9 @@
                     }
                   </td>
                   <td>
+                    @if(user.admin) {
+                      <span class="badge badge-danger">Admin</span>
+                    }
                     @for(role <- user.roles) {
                         <span class="badge badge-primary">@role</span>
                     }
