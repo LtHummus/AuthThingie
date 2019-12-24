@@ -4,9 +4,10 @@ import config.AuthThingieConfig
 import javax.inject.Inject
 import play.api.data.Forms._
 import play.api.data._
-import play.api.mvc.{AnyContent, MessagesAbstractController, MessagesControllerComponents, MessagesRequest}
+import play.api.mvc.{AnyContent, MessagesAbstractController, MessagesControllerComponents, MessagesRequest, Request}
 import services.users.UserMatcher
 import util.CallImplicits._
+
 import scala.concurrent.duration._
 
 case class LoginData(username: String, password: String)
@@ -36,6 +37,10 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
     )(LoginData.apply)(LoginData.unapply)
   )
 
+  private def redirectUrl[T](implicit request: Request[T]): String = {
+    request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(routes.HomeController.index().url)
+  }
+
   def logout() = Action { implicit request: MessagesRequest[AnyContent] =>
     request.session.get("user") match {
       case Some(user) => Logger.info(s"Logging out $user")
@@ -46,7 +51,6 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
 
 
   def showLoginForm() = Action { implicit request: MessagesRequest[AnyContent] =>
-    val redirectUrl: String = request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(config.getSiteUrl)
     Unauthorized(views.html.login(loginForm, redirectUrl, routes.LoginController.login().appendQueryString(Map(Redirect -> Seq(redirectUrl))))).withSession(request.session - PartialAuthUsername)
   }
 
@@ -58,7 +62,6 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
     if (request.session.get(PartialAuthUsername).isEmpty) {
       Unauthorized("Error: No partially authed username.")
     } else {
-      val redirectUrl: String = request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(config.getSiteUrl)
       Ok(views.html.totp(totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl)))))
     }
   }
@@ -67,7 +70,6 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
   def totp() = Action { implicit request: MessagesRequest[AnyContent] =>
     val error = {
       formWithErrors: Form[TotpData] =>
-        val redirectUrl = request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(config.getSiteUrl)
         Logger.warn("Unable to parse 2FA form.")
         for (error <- formWithErrors.errors) {
           Logger.warn(s"${error.key} -> ${error.message}")
@@ -81,8 +83,6 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
       if (System.currentTimeMillis() > givenTimeout) {
         Unauthorized("TOTP authentication too delayed. Log in again").withNewSession
       } else {
-        val redirectUrl = request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(config.getSiteUrl)
-
         val knownUser = for {
           potentialUser <- request.session.get(PartialAuthUsername)
           user <- userMatcher.getUser(potentialUser)
@@ -110,14 +110,11 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
   def login() = Action { implicit request: MessagesRequest[AnyContent] =>
     val error = {
       formWithErrors: Form[LoginData] =>
-        val redirectUrl = request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(config.getSiteUrl)
         BadRequest(views.html.login(formWithErrors, redirectUrl, routes.LoginController.login().appendQueryString(Map(Redirect -> Seq(redirectUrl)))))
     }
 
 
     val success = { data: LoginData =>
-      val redirectUrl = request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(config.getSiteUrl)
-
       userMatcher.validUser(data.username, data.password) match {
         case Some(user) if user.doesNotUseTotp =>
           Logger.info(s"Successful auth for user ${user.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}")
