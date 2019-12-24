@@ -15,13 +15,13 @@ libraryDependencies ++= List(
   "org.mockito" %% "mockito-scala" % "1.5.11" % "test",
 
   "com.github.kxbmap" %% "configs" % "0.4.4",
-  "commons-codec" % "commons-codec" % "1.12",
+  "commons-codec" % "commons-codec" % "1.13",
   "commons-io" % "commons-io" % "2.6",
+  "org.apache.commons" % "commons-lang3" % "3.9",
 
   //TOTP + QR
   "at.favre.lib" % "bcrypt" % "0.8.0",
   "com.google.zxing" % "core" % "3.4.0",
-  "commons-codec" % "commons-codec" % "1.12",
   "com.github.scopt" %% "scopt" % "3.7.1",
 
   //look nice
