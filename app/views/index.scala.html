@@ -1,11 +1,19 @@
 @import services.rules.PathRule
 @import services.users.User
-@(user: Option[User], rules: List[PathRule], users: List[User])
+@(user: Option[User], rules: List[PathRule], users: List[User], showConfigWarning: Boolean)
 
 @main("Authentication") {
   <div class="container-fluid row">
     <h1>Welcome to AuthThingie!</h1>
   </div>
+
+  @if(showConfigWarning) {
+    <div class="alert alert-warning">
+      Hi there! A major change was made to the way AuthThingie loads configuration. You're still using the old-style method.
+      You should probably change that. Checkout the README at <a href="https://github.com/LtHummus/AuthThingie" target="_blank">https://github.com/LtHummus/AuthThingie</a> for
+      information on how to get up to date.
+    </div>
+  }
 
   @if(user.isEmpty) {
     <div class="row align-items-start">

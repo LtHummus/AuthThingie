@@ -19,10 +19,12 @@ class AuthThingieConfig @Inject()() {
     ConfigFactory.parseFile(configFile)
   }
 
+  private val PlayConfigTree = ConfigFactory.load()
+
   //these technically could be lazy, but I want checking to happen on startup
   val getPathRules: List[PathRule] = ConfigTree.get[List[PathRule]]("rules").value
   val getUsers: List[User] = ConfigTree.get[List[User]]("users").value
-  val getSiteUrl: String = ConfigTree.get[String]("auth_site_url").value
   val forceRedirectToHttps: Boolean = ConfigTree.get[Boolean]("forceRedirectToHttps").valueOrElse(false)
+  val isUsingNewConfig: Boolean = PlayConfigTree.get[String]("play.application.loader").toOption.contains("modules.AuthThingieLoader")
 
 }
