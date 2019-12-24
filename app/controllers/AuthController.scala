@@ -93,7 +93,7 @@ class AuthController @Inject() (decoder: RequestDecoder,
       case _ =>
         Logger.debug("Access denied, redirecting to login page")
         val destinationUri = requestInfo.toString
-        Redirect(s"${config.getSiteUrl}/needed", Map("redirect" -> Seq(destinationUri)), FOUND)
+        Redirect(routes.LoginController.loginRedirect().url, Map("redirect" -> Seq(destinationUri)), FOUND)
 
     }
 

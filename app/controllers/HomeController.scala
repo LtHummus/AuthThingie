@@ -24,14 +24,14 @@ class HomeController @Inject()(config: AuthThingieConfig,
   def index() = Action { implicit request: Request[AnyContent] =>
     val loggedInUser = for {
       sessionUser <- request.session.get("user")
-      knownUser <- userMatcher.getUser(sessionUser)
+      knownUser   <- userMatcher.getUser(sessionUser)
     } yield knownUser
 
     val isAdmin = loggedInUser.exists(_.admin)
     val rules = if (isAdmin) config.getPathRules else List()
     val allUsers = if (isAdmin) config.getUsers else List()
 
-    Ok(views.html.index(loggedInUser, rules, allUsers))
+    Ok(views.html.index(loggedInUser, rules, allUsers, isAdmin && !config.isUsingNewConfig))
   }
 
 
