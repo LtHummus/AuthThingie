@@ -1,11 +1,14 @@
 name := """auththingie"""
 organization := "com.lthummus"
 
-version := "0.0.4"
+version := "0.0.5"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
 scalaVersion := "2.12.8"
+
+packageName in Docker := "lthummus/auththingie"
+dockerExposedPorts := Seq(9000, 9443)
 
 libraryDependencies ++= List(
   guice,

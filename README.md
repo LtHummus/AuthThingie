@@ -89,7 +89,7 @@ When logging in is needed, the user will automatically be redirected to a login 
 
 ## TOTP
 
-AuthThingie supports Time-Based One-Time Passowrds. They do require some special setup. AuthThingie includes a script to help generate secrets and set up your app of choice. Once you have AuthThingie up and running in a docker container, you can generate everything with `docker exec -it <container name> generate_totp <username>` (if you are using Docker Compose, you can do `docker-compose exec auth generate_totp <username>`). This will generate a random secret for you and give you instructions on what to do next. The app will also display a QR code in your terminal for scanning in to your authentication application as well as a field to add to your config file. Scan the code, update the config file, then restart the container and you should be good to go.
+AuthThingie supports Time-Based One-Time Passwords. They do require some special setup. AuthThingie includes a script to help generate secrets and set up your app of choice. Once you have AuthThingie up and running in a docker container, you can generate everything with `docker exec -it <container name> generate-totp <username>` (if you are using Docker Compose, you can do `docker-compose exec auth generate-totp <username>`). This will generate a random secret for you and give you instructions on what to do next. The app will also display a QR code in your terminal for scanning in to your authentication application as well as a field to add to your config file. Scan the code, update the config file, then restart the container and you should be good to go.
 
 ## Deployment
 

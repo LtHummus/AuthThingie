@@ -1,10 +1,12 @@
-package services.totp
+package util
+
+import services.totp.{QrUtil, TotpUtil}
 
 import scala.concurrent.duration._
 
 case class GeneratorConfig(username: String = "", forcedSecret: Option[String] = None, qrMargin: Int = 1)
 
-object GeneratorApp  {
+object GenerateTotp  {
   private val Bold = "\u001b[0;1m"
   private val Reset = "\u001b[0;0m"
 
