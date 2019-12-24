@@ -7,8 +7,9 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
 scalaVersion := "2.12.8"
 
-packageName in Docker := "lthummus/auththingie"
+dockerUsername := Some("lthummus")
 dockerExposedPorts := Seq(9000, 9443)
+dockerEnvVars ++= Map("PATH" -> "/opt/docker/bin:${PATH}")
 
 javaOptions in Universal ++= Seq(
   "-Dpidfile.path=/dev/null"
