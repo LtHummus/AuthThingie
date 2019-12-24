@@ -25,6 +25,7 @@ class AuthThingieConfig @Inject()() {
   val getPathRules: List[PathRule] = ConfigTree.get[List[PathRule]]("rules").value
   val getUsers: List[User] = ConfigTree.get[List[User]]("users").value
   val forceRedirectToHttps: Boolean = ConfigTree.get[Boolean]("forceRedirectToHttps").valueOrElse(false)
+  val siteUrl: String = ConfigTree.get[String]("auth_site_url").value
   val isUsingNewConfig: Boolean = PlayConfigTree.get[String]("play.application.loader").toOption.contains("modules.AuthThingieLoader")
 
 }

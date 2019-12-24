@@ -10,6 +10,10 @@ scalaVersion := "2.12.8"
 packageName in Docker := "lthummus/auththingie"
 dockerExposedPorts := Seq(9000, 9443)
 
+javaOptions in Universal ++= Seq(
+  "-Dpidfile.path=/dev/null"
+)
+
 libraryDependencies ++= List(
   guice,
 

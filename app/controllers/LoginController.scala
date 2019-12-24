@@ -38,7 +38,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
   )
 
   private def redirectUrl[T](implicit request: Request[T]): String = {
-    request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(routes.HomeController.index().url)
+    request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(config.siteUrl)
   }
 
   def logout() = Action { implicit request: MessagesRequest[AnyContent] =>
