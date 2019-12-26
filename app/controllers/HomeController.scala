@@ -28,8 +28,8 @@ class HomeController @Inject()(config: AuthThingieConfig,
     } yield knownUser
 
     val isAdmin = loggedInUser.exists(_.admin)
-    val rules = if (isAdmin) config.getPathRules else List()
-    val allUsers = if (isAdmin) config.getUsers else List()
+    val rules = if (isAdmin) config.pathRules else List()
+    val allUsers = if (isAdmin) config.users else List()
 
     Ok(views.html.index(loggedInUser, rules, allUsers, isAdmin && !config.isUsingNewConfig))
   }

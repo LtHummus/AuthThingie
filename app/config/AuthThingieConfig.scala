@@ -1,31 +1,61 @@
 package config
 
-import java.io.File
-
-import com.typesafe.config.ConfigFactory
+import cats.data.{Validated, ValidatedNec}
+import cats.data.Validated.Valid
+import cats.implicits._
 import javax.inject.{Inject, Singleton}
-import services.rules.PathRule
 import play.api.Configuration
+import services.rules.PathRule
 import services.users.User
+
+import scala.util.{Failure, Success, Try}
 
 @Singleton
 class AuthThingieConfig @Inject() (baseConfig: Configuration) {
 
-  private val Logger = play.api.Logger(this.getClass)
+  type ValidationResult[T] = ValidatedNec[String, T]
 
-  private val ConfigTree = {
-    val configFile = new File(sys.env("AUTHTHINGIE_CONFIG_FILE_PATH"))
-    Logger.info(s"Loading config from ${configFile.getAbsolutePath}")
-    ConfigFactory.parseFile(configFile)
+  private implicit class RichTry[T](x: Try[T]) {
+    def toValidated: ValidationResult[T] = x match {
+      case Failure(e) => s"${e.getClass.getSimpleName}:${e.getMessage}".invalidNec
+      case Success(value) => value.validNec
+    }
   }
 
-  //these technically could be lazy, but I want checking to happen on startup
-  val getPathRules: List[PathRule] = baseConfig.getDeprecated[List[PathRule]]("auththingie.rules", "rules")
-  val getUsers: List[User] = baseConfig.getDeprecated[List[User]]("auththingie.users", "users")
-  val forceRedirectToHttps: Boolean = baseConfig.getOptional[Boolean]("auththingie.forceRedirectToHttps").contains(true)
-  val siteUrl: String = baseConfig.getDeprecated[String]("auththingie.authSiteUrl", "auth_site_url", "authSiteUrl")
+  private def loadPathRules: ValidationResult[List[PathRule]] = {
+    Try(baseConfig.getDeprecated[List[PathRule]]("auththingie.rules", "rules")).toValidated
+  }
 
-  val isUsingNewConfig: Boolean = false
-  val configErrors: List[String] = List("blah blah is bad")
+  private def loadUsers: ValidationResult[List[User]] = {
+    Try(baseConfig.getDeprecated[List[User]]("auththingie.users", "users")).toValidated
+  }
+
+  private def loadForceRedirect: ValidationResult[Boolean] = {
+    Valid(baseConfig.getOptional[Boolean]("auththingie.forceRedirectToHttps").contains(true))
+  }
+
+  private val loadSiteUrl: ValidationResult[String] = {
+    Try(baseConfig.getDeprecated[String]("auththingie.authSiteUrl", "auth_site_url", "authSiteUrl")).toValidated
+  }
+
+  private val Logger = play.api.Logger(this.getClass)
+
+  case class AuthThingieConfig(rules: List[PathRule], users: List[User], forceRedirectToHttps: Boolean, siteUrl: String)
+
+  private val parsedConfig = {
+    (loadPathRules, loadUsers, loadForceRedirect, loadSiteUrl).mapN(AuthThingieConfig)
+  }
+
+  val (pathRules, users, forceHttpsRedirect, siteUrl) = parsedConfig match {
+    case Valid(a) =>
+      (a.rules, a.users, a.forceRedirectToHttps, a.siteUrl)
+    case Validated.Invalid(e) => (List(), List(), false, "")
+  }
+
+  val isUsingNewConfig: Boolean = baseConfig.has("auththingie.users")
+  val configErrors: List[String] = parsedConfig match {
+    case Valid(_)                  => List()
+    case Validated.Invalid(errors) => errors.toList
+  }
 
 }

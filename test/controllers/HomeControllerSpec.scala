@@ -21,8 +21,8 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "render the login page when a logged out user is there" in new Setup() {
-      fakeConfig.getUsers returns List[User]()
-      fakeConfig.getPathRules returns List[PathRule]()
+      fakeConfig.users returns List[User]()
+      fakeConfig.pathRules returns List[PathRule]()
 
       val home = controller.index().apply(FakeRequest(GET, "/"))
 
@@ -34,8 +34,8 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "render some path rules and user info when logged in as admin" in new Setup() {
-      fakeConfig.getUsers returns List(User("test:foo", admin = true, None, List()))
-      fakeConfig.getPathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
+      fakeConfig.users returns List(User("test:foo", admin = true, None, List()))
+      fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
 
@@ -50,8 +50,8 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "render no path rules and no user info when not admin" in new Setup() {
-      fakeConfig.getUsers returns List(User("test:foo", admin = false, None, List()))
-      fakeConfig.getPathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
+      fakeConfig.users returns List(User("test:foo", admin = false, None, List()))
+      fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = false, None, List()))
 
@@ -65,8 +65,8 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "render public access properly" in new Setup() {
-      fakeConfig.getUsers returns List(User("test:foo", admin = true, None, List()))
-      fakeConfig.getPathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
+      fakeConfig.users returns List(User("test:foo", admin = true, None, List()))
+      fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
 
@@ -79,8 +79,8 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "render admin only properly" in new Setup() {
-      fakeConfig.getUsers returns List(User("test:foo", admin = true, None, List()))
-      fakeConfig.getPathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = false, List()))
+      fakeConfig.users returns List(User("test:foo", admin = true, None, List()))
+      fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = false, List()))
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
 
@@ -93,8 +93,8 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "render role tags properly on path rules" in new Setup() {
-      fakeConfig.getUsers returns List(User("test:foo", admin = true, None, List()))
-      fakeConfig.getPathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = false, List("a", "b", "c")))
+      fakeConfig.users returns List(User("test:foo", admin = true, None, List()))
+      fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = false, List("a", "b", "c")))
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
 
@@ -108,8 +108,8 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "render role tags properly on users" in new Setup() {
-      fakeConfig.getUsers returns List(User("test:foo", admin = true, None, List()))
-      fakeConfig.getPathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = false, List("d", "e", "f", "g")))
+      fakeConfig.users returns List(User("test:foo", admin = true, None, List()))
+      fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = false, List("d", "e", "f", "g")))
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List("a", "b", "c")))
 

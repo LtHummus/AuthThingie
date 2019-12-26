@@ -13,7 +13,7 @@ class PathMatcher @Inject() (config: AuthThingieConfig) {
 
   def getRule(protocol: String, host: String, path: String): Option[PathRule] = {
     Logger.debug(s"Checking against protocol = `$protocol` & host = `$host` & path = `$path`")
-    config.getPathRules.find(_.matches(protocol, host, path))
+    config.pathRules.find(_.matches(protocol, host, path))
   }
 
   def getRule(requestInfo: RequestInfo): Option[PathRule] = getRule(requestInfo.protocol, requestInfo.host, requestInfo.path)

@@ -16,7 +16,7 @@ class RequestDecoder @Inject() (config: AuthThingieConfig) {
 
     (optionalProtocol, optionalHost, optionalPath) match {
       case (Some(protocol), Some(host), Some(path)) =>
-        if (config.forceRedirectToHttps && protocol == "http") {
+        if (config.forceHttpsRedirect && protocol == "http") {
           RequestInfo("https", host, path)
         } else {
           RequestInfo(protocol, host, path)

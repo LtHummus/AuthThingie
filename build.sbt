@@ -18,6 +18,9 @@ javaOptions in Universal ++= Seq(
 libraryDependencies ++= List(
   guice,
 
+  //cats (meow)
+  "org.typelevel" %% "cats-core" % "2.0.0",
+
   //testing
   "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.3" % Test,
   "org.mockito" %% "mockito-scala" % "1.5.11" % "test",

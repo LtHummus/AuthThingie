@@ -15,7 +15,7 @@ class UserSpec extends PlaySpec with MockitoSugar {
   private val PrivateZTestRule = PathRule("abc", None, None, None, public = false, List("z"))
 
   private val FakeConfig = mock[AuthThingieConfig]
-  when(FakeConfig.getUsers) thenReturn List(TestUser, AdminUser)
+  when(FakeConfig.users) thenReturn List(TestUser, AdminUser)
 
   private val UserMatcher = new UserMatcher(FakeConfig)
 
