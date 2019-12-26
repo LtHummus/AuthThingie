@@ -20,10 +20,10 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
   }
 
   //these technically could be lazy, but I want checking to happen on startup
-  val getPathRules: List[PathRule] = baseConfig.get[List[PathRule]]("rules")
-  val getUsers: List[User] = baseConfig.get[List[User]]("users")
-  val forceRedirectToHttps: Boolean = baseConfig.getOptional[Boolean]("forceRedirectToHttps").contains(true)
-  val siteUrl: String = baseConfig.getDeprecated[String]("authSiteUrl", "auth_site_url")
+  val getPathRules: List[PathRule] = baseConfig.getDeprecated[List[PathRule]]("auththingie.rules", "rules")
+  val getUsers: List[User] = baseConfig.getDeprecated[List[User]]("auththingie.users", "users")
+  val forceRedirectToHttps: Boolean = baseConfig.getOptional[Boolean]("auththingie.forceRedirectToHttps").contains(true)
+  val siteUrl: String = baseConfig.getDeprecated[String]("auththingie.authSiteUrl", "auth_site_url", "authSiteUrl")
 
   val isUsingNewConfig: Boolean = false
 
