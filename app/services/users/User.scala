@@ -1,8 +1,34 @@
 package services.users
 
+import java.util
+
+import com.typesafe.config.Config
+import play.api.ConfigLoader
 import services.rules.PathRule
 import services.totp.TotpUtil
 import services.validator.HashValidator
+
+import scala.collection.JavaConverters._
+
+object User {
+  implicit val configLoader = new ConfigLoader[List[User]] {
+    override def load(config: Config, path: String): List[User] = {
+      config.getObjectList(path).asScala.map { curr =>
+        val unwrapped = curr.unwrapped().asScala
+
+        val passwdLine = unwrapped("htpasswdLine").asInstanceOf[String]
+        val admin = unwrapped.get("admin").exists(x => x.asInstanceOf[Boolean])
+        val totpSecret = unwrapped.get("totpSecret").map(_.asInstanceOf[String])
+        val roles = unwrapped.get("roles") match {
+          case Some(roleList) => roleList.asInstanceOf[util.ArrayList[String]].asScala.toList
+          case None           => List.empty[String]
+        }
+
+        User(passwdLine, admin, totpSecret, roles)
+      }.toList
+    }
+  }
+}
 
 case class User(htpasswdLine: String, admin: Boolean, totpSecret: Option[String], roles: List[String]) {
 
