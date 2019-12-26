@@ -1,0 +1,14 @@
+@(errors: List[String])
+
+@main("Config Errors") {
+    <h1>There were config errors in AuthThingie</h1>
+    <div class="col col-sm-6 offset-md-3">
+        <div class="alert alert-danger">
+            <ul>
+                @for(e <- errors) {
+                    <li>@e</li>
+                }
+            </ul>
+        </div>
+    </div>
+}

@@ -26,5 +26,6 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
   val siteUrl: String = baseConfig.getDeprecated[String]("auththingie.authSiteUrl", "auth_site_url", "authSiteUrl")
 
   val isUsingNewConfig: Boolean = false
+  val configErrors: List[String] = List("blah blah is bad")
 
 }
