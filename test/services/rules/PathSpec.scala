@@ -12,7 +12,7 @@ class PathSpec extends PlaySpec with IdiomaticMockito {
   private val bStarOnFooExampleCom = PathRule("/bar* on foo.example.com", None, Some("foo.example.com"), Some("/b*"), public = false, List())
 
   private val fakeConfig = mock[AuthThingieConfig]
-  fakeConfig.getPathRules returns List(allOnTestExampleCom, binStarOnAnything, barOnFooExampleCom, bStarOnFooExampleCom)
+  fakeConfig.pathRules returns List(allOnTestExampleCom, binStarOnAnything, barOnFooExampleCom, bStarOnFooExampleCom)
 
   private val matcher = new PathMatcher(fakeConfig)
 

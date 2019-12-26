@@ -81,7 +81,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
       val result = controller.showTotpForm().apply(FakeRequest(GET, "/totp?redirect=someUrl"))
 
       status(result) mustBe UNAUTHORIZED
-      contentAsString(result) mustBe "Error: No partially authed username."
+      contentAsString(result).indexOf("Error: No partially authed username.") > 0 mustBe true
     }
 
     "correctly reject incorrect totp code" in new Setup() {
