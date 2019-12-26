@@ -18,9 +18,9 @@
         <h3>Two-Factor Auth</h3>
 
         @b4.vertical.formCSRF(postUrl) { implicit vfc =>
-            @b4.text(form("totpCode"), '_label -> "TOTP Code", 'size -> 10, 'autofocus -> "autofocus")
+            @b4.text(form("totpCode"), Symbol("_label") -> "TOTP Code", Symbol("size") -> 10, Symbol("autofocus") -> "autofocus")
 
-            @b4.submit('class -> "btn btn-primary"){ <i class="fa fa-ok btn-submit"></i> Go }
+            @b4.submit(Symbol("class") -> "btn btn-primary"){ <i class="fa fa-ok btn-submit"></i> Go }
         }
     </div>
 }

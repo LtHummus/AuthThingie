@@ -5,7 +5,6 @@ import java.io.File
 import com.typesafe.config.ConfigFactory
 import javax.inject.{Inject, Singleton}
 import services.rules.PathRule
-import configs.syntax._
 import play.api.Configuration
 import services.users.User
 
@@ -23,8 +22,9 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
   //these technically could be lazy, but I want checking to happen on startup
   val getPathRules: List[PathRule] = baseConfig.get[List[PathRule]]("rules")
   val getUsers: List[User] = baseConfig.get[List[User]]("users")
-  val forceRedirectToHttps: Boolean = ConfigTree.get[Boolean]("forceRedirectToHttps").valueOrElse(false)
-  val siteUrl: String = ConfigTree.get[String]("auth_site_url").value
-  val isUsingNewConfig: Boolean = ConfigTree.get[String]("play.http.session.jwt.signatureAlgorithm").toOption.isEmpty
+  val forceRedirectToHttps: Boolean = baseConfig.getOptional[Boolean]("forceRedirectToHttps").contains(true)
+  val siteUrl: String = baseConfig.getDeprecated[String]("authSiteUrl", "auth_site_url")
+
+  val isUsingNewConfig: Boolean = false
 
 }
