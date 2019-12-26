@@ -7,7 +7,7 @@ import javax.inject.{Inject, Singleton}
 class UserMatcher @Inject()(config: AuthThingieConfig) {
 
   private val Users: List[User] = config.getUsers
-  private lazy val userMap: Map[String, User] = Users.groupBy(_.username).mapValues(_.head)
+  private lazy val userMap: Map[String, User] = Users.map(u => (u.username, u)).toMap
 
   def validUser(username: String, password: String): Option[User] = {
     userMap.get(username) match {

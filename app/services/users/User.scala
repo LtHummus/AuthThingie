@@ -8,7 +8,7 @@ import services.rules.PathRule
 import services.totp.TotpUtil
 import services.validator.HashValidator
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object User {
   implicit val configLoader = new ConfigLoader[List[User]] {

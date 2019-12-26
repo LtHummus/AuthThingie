@@ -6,7 +6,7 @@ import com.typesafe.config.Config
 import org.apache.commons.io.{FilenameUtils, IOCase}
 import play.api.ConfigLoader
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object PathRule {
   private val Logger = play.api.Logger(this.getClass)

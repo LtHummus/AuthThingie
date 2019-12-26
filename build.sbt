@@ -5,7 +5,7 @@ version := "0.0.5"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
-scalaVersion := "2.12.8"
+scalaVersion := "2.13.1"
 
 dockerUsername := Some("lthummus")
 dockerExposedPorts := Seq(9000, 9443)
@@ -19,10 +19,9 @@ libraryDependencies ++= List(
   guice,
 
   //testing
-  "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.2" % Test,
+  "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.3" % Test,
   "org.mockito" %% "mockito-scala" % "1.5.11" % "test",
 
-  "com.github.kxbmap" %% "configs" % "0.4.4",
   "commons-codec" % "commons-codec" % "1.13",
   "commons-io" % "commons-io" % "2.6",
   "org.apache.commons" % "commons-lang3" % "3.9",
