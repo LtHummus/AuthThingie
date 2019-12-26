@@ -1,7 +1,7 @@
 name := """auththingie"""
 organization := "com.lthummus"
 
-version := "0.0.5"
+version := "0.1.0"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
