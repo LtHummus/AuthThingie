@@ -51,7 +51,12 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
 
 
   def showLoginForm() = Action { implicit request: MessagesRequest[AnyContent] =>
-    Unauthorized(views.html.login(loginForm, redirectUrl, routes.LoginController.login().appendQueryString(Map(Redirect -> Seq(redirectUrl))))).withSession(request.session - PartialAuthUsername)
+    Unauthorized(views.html.login(loginForm,
+      redirectUrl,
+      routes.LoginController
+        .login()
+        .appendQueryString(Map(Redirect -> Seq(redirectUrl)))
+    )).withSession(request.session - PartialAuthUsername)
   }
 
   def loginRedirect() = Action { implicit request: MessagesRequest[AnyContent] =>
@@ -60,7 +65,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
 
   def showTotpForm() = Action { implicit request: MessagesRequest[AnyContent] =>
     if (request.session.get(PartialAuthUsername).isEmpty) {
-      Unauthorized("Error: No partially authed username.")
+      Unauthorized(views.html.denied("Error: No partially authed username."))
     } else {
       Ok(views.html.totp(totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl)))))
     }
