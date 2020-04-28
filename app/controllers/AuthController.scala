@@ -75,27 +75,35 @@ class AuthController @Inject() (decoder: RequestDecoder,
     val rule: Option[PathRule] = pathMatcher.getRule(requestInfo)
     Logger.debug(s"Detected rule: ${rule.map(_.name)}")
 
-    //figure out if the user is logged in or gave us basic-auth credentials
-    val (user, credentialSource) = pullLoginInfoFromRequest
-    Logger.debug(s"Logged in user: ${user.map(_.username)}")
+    //if this matches a public route, just exit out now since the request will succeed no matter what
+    if (rule.exists(_.public)) {
+      Logger.debug(s"Rule ${rule.map(_.name)} is public, so quickly exiting")
+      NoContent
+    } else {
+      //figure out if the user is logged in or gave us basic-auth credentials
+      val (user, credentialSource) = pullLoginInfoFromRequest
+      Logger.debug(s"Logged in user: ${user.map(_.username)}")
 
-    //figure out what to do and return the proper response
-    resolver.resolveUserAccessForRule(user, rule) match {
-      case Allowed =>
-        Logger.debug("Access allowed")
-        NoContent
+      //figure out what to do and return the proper response
+      resolver.resolveUserAccessForRule(user, rule) match {
+        case Allowed =>
+          Logger.debug("Access allowed")
+          NoContent
 
-      case Denied if credentialSource == BasicAuth || user.isDefined =>
-        Logger.debug("Access denied. Showing error")
-        val printableUsername = user.map(_.username).getOrElse("<not logged in>")
-        Unauthorized(views.html.denied(s"You do not have permission for this resource. Currently logged in as $printableUsername"))
+        case Denied if credentialSource == BasicAuth || user.isDefined =>
+          Logger.debug("Access denied. Showing error")
+          val printableUsername = user.map(_.username).getOrElse("<not logged in>")
+          Unauthorized(views.html.denied(s"You do not have permission for this resource. Currently logged in as $printableUsername"))
 
-      case _ =>
-        Logger.debug("Access denied, redirecting to login page")
-        val destinationUri = requestInfo.toString
-        Redirect(config.siteUrl + "/needed", Map("redirect" -> Seq(destinationUri)), FOUND)
+        case _ =>
+          Logger.debug("Access denied, redirecting to login page")
+          val destinationUri = requestInfo.toString
+          Redirect(config.siteUrl + "/needed", Map("redirect" -> Seq(destinationUri)), FOUND)
 
+      }
     }
+
+
 
   }
 
