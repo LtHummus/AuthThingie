@@ -29,7 +29,7 @@ class AuthController @Inject() (decoder: RequestDecoder,
   case object BasicAuth extends CredentialSource
   case object NoCredentials extends CredentialSource
 
-  private def pullLoginInfoFromRequest[T](request: Request[T]): (Option[User], CredentialSource) = {
+  private def pullLoginInfoFromRequest[_](request: Request[_]): (Option[User], CredentialSource) = {
     (request.session.get("user"), request.headers.get(AUTHORIZATION)) match {
       case (Some(username), _)   => (userMatcher.getUser(username), Session) //logged in via session, continue on
       case (_, Some(authHeader)) =>
