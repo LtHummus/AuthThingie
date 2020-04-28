@@ -29,7 +29,7 @@ class AuthController @Inject() (decoder: RequestDecoder,
   case object BasicAuth extends CredentialSource
   case object NoCredentials extends CredentialSource
 
-  private def pullLoginInfoFromRequest[T](implicit request: Request[T]): (Option[User], CredentialSource) = {
+  private def pullLoginInfoFromRequest[T](request: Request[T]): (Option[User], CredentialSource) = {
     (request.session.get("user"), request.headers.get(AUTHORIZATION)) match {
       case (Some(username), _)   => (userMatcher.getUser(username), Session) //logged in via session, continue on
       case (_, Some(authHeader)) =>
@@ -44,7 +44,7 @@ class AuthController @Inject() (decoder: RequestDecoder,
   }
 
   def testUrl() = Action { implicit request: Request[AnyContent] =>
-    val (user, _) = pullLoginInfoFromRequest
+    val (user, _) = pullLoginInfoFromRequest(request)
     Logger.debug(s"Logged in user: ${user.map(_.username)}")
 
     if (user.isEmpty) {
@@ -81,7 +81,7 @@ class AuthController @Inject() (decoder: RequestDecoder,
       NoContent
     } else {
       //figure out if the user is logged in or gave us basic-auth credentials
-      val (user, credentialSource) = pullLoginInfoFromRequest
+      val (user, credentialSource) = pullLoginInfoFromRequest(request)
       Logger.debug(s"Logged in user: ${user.map(_.username)}")
 
       //figure out what to do and return the proper response
