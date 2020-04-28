@@ -28,7 +28,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
 
     "properly let people in when the matcher says so" in new Setup() {
       val requestInfo = RequestInfo("https", "test.example.com", "/")
-      val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = true, List())
+      val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
 
       fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
@@ -108,7 +108,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
 
     "properly decode basic auth headers" in new Setup() {
       val requestInfo = RequestInfo("https", "test.example.com", "/")
-      val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = true, List())
+      val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
       val user = User("test:test", admin = true, None, List())
 
       fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
@@ -128,7 +128,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
 
     "properly decode session data" in new Setup() {
       val requestInfo = RequestInfo("https", "test.example.com", "/")
-      val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = true, List())
+      val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
       val user = User("test:test", admin = true, None, List())
 
       fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
@@ -144,6 +144,22 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
       fakePathMatcher.getRule(requestInfo) was called
       fakeUserMatcher.getUser("test") was called
       fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) was called
+    }
+
+    "don't bother looking at the user data if the rule is public" in new Setup() {
+      val requestInfo = RequestInfo("https", "test.example.com", "/")
+      val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = true, List())
+
+      fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
+      fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
+
+      val result = controller.auth().apply(FakeRequest(GET, "/auth"))
+
+      status(result) mustBe NO_CONTENT
+
+      fakeRequestDecoder.decodeRequestHeaders(*) wasCalled once
+      fakePathMatcher.getRule(requestInfo) was called
+      fakeResolver.resolveUserAccessForRule(None, Some(pathRule)) wasNever called
     }
 
   }
