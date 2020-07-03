@@ -43,11 +43,11 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
     }
 
     val authThingieSecretKey = combinedConfiguration.getOptional[String](SecretKeyConfigPath)
-    val secretKeyPatch = if (authThingieSecretKey.exists(x => secretKeyIsBad(x))) {
-      Logger.warn(s"Hey! Listen! Your secret key is crap! It should be at least 16 characters long and not the default that I ship with. " +
-        s"The fundamental security of the app relies on it. I've randomly generated one for you for now, but this means that sessions will be invalidated " +
-        s"when you restart the app. You should set (a strong) one manually by setting the `AUTHTHINGIE_SECRET_KEY` environment variable (recommended) " +
-        s"or by setting the config key `play.http.secret.key` in your config file")
+    val secretKeyPatch = if (authThingieSecretKey.isEmpty || authThingieSecretKey.exists(x => secretKeyIsBad(x))) {
+      Logger.warn("Hey! Listen! Your secret key is crap! It should be at least 16 characters long and not the default that I ship with. " +
+        "The fundamental security of the app relies on it. I've randomly generated one for you for now, but this means that sessions will be invalidated " +
+        "when you restart the app. You should set (a strong) one manually by setting the `AUTHTHINGIE_SECRET_KEY` environment variable (recommended) " +
+        "or by setting the config key `play.http.secret.key` in your config file")
 
       val generatedSecretKey = RandomStringUtils.randomAlphanumeric(MinSecretKeyLength, MinSecretKeyLength * 2)
       Seq((SecretKeyConfigPath -> generatedSecretKey))
