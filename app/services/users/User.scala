@@ -11,22 +11,20 @@ import services.validator.HashValidator
 import scala.jdk.CollectionConverters._
 
 object User {
-  implicit val configLoader = new ConfigLoader[List[User]] {
-    override def load(config: Config, path: String): List[User] = {
-      config.getObjectList(path).asScala.map { curr =>
-        val unwrapped = curr.unwrapped().asScala
+  implicit val configLoader: ConfigLoader[List[User]] = (config: Config, path: String) => {
+    config.getObjectList(path).asScala.map { curr =>
+      val unwrapped = curr.unwrapped().asScala
 
-        val passwdLine = unwrapped("htpasswdLine").asInstanceOf[String]
-        val admin = unwrapped.get("admin").exists(x => x.asInstanceOf[Boolean])
-        val totpSecret = unwrapped.get("totpSecret").map(_.asInstanceOf[String])
-        val roles = unwrapped.get("roles") match {
-          case Some(roleList) => roleList.asInstanceOf[util.ArrayList[String]].asScala.toList
-          case None           => List.empty[String]
-        }
+      val passwdLine = unwrapped("htpasswdLine").asInstanceOf[String]
+      val admin = unwrapped.get("admin").exists(x => x.asInstanceOf[Boolean])
+      val totpSecret = unwrapped.get("totpSecret").map(_.asInstanceOf[String])
+      val roles = unwrapped.get("roles") match {
+        case Some(roleList) => roleList.asInstanceOf[util.ArrayList[String]].asScala.toList
+        case None => List.empty[String]
+      }
 
-        User(passwdLine, admin, totpSecret, roles)
-      }.toList
-    }
+      User(passwdLine, admin, totpSecret, roles)
+    }.toList
   }
 }
 
