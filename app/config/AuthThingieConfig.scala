@@ -38,18 +38,22 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
     Try(baseConfig.getDeprecated[String]("auththingie.authSiteUrl", "auth_site_url", "authSiteUrl")).toValidated
   }
 
-  private val Logger = play.api.Logger(this.getClass)
-
-  case class AuthThingieConfig(rules: List[PathRule], users: List[User], forceRedirectToHttps: Boolean, siteUrl: String)
-
-  private val parsedConfig = {
-    (loadPathRules, loadUsers, loadForceRedirect, loadSiteUrl).mapN(AuthThingieConfig)
+  private val loadSiteName: ValidationResult[String] = {
+    Try(baseConfig.getOptional[String]("auththingie.siteName").getOrElse("AuthThingie")).toValidated
   }
 
-  val (pathRules, users, forceHttpsRedirect, siteUrl) = parsedConfig match {
+  private val Logger = play.api.Logger(this.getClass)
+
+  case class AuthThingieConfig(rules: List[PathRule], users: List[User], forceRedirectToHttps: Boolean, siteUrl: String, siteName: String)
+
+  private val parsedConfig = {
+    (loadPathRules, loadUsers, loadForceRedirect, loadSiteUrl, loadSiteName).mapN(AuthThingieConfig)
+  }
+
+  val (pathRules, users, forceHttpsRedirect, siteUrl, siteName) = parsedConfig match {
     case Valid(a) =>
-      (a.rules, a.users, a.forceRedirectToHttps, a.siteUrl)
-    case Validated.Invalid(e) => (List(), List(), false, "")
+      (a.rules, a.users, a.forceRedirectToHttps, a.siteUrl, a.siteName)
+    case Validated.Invalid(e) => (List(), List(), false, "", "")
   }
 
   val isUsingNewConfig: Boolean = baseConfig.has("auththingie.users")

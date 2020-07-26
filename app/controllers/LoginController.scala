@@ -55,7 +55,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
       redirectUrl,
       routes.LoginController
         .login()
-        .appendQueryString(Map(Redirect -> Seq(redirectUrl)))
+        .appendQueryString(Map(Redirect -> Seq(redirectUrl))), config.siteName
     )).withSession(request.session - PartialAuthUsername)
   }
 
@@ -115,7 +115,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
   def login() = Action { implicit request: MessagesRequest[AnyContent] =>
     val error = {
       formWithErrors: Form[LoginData] =>
-        BadRequest(views.html.login(formWithErrors, redirectUrl, routes.LoginController.login().appendQueryString(Map(Redirect -> Seq(redirectUrl)))))
+        BadRequest(views.html.login(formWithErrors, redirectUrl, routes.LoginController.login().appendQueryString(Map(Redirect -> Seq(redirectUrl))), config.siteName))
     }
 
 
@@ -130,7 +130,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
           Redirect(routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl)))).withSession(PartialAuthUsername -> user.username, PartialAuthTimeout -> timeout.toString)
         case None =>
           Logger.warn(s"Bad login attempt for user ${data.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}")
-          Unauthorized(views.html.login(loginForm.fill(data.copy(password = "")), request.session.get(Redirect + "Url").getOrElse(""), routes.LoginController.login().appendQueryString(Map(Redirect -> Seq(redirectUrl)))))
+          Unauthorized(views.html.login(loginForm.fill(data.copy(password = "")), request.session.get(Redirect + "Url").getOrElse(""), routes.LoginController.login().appendQueryString(Map(Redirect -> Seq(redirectUrl))), config.siteName))
       }
     }
 

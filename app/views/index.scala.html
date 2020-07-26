@@ -1,10 +1,10 @@
 @import services.rules.PathRule
 @import services.users.User
-@(user: Option[User], rules: List[PathRule], users: List[User], showConfigWarning: Boolean)
+@(user: Option[User], rules: List[PathRule], users: List[User], showConfigWarning: Boolean, siteName: String)
 
 @main("Authentication") {
   <div class="container-fluid row">
-    <h1>Welcome to AuthThingie!</h1>
+    <h1>Welcome to @siteName!</h1>
   </div>
 
   @if(showConfigWarning) {
