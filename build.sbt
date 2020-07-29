@@ -7,10 +7,6 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
 scalaVersion := "2.13.3"
 
-dockerBaseImage := "openjdk:11"
-dockerUsername := Some("lthummus")
-dockerExposedPorts := Seq(9000, 9443)
-dockerEnvVars ++= Map("PATH" -> "/opt/docker/bin:${PATH}")
 
 javaOptions in Universal ++= Seq(
   "-Dpidfile.path=/dev/null"
