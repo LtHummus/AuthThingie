@@ -37,7 +37,7 @@ class AuthController @Inject() (decoder: RequestDecoder,
         val Array(username, password) = new String(Base64.decodeBase64(rawAuthData)).split(":", 2)
         userMatcher.validUser(username, password) match {
           case Some(user) if user.doesNotUseTotp => (Some(user), BasicAuth)
-          case _                                 => (None, NoCredentials) //TODO: see if 2fa code has been appended to password for accounts that use it
+          case _                                 => (None, BasicAuth) //TODO: see if 2fa code has been appended to password for accounts that use it
         }
       case _                     => (None, NoCredentials)
     }
@@ -54,12 +54,12 @@ class AuthController @Inject() (decoder: RequestDecoder,
 
       val parsedUrl = for {
         urlFromRequest <- urlFromQueryString.toRight(new Exception("No valid URL specified"))
-        parsedUrl <- Try(new URI(urlFromRequest)).toEither
+        parsedUrl      <- Try(new URI(urlFromRequest)).toEither
       } yield parsedUrl
 
       parsedUrl match {
         case Left(error) => BadRequest(Json.toJson(Map("error" -> error.getMessage)))
-        case Right(url) =>
+        case Right(url)  =>
           val matchedRule = pathMatcher.getRule(url)
           Ok(Json.toJson(Map("rule_name" -> matchedRule.map(_.name).orNull)))
       }

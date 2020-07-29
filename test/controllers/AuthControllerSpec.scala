@@ -162,5 +162,25 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
       fakeResolver.resolveUserAccessForRule(None, Some(pathRule)) wasNever called
     }
 
+    "show error if using basic auth and incorrect credentials" in new Setup() {
+      val requestInfo = RequestInfo("https", "test.example.com", "/")
+      val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
+      val user = User("test:test", admin = true, None, List())
+
+      fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
+      fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
+      fakeUserMatcher.validUser("test", "test") returns None
+      fakeResolver.resolveUserAccessForRule(None, Some(pathRule)) returns Denied
+
+      val result = controller.auth().apply(FakeRequest(GET, "/auth").withHeaders("Authorization" -> "Basic dGVzdDp0ZXN0"))
+
+      status(result) mustBe UNAUTHORIZED
+
+      fakeRequestDecoder.decodeRequestHeaders(*) wasCalled once
+      fakePathMatcher.getRule(requestInfo) was called
+      fakeUserMatcher.validUser("test", "test") was called
+      fakeResolver.resolveUserAccessForRule(None, Some(pathRule)) was called
+    }
+
   }
 }
