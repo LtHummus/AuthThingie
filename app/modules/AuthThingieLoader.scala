@@ -38,9 +38,9 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
       Seq(PlayDomainConfigPath -> domain)
     }.getOrElse {
       if (!combinedConfiguration.has(PlayDomainConfigPath))
-        Logger.warn(s"No configuration found for `auththingie.domain`. This may affect cookie persistence between subdomains. " +
-        s"If you are having issues, set the `auththingie.domain` config value to your domain name. For example, if your services " +
-        s"are hosted at foo.example.com, bar.example.com, etc, add `auththingie.domain: example.com` to your config file. ")
+        Logger.warn("No configuration found for `auththingie.domain`. This may affect cookie persistence between subdomains. " +
+        "If you are having issues, set the `auththingie.domain` config value to your domain name. For example, if your services " +
+        "are hosted at foo.example.com, bar.example.com, etc, add `auththingie.domain: example.com` to your config file. ")
       Seq()
     }
 
