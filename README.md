@@ -122,6 +122,7 @@ Add the auth server as a rule with public access.
 In no particular order...
 
 * Perhaps read config from a database?
+* WebAuth?
 
 ## Credits
 
