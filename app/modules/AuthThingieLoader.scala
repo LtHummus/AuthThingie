@@ -19,6 +19,8 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
   private def secretKeyIsBad(key: String): Boolean = key.length < MinSecretKeyLength || key.equalsIgnoreCase("SAMPLE_SECRET_KEY")
 
   override def builder(context: ApplicationLoader.Context): GuiceApplicationBuilder = {
+    Logger.info("Starting config file parsing")
+
     val additionalConfig = sys.env.get("AUTHTHINGIE_CONFIG_FILE_PATH") match {
       case Some(filePath) =>
         Logger.debug(s"Loading fallback config from $filePath")
