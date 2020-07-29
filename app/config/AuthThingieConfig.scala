@@ -52,14 +52,22 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
 
   val (pathRules, users, forceHttpsRedirect, siteUrl, siteName) = parsedConfig match {
     case Valid(a) =>
+      Logger.info("Valid configuration parsed and loaded")
       (a.rules, a.users, a.forceRedirectToHttps, a.siteUrl, a.siteName)
-    case Validated.Invalid(e) => (List(), List(), false, "", "")
+    case Validated.Invalid(e) =>
+      Logger.warn("Invalid configuration!")
+      (List(), List(), false, "", "")
   }
 
   val isUsingNewConfig: Boolean = baseConfig.has("auththingie.users")
   val configErrors: List[String] = parsedConfig match {
     case Valid(_)                  => List()
     case Validated.Invalid(errors) => errors.toList
+  }
+
+  if (!isUsingNewConfig) {
+    Logger.warn(" Hi there! A major change was made to the way AuthThingie loads configuration. You're still using the old-style method. " +
+      "You should probably change that. Checkout the README at https://github.com/LtHummus/AuthThingie for information on how to get up to date")
   }
 
 }
