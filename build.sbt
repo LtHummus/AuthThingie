@@ -6,7 +6,9 @@ version := "0.1.0"
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
 scalaVersion := "2.13.3"
+scalacOptions := Seq("-target:jvm-1.8")
 
+javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint")
 
 javaOptions in Universal ++= Seq(
   "-Dpidfile.path=/dev/null"
