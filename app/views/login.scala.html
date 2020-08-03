@@ -1,4 +1,4 @@
-@(form: Form[LoginData], redirectUrl: String, postUrl: Call, siteName: String)(implicit request: MessagesRequestHeader)
+@(form: Form[LoginData], redirectUrl: String, postUrl: Call, siteName: String, error: Option[String])(implicit request: MessagesRequestHeader)
 
 
 @main("Login form") {
@@ -17,6 +17,12 @@
     <div class="col col-sm-6 offset-md-3 login-form">
 
         <h3>@siteName Login</h3>
+
+        @if(error.isDefined) {
+            <div class="alert alert-danger">
+                @error.get
+            </div>
+        }
 
         @b4.vertical.formCSRF(postUrl) { implicit vfc =>
             @b4.text(form("username"), Symbol("_label") -> "Username", Symbol("placeholder") -> "Username", Symbol("autofocus") -> "autofocus")

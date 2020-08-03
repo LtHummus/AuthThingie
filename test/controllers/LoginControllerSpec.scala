@@ -47,6 +47,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
 
       status(result) mustBe UNAUTHORIZED
       contentType(result) mustBe Some("text/html")
+      contentAsString(result) must include("Invalid username or password")
     }
   }
 
@@ -81,18 +82,21 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
       val result = controller.showTotpForm().apply(FakeRequest(GET, "/totp?redirect=someUrl"))
 
       status(result) mustBe UNAUTHORIZED
-      contentAsString(result).indexOf("Error: No partially authed username.") > 0 mustBe true
+      contentAsString(result) must include("Error: No partially authed username.")
     }
 
     "correctly reject incorrect totp code" in new Setup() {
       fakeUserMatcher.getUser("test") returns Some(User("test:test", admin = true, Some("T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH"), List()))
 
+      val authExpiration = System.currentTimeMillis() + 5.minutes.toMillis
+
       val result = controller.totp().apply(CSRFTokenHelper.addCSRFToken(FakeRequest(POST, "/totp?redirect=someUrl")
-        .withSession("partialAuthUsername" -> "test")
+        .withSession("partialAuthUsername" -> "test", "partialAuthTimeout" -> authExpiration.toString)
         .withHeaders("X-Forwarded-For" -> "127.0.0.1")
         .withFormUrlEncodedBody("totpCode" -> "000000")))
 
       status(result) mustBe UNAUTHORIZED
+      contentAsString(result) must include("Invalid Auth Code")
     }
 
     "correctly validate totp code" in new Setup() {
