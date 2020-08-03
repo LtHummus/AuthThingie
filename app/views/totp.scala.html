@@ -1,4 +1,4 @@
-@(form: Form[TotpData], postUrl: Call)(implicit request: MessagesRequestHeader)
+@(form: Form[TotpData], postUrl: Call, error: Option[String])(implicit request: MessagesRequestHeader)
 
 
 @main("TOTP") {
@@ -16,6 +16,12 @@
 
     <div class="col col-sm-6 offset-md-3 login-form">
         <h3>Two-Factor Auth</h3>
+
+        @if(error.isDefined) {
+            <div class="alert alert-danger">
+            @error.get
+            </div>
+        }
 
         @b4.vertical.formCSRF(postUrl) { implicit vfc =>
             @b4.text(form("totpCode"), Symbol("_label") -> "TOTP Code", Symbol("size") -> 10, Symbol("autofocus") -> "autofocus")
