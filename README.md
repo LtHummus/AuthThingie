@@ -11,72 +11,59 @@ AuthThingie (names are hard, ok?) is a simple web server that can be used with T
 Everything is handled in a `auththingie_config.conf` file. Here's an example:
 
 ```hocon
-play {
-  filters.hosts {
-    allowed = [".example.com", "auth:9000", "localhost:9000"]
-  }
+play.http.secret.key = "drove-crumpled-mothproof-riveter-unsliced-revisable"
 
-  http {
-    secret.key = "SECRET" # should be replaced with a randomly generated, long string
-
-    session {
-      domain = "example.com"
-
-      jwt {
-        signatureAlgorithm = "HS256"
-      }
-    }
-  }
-}
-
-
-
-"rules": [
-  {
-    "name": "/css* on test.example.com",
-    "pathPattern": "/css*",
-    "hostPattern": "test.example.com",
-    "public": true,
-    "permittedRoles": []
-  },
-  {
+auththingie {
+  timeout: 1h
+  domain: localhost
+  rules: [
+    {
+      "name": "/css* on test.example.com",
+      "pathPattern": "/css*",
+      "hostPattern": "test.example.com",
+      "public": true,
+      "permittedRoles": []
+    },
+    {
       "name": "/js* on test.example.com",
       "pathPattern": "/js*",
       "hostPattern": "test.example.com",
       "public": true,
       "permittedRoles": []
-  },
-  {
+    },
+    {
       "name": "/animals* on test.example.com",
       "pathPattern": "/animals*",
       "hostPattern": "test.example.com",
       "public": false,
       "permittedRoles": ["animal_role"]
-  },
-  {
-    "name": "test.example.com root",
-    "hostPattern": "test.example.com",
-    "pathPattern": "/",
-    "public": true,
-    "permittedRoles": []
-  }
-]
+    },
+    {
+      "name": "test.example.com root",
+      "hostPattern": "test.example.com",
+      "pathPattern": "/",
+      "public": true,
+      "permittedRoles": []
+    }
+  ]
 
-"users": [
-  {
-    "htpasswdLine": "ben:$2y$05$WvtSdzLmwYqZqUe/EdLt1uG250dUmHAdQ4nKEDP.J5KRM2u3JbTCS",
-    "admin": true,
-    "totpSecret": "T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH",
-    "roles": []
-  },
-  {
-    "htpasswdLine": "dog:$2y$05$/WME1Gi5RRG/or8To0BjQewJ6lg0z/IyaRjLyhW8yx0ygVwMoJjGO",
-    "admin": false,
-    "roles": ["animal_role"]
-  }
-]
+  users: [
+    {
+      "htpasswdLine": "ben:$2y$05$WvtSdzLmwYqZqUe/EdLt1uG250dUmHAdQ4nKEDP.J5KRM2u3JbTCS",
+      "admin": true,
+      "roles": [],
+    },
+    {
+      "htpasswdLine": "dog:$2y$05$/WME1Gi5RRG/or8To0BjQewJ6lg0z/IyaRjLyhW8yx0ygVwMoJjGO",
+      "admin": false,
+      "totpSecret": "T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH",
+      "roles": ["animal_role", "foo_role"],
+    }
+  ]
 
-"auth_site_url": "http://auth.example.com"
+  authSiteUrl = "http://localhost:9000"
+}
+
 ``` 
 
 Everything should be more or less self-explanatory at this point. Essentially, you have your users and your rules. Every user needs an `htpasswdLine` (essentially the output generated from `htpasswd -nB <username>`), a flag indicating if they are an admin, and a list of roles that the user has. Note you will need to set some things in the `play` section (TODO: make it so you don't have to do that): notably the domain for the session, the secret key (please don't use the one in the sample file; just any long, randomly generated string will do), and the hostnames the server will live under (`auth.example.com` and perhaps `auth:9000` so Traefik can talk to it internally). 
@@ -86,6 +73,10 @@ Each rule has a `name`, a list of `permittedRoles` (which can be empty for admin
 `auth_site_url` should be the public URL of the authentication site. Note you will also have to add the proper domains to your `play.filters.hosts` section of the config file. You should add all hostnames that this site can potentially be reached from (both inside your docker network and outside). Alternatively, you can add `play.filters.disabled += play.filters.hosts.AllowedHostsFilter` to the config file to disable the hosts filter completely. You will need to set your domain for the `play.http.session.domain` entry.
 
 When logging in is needed, the user will automatically be redirected to a login page. Once logged in, the user will be redirected back to where they were going (if they have permission). Additionally, credentials can be passed in using basic-auth (via the `Authorization` header). This is useful if you have an app that interacts with a service behind your authentication but can't handle the redirects properly.
+
+### Upgrading from 0.0.x series
+
+In AuthThingie 0.1.0, I changed the config file format a bit. For now, things are backwards compatible (though you'll get warnings in the logs and in the admin control panel if you are using the old format...that might be why you're here). Anyway, I removed a bunch of stuff you don't need to worry about anymore (basically anything under the `play` key explicitly except for the secret key). Everything else moved under the `auththingie` key (and `auth_site_url` was changed to have a more consistent name). The above example file should be a reasonable guide in how to configure things (the formats of users and rules haven't changed, just the config key).
 
 ## TOTP
 
