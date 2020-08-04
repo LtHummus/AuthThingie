@@ -5,6 +5,7 @@ import cats.data.Validated.Valid
 import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
+import play.mvc.Http.HeaderNames
 import services.rules.PathRule
 import services.users.User
 
@@ -42,21 +43,25 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
     Try(baseConfig.getOptional[String]("auththingie.siteName").getOrElse("AuthThingie")).toValidated
   }
 
-  private val Logger = play.api.Logger(this.getClass)
-
-  case class AuthThingieConfig(rules: List[PathRule], users: List[User], forceRedirectToHttps: Boolean, siteUrl: String, siteName: String)
-
-  private val parsedConfig = {
-    (loadPathRules, loadUsers, loadForceRedirect, loadSiteUrl, loadSiteName).mapN(AuthThingieConfig)
+  private val authHeaderName: ValidationResult[String] = {
+    Try(baseConfig.getOptional[String]("auththingie.authHeader").getOrElse(HeaderNames.AUTHORIZATION)).toValidated
   }
 
-  val (pathRules, users, forceHttpsRedirect, siteUrl, siteName) = parsedConfig match {
+  private val Logger = play.api.Logger(this.getClass)
+
+  case class AuthThingieConfig(rules: List[PathRule], users: List[User], forceRedirectToHttps: Boolean, siteUrl: String, siteName: String, headerName: String)
+
+  private val parsedConfig = {
+    (loadPathRules, loadUsers, loadForceRedirect, loadSiteUrl, loadSiteName, authHeaderName).mapN(AuthThingieConfig)
+  }
+
+  val (pathRules, users, forceHttpsRedirect, siteUrl, siteName, headerName) = parsedConfig match {
     case Valid(a) =>
       Logger.info("Valid configuration parsed and loaded")
-      (a.rules, a.users, a.forceRedirectToHttps, a.siteUrl, a.siteName)
+      (a.rules, a.users, a.forceRedirectToHttps, a.siteUrl, a.siteName, a.headerName)
     case Validated.Invalid(e) =>
       Logger.warn("Invalid configuration!")
-      (List(), List(), false, "", "")
+      (List(), List(), false, "", "", "")
   }
 
   val isUsingNewConfig: Boolean = baseConfig.has("auththingie.users")

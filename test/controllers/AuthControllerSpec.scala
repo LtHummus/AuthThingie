@@ -52,6 +52,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
       fakeUserMatcher.validUser("test", "test") returns Some(user)
       fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) returns Denied
+      fakeConfig.headerName returns "Authorization"
 
       val result = controller.auth().apply(FakeRequest(GET, "/auth").withHeaders("Authorization" -> "Basic dGVzdDp0ZXN0"))
 
@@ -115,8 +116,30 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
       fakeUserMatcher.validUser("test", "test") returns Some(user)
       fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) returns Allowed
+      fakeConfig.headerName returns "Authorization"
 
       val result = controller.auth().apply(FakeRequest(GET, "/auth").withHeaders("Authorization" -> "Basic dGVzdDp0ZXN0"))
+
+      status(result) mustBe NO_CONTENT
+
+      fakeRequestDecoder.decodeRequestHeaders(*) wasCalled once
+      fakePathMatcher.getRule(requestInfo) was called
+      fakeUserMatcher.validUser("test", "test") was called
+      fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) was called
+    }
+
+    "properly decode basic auth headers with an arbitrary name" in new Setup() {
+      val requestInfo = RequestInfo("https", "test.example.com", "/")
+      val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
+      val user = User("test:test", admin = true, None, List())
+
+      fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
+      fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
+      fakeUserMatcher.validUser("test", "test") returns Some(user)
+      fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) returns Allowed
+      fakeConfig.headerName returns "FooBarBaz"
+
+      val result = controller.auth().apply(FakeRequest(GET, "/auth").withHeaders("FooBarBaz" -> "Basic dGVzdDp0ZXN0"))
 
       status(result) mustBe NO_CONTENT
 
@@ -171,6 +194,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
       fakeUserMatcher.validUser("test", "test") returns None
       fakeResolver.resolveUserAccessForRule(None, Some(pathRule)) returns Denied
+      fakeConfig.headerName returns "Authorization"
 
       val result = controller.auth().apply(FakeRequest(GET, "/auth").withHeaders("Authorization" -> "Basic dGVzdDp0ZXN0"))
 

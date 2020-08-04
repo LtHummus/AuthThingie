@@ -30,7 +30,7 @@ class AuthController @Inject() (decoder: RequestDecoder,
   case object NoCredentials extends CredentialSource
 
   private def pullLoginInfoFromRequest[_](request: Request[_]): (Option[User], CredentialSource) = {
-    (request.session.get("user"), request.headers.get(AUTHORIZATION)) match {
+    (request.session.get("user"), request.headers.get(config.headerName)) match {
       case (Some(username), _)   => (userMatcher.getUser(username), Session) //logged in via session, continue on
       case (_, Some(authHeader)) =>
         val rawAuthData = authHeader.replaceFirst("Basic ", "")
