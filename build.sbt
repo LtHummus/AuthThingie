@@ -34,7 +34,7 @@ libraryDependencies ++= List(
   "com.github.scopt" %% "scopt" % "3.7.1",
 
   //look nice
-  "com.adrianhurt" %% "play-bootstrap" % "1.5-P27-B4"
+  "com.adrianhurt" %% "play-bootstrap" % "1.6.1-P28-B4"
 )
 
 

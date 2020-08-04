@@ -9,14 +9,35 @@ import play.api.{ApplicationLoader, Configuration}
 import play.api.inject.guice.{GuiceApplicationBuilder, GuiceApplicationLoader}
 
 class AuthThingieLoader extends GuiceApplicationLoader() {
-  private val Logger = LoggerFactory.getLogger(getClass)
+  private val Logger = LoggerFactory.getLogger(this.getClass)
   private val MinSecretKeyLength = 16
+
+  private val AuthThingieSecretKeyConfigPath = "auththingie.secretKey"
   private val SecretKeyConfigPath = "play.http.secret.key"
   private val PlayDomainConfigPath = "play.http.session.domain"
   private val PlaySessionExpirationPath = "play.http.session.maxAge"
   private val PlayJwtExpirationPath = "play.http.session.jwt.expiresAfter"
 
+  private val SecretKeyEnvVarName = "AUTHTHINGIE_SECRET_KEY"
+
   private def secretKeyIsBad(key: String): Boolean = key.length < MinSecretKeyLength || key.equalsIgnoreCase("SAMPLE_SECRET_KEY")
+
+  private def loadSecretKey(config: Configuration): Option[String] = {
+    // we can load the secret key from one of a number of places....so let's do it in priority order
+    if (sys.env.contains(SecretKeyEnvVarName)) {
+      Logger.warn(s"Loading secret key from environment variable $SecretKeyEnvVarName")
+      Some(sys.env(SecretKeyEnvVarName))
+    } else if (config.has(AuthThingieSecretKeyConfigPath)) {
+      Logger.warn(s"Loading secret key from config path $AuthThingieSecretKeyConfigPath")
+      Some(config.get[String](AuthThingieSecretKeyConfigPath))
+    } else if (config.has(SecretKeyConfigPath)) {
+      Logger.warn(s"Loading secret key from config path $SecretKeyConfigPath")
+      Some(config.get[String](SecretKeyConfigPath))
+    }  else {
+      // no secret key has been specified anywhere
+      None
+    }
+  }
 
   override def builder(context: ApplicationLoader.Context): GuiceApplicationBuilder = {
     Logger.info("Starting config file parsing")
@@ -44,7 +65,7 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
       Seq()
     }
 
-    val authThingieSecretKey = combinedConfiguration.getOptional[String](SecretKeyConfigPath)
+    val authThingieSecretKey = loadSecretKey(combinedConfiguration)
     val secretKeyPatch = if (authThingieSecretKey.isEmpty || authThingieSecretKey.exists(x => secretKeyIsBad(x))) {
       Logger.warn("Hey! Listen! Your secret key is crap! It should be at least 16 characters long and not the default that I ship with. " +
         "The fundamental security of the app relies on it. I've randomly generated one for you for now, but this means that sessions will be invalidated " +
@@ -54,7 +75,8 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
       val generatedSecretKey = RandomStringUtils.randomAlphanumeric(MinSecretKeyLength, MinSecretKeyLength * 2)
       Seq((SecretKeyConfigPath -> generatedSecretKey))
     } else {
-      Seq()
+      require(authThingieSecretKey.isDefined, "No secret key defined, yet we think one is!")
+      Seq((SecretKeyConfigPath -> authThingieSecretKey.get))
     }
 
     val configPatch = Configuration((domain ++ authThingieTimeout ++ secretKeyPatch): _*)
