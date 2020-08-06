@@ -11,11 +11,10 @@ AuthThingie (names are hard, ok?) is a simple web server that can be used with T
 Everything is handled in a `auththingie_config.conf` file. Here's an example:
 
 ```hocon
-play.http.secret.key = "drove-crumpled-mothproof-riveter-unsliced-revisable"
-
 auththingie {
-  timeout: 1h
-  domain: localhost
+  timeout: 24h
+  domain: localhost // set this to  your domain (so if AuthThingie is at auth.example.com, this should be example.com
+  secretKey: "SAMPLE_SECRET_KEY" // this should be a strong and secure key! It can also be specified in the AUTHTHINGIE_SECRET_KEY envvar
   rules: [
     {
       "name": "/css* on test.example.com",
@@ -66,13 +65,15 @@ auththingie {
 
 ``` 
 
-Everything should be more or less self-explanatory at this point. Essentially, you have your users and your rules. Every user needs an `htpasswdLine` (essentially the output generated from `htpasswd -nB <username>`), a flag indicating if they are an admin, and a list of roles that the user has. Note you will need to set some things in the `play` section (TODO: make it so you don't have to do that): notably the domain for the session, the secret key (please don't use the one in the sample file; just any long, randomly generated string will do), and the hostnames the server will live under (`auth.example.com` and perhaps `auth:9000` so Traefik can talk to it internally). 
+Everything should be more or less self-explanatory at this point. Essentially, you have your users and your rules. Every user needs an `htpasswdLine` (essentially the output generated from `htpasswd -nB <username>`), a flag indicating if they are an admin, and a list of roles that the user has.
 
 Each rule has a `name`, a list of `permittedRoles` (which can be empty for admin only), a `public` flag (public means everyone is allowed, logged in or not), and then at least one of `hostPattern`, `pathPattern`, or `protocolPattern` to match against. Any of those three not specified means "ANY". Everything is specified using simple wildcards: `?` matches a single character, and `*` matches many characters (on the todo list is a rule tester). Any path that matches no rules is implicitly "admin-only." Admin users implicitly have access to everything.
 
-`auth_site_url` should be the public URL of the authentication site. Note you will also have to add the proper domains to your `play.filters.hosts` section of the config file. You should add all hostnames that this site can potentially be reached from (both inside your docker network and outside). Alternatively, you can add `play.filters.disabled += play.filters.hosts.AllowedHostsFilter` to the config file to disable the hosts filter completely. You will need to set your domain for the `play.http.session.domain` entry.
+`auththingie.authSiteUrl` should be the public URL of the authentication site so AuthThingie can redirect properly. `auththingie.domain` should be the root domain of your server. For example, if all of your sites are `*.example.com` (like `auth.example.com`, `foo.example.com`, etc, this should be set to `example.com`)
 
-When logging in is needed, the user will automatically be redirected to a login page. Once logged in, the user will be redirected back to where they were going (if they have permission). Additionally, credentials can be passed in using basic-auth (via the `Authorization` header). This is useful if you have an app that interacts with a service behind your authentication but can't handle the redirects properly.
+TIP: if you want your sessions to auto expire, you can set the `auththingie.timeout` config value to the session duration (for example `12h`).
+
+When a user needs to log in, the user will automatically be redirected to a login page. Once logged in, the user will be redirected back to where they were going (if they have permission). Additionally, credentials can be passed in using basic-auth (via the `Authorization` header). This is useful if you have an app that interacts with a service behind your authentication but can't handle the redirects properly. If you have something that conflicts and uses the `Authorization` header for its own purposes, you can override the header that AuthThingie looks at by setting the `auththingie.authHeader` config value.
 
 ### Upgrading from 0.0.x series
 
@@ -96,8 +97,6 @@ to your computer's hosts file, then run `./build.sh` to boot everything (you wil
 ### Deployment for real
 
 Create a `auththingie_config.conf` file somewhere on your file system. Create the docker container from the image and mount that config file in the container. Set the environment variable `AUTHTHINGIE_CONFIG_FILE_PATH` to point to where the config file lives in the container. Set your Traefik config to point forward authentication to `/auth` on the server See the included `docker-compose.yaml` file for a complete example. Note the `traefik.frontend.auth.forward.address: "http://auth:9000/auth"` label on the sample website.
-
-TIP: if you want your sessions to auto expire, add something like `maxAge = "12h"` to the `session` section inside the `http` section of the config file.
 
 ## You are likely to be eaten by a grue
 **Remember! This is a work in progress!**
