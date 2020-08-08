@@ -12,7 +12,7 @@ services:
             traefik.port: 9000
 
     traefik:
-        image: traefik
+        image: traefik:1.7
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock:ro
             - ./example/traefik.toml:/etc/traefik/traefik.toml
