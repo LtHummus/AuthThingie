@@ -75,6 +75,61 @@ TIP: if you want your sessions to auto expire, you can set the `auththingie.time
 
 When a user needs to log in, the user will automatically be redirected to a login page. Once logged in, the user will be redirected back to where they were going (if they have permission). Additionally, credentials can be passed in using basic-auth (via the `Authorization` header). This is useful if you have an app that interacts with a service behind your authentication but can't handle the redirects properly. If you have something that conflicts and uses the `Authorization` header for its own purposes, you can override the header that AuthThingie looks at by setting the `auththingie.authHeader` config value.
 
+### Config Values
+
+#### Main configuration
+Here's a table of all the configuration values
+
+| Key                       | Required | Value                                                                                                                                                                       |
+|---------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `auththingie.rules`       | Yes      | An array of the rules to apply for paths                                                                                                                                    |
+| `auththingie.users`       | Yes      | An array of users for the system                                                                                                                                            |
+| `auththingie.authSiteUrl` | Yes      | The full URL of the authentication site (for redirection purposes)                                                                                                          |
+| `auththingie.secretKey`   | Yes      | The key to sign session information with. This key should be kept secret. It is also set from the `AUTHTHINGIE_SECRET_KEY` environment variable. (Env var takes precedence) |
+| `auththingie.domain`      | Yes      | The root domain for your system. For example, if your sites are `auth.example.com`, `files.example.com`, etc., this should be set to `example.com`                          |
+| `auththingie.siteName`    | No       | The name of the site. Show on login pages.                                                                                                                                  |
+| `auththingie.timeout`     | No       | Determines how long logging in is good for. If not set, cookie is cleared on browser exit. Takes durations like `1h`, `2d`, etc.                                            |
+| `auththingie.authHeader`  | No       | The name of the header to use for basic auth. Defaults to `Authorization` if not set                                                                                        |
+
+#### Rule Configuration
+Rules consist of the following values
+
+| Key              | Required | Value                                                                                                  |
+|------------------|----------|--------------------------------------------------------------------------------------------------------|
+| `name`           | Yes      | A name for the rule                                                                                    |
+| `pathPattern`    | No       | The path the request should match. If not given, matches any.                                          |
+| `hostPattern`    | No       | The host the request should match. If not given, matches any.                                          |
+| `public`         | No       | If the path should be considered "public" (i.e. accessible without logging in). Defaults to `false`    |
+| `permittedRoles` | No       | A list of roles that are allowed to access this path. If empty or not given, defaults to `admin` only. |
+
+#### User Configuration
+Users consist of the following values
+
+| Key          | Required | Value                                                                                                              |
+|--------------|----------|--------------------------------------------------------------------------------------------------------------------|
+| `passwdLine` | Yes      | The output of `htpasswd -nB <username>`. This generally looks like `<username>:<hashed+salted password>`           |
+| `admin`      | No       | If this user is an `admin`. Defaults to `false` if not given                                                       |
+| `totpSecret` | No       | If the user has a TOTP token, this is the secret. This can be generated with the built in `generate_totp` command. |
+| `roles`      | No       | Roles that this user has. These should match up with ones in the path rules.                                       |
+
+#### Final note
+
+Note that the parser is smart when it comes to `.`. The following configs are equivalent:
+
+```hocon
+auththingie.domain: example.com
+auththingie.siteName: Example Site
+```
+
+and
+
+```hocon
+auththingie {
+  domain: example.com
+  siteName: Example Site
+}
+```
+
 ### Upgrading from 0.0.x series
 
 In AuthThingie 0.1.0, I changed the config file format a bit. For now, things are backwards compatible (though you'll get warnings in the logs and in the admin control panel if you are using the old format...that might be why you're here). Anyway, I removed a bunch of stuff you don't need to worry about anymore (basically anything under the `play` key explicitly except for the secret key). Everything else moved under the `auththingie` key (and `auth_site_url` was changed to have a more consistent name). The above example file should be a reasonable guide in how to configure things (the formats of users and rules haven't changed, just the config key).
