@@ -11,6 +11,8 @@ import services.users.{User, UserMatcher}
 import scala.concurrent.duration._
 
 class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
+  private val TimeTolerance = 500.millis
+
   trait Setup {
     val fakeUserMatcher = mock[UserMatcher]
     val fakeComponents = Helpers.stubMessagesControllerComponents()
@@ -31,8 +33,15 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
 
 
       status(result) mustBe FOUND
-      session(result) mustBe Session(Map("user" -> "user"))
       redirectLocation(result) mustBe Some("http://foo.example.com")
+      val returnedSession = session(result)
+      returnedSession.get("user") mustBe Some("user")
+
+      val authedTime = returnedSession.get("authTime").getOrElse(fail("no auth time returned")).toLong
+
+      authedTime mustBe < (System.currentTimeMillis() + TimeTolerance.toMillis)
+      authedTime mustBe > (System.currentTimeMillis() - TimeTolerance.toMillis)
+
     }
 
     "reject invalid login info" in new Setup() {
@@ -48,6 +57,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
       status(result) mustBe UNAUTHORIZED
       contentType(result) mustBe Some("text/html")
       contentAsString(result) must include("Invalid username or password")
+      session(result).get("user").isEmpty mustBe true
     }
   }
 
@@ -112,6 +122,16 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
 
       status(result) mustBe FOUND
       redirectLocation(result) mustBe Some("someUrl")
+
+      val returnedSession = session(result)
+
+      returnedSession.get("user") mustBe(Some("test"))
+
+      val authedTime = returnedSession.get("authTime").getOrElse(fail("no auth time set")).toLong
+      authedTime mustBe < (System.currentTimeMillis() + TimeTolerance.toMillis)
+      authedTime mustBe > (System.currentTimeMillis() - TimeTolerance.toMillis)
+
+
     }
 
     "respect auth timeout" in new Setup() {
