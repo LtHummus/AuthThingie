@@ -39,9 +39,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
 
       val authedTime = returnedSession.get("authTime").getOrElse(fail("no auth time returned")).toLong
 
-      authedTime mustBe < (System.currentTimeMillis() + TimeTolerance.toMillis)
-      authedTime mustBe > (System.currentTimeMillis() - TimeTolerance.toMillis)
-
+      authedTime mustBe System.currentTimeMillis() +- TimeTolerance.toMillis
     }
 
     "reject invalid login info" in new Setup() {
@@ -128,10 +126,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
       returnedSession.get("user") mustBe(Some("test"))
 
       val authedTime = returnedSession.get("authTime").getOrElse(fail("no auth time set")).toLong
-      authedTime mustBe < (System.currentTimeMillis() + TimeTolerance.toMillis)
-      authedTime mustBe > (System.currentTimeMillis() - TimeTolerance.toMillis)
-
-
+      authedTime mustBe System.currentTimeMillis() +- TimeTolerance.toMillis
     }
 
     "respect auth timeout" in new Setup() {
