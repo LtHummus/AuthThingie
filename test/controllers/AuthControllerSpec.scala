@@ -1,6 +1,11 @@
 package controllers
 
+import java.time.Duration
+import java.time.temporal.TemporalUnit
+
+import scala.concurrent.duration._
 import config.AuthThingieConfig
+import org.joda.time.DateTime
 import org.scalatestplus.play._
 import play.api.test._
 import play.api.test.Helpers._
@@ -29,18 +34,21 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
     "properly let people in when the matcher says so" in new Setup() {
       val requestInfo = RequestInfo("https", "test.example.com", "/")
       val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
+      val user = User("ben:test", admin = true, None, List())
 
       fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
-      fakeResolver.resolveUserAccessForRule(None, Some(pathRule)) returns Allowed
+      fakeUserMatcher.getUser("ben") returns Some(user)
+      fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) returns Allowed
 
-      val result = controller.auth().apply(FakeRequest(GET, "/auth"))
+      val result = controller.auth().apply(FakeRequest(GET, "/auth").withSession("user" -> "ben"))
 
       status(result) mustBe NO_CONTENT
 
       fakeRequestDecoder.decodeRequestHeaders(*) wasCalled once
       fakePathMatcher.getRule(requestInfo) was called
-      fakeResolver.resolveUserAccessForRule(None, Some(pathRule)) was called
+      fakeUserMatcher.getUser("ben") was called
+      fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) was called
     }
 
     "redirect to error message if user is using basic auth and access is denied" in new Setup() {
@@ -109,7 +117,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
 
     "properly decode basic auth headers" in new Setup() {
       val requestInfo = RequestInfo("https", "test.example.com", "/")
-      val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
+      val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List(), Some(Duration.ofHours(1)))
       val user = User("test:test", admin = true, None, List())
 
       fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
@@ -146,6 +154,46 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
       fakeRequestDecoder.decodeRequestHeaders(*) wasCalled once
       fakePathMatcher.getRule(requestInfo) was called
       fakeUserMatcher.validUser("test", "test") was called
+      fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) was called
+    }
+
+    "respect timeouts even with a valid session" in new Setup() {
+      val requestInfo = RequestInfo("https", "test.example.com", "/")
+      val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List(), Some(Duration.ofMinutes(1)))
+      val user = User("ben:test", admin = true, None, List())
+
+      fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
+      fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
+      fakeUserMatcher.getUser("ben") returns Some(user)
+      fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) returns Allowed
+
+      val result = controller.auth().apply(FakeRequest(GET, "/auth").withSession("user" -> "ben", "authTime" -> DateTime.now().minusMinutes(10).getMillis.toString))
+
+      status(result) mustBe FOUND
+
+      fakeRequestDecoder.decodeRequestHeaders(*) wasCalled once
+      fakePathMatcher.getRule(requestInfo) was called
+      fakeUserMatcher.getUser("ben") was called
+      fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) was called
+    }
+
+    "work with a custom timeout" in new Setup() {
+      val requestInfo = RequestInfo("https", "test.example.com", "/")
+      val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List(), Some(Duration.ofMinutes(100)))
+      val user = User("ben:test", admin = true, None, List())
+
+      fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
+      fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
+      fakeUserMatcher.getUser("ben") returns Some(user)
+      fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) returns Allowed
+
+      val result = controller.auth().apply(FakeRequest(GET, "/auth").withSession("user" -> "ben", "authTime" -> DateTime.now().minusMinutes(10).getMillis.toString))
+
+      status(result) mustBe NO_CONTENT
+
+      fakeRequestDecoder.decodeRequestHeaders(*) wasCalled once
+      fakePathMatcher.getRule(requestInfo) was called
+      fakeUserMatcher.getUser("ben") was called
       fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) was called
     }
 

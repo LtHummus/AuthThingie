@@ -3,6 +3,7 @@ package services.users
 import java.util
 
 import com.typesafe.config.Config
+import org.apache.commons.codec.binary.Base64
 import play.api.ConfigLoader
 import services.rules.PathRule
 import services.totp.TotpUtil

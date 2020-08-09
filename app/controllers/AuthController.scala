@@ -5,6 +5,7 @@ import java.net.URI
 import config.AuthThingieConfig
 import javax.inject.{Inject, Singleton}
 import org.apache.commons.codec.binary.Base64
+import org.joda.time.DateTime
 import play.api.mvc.{AbstractController, AnyContent, ControllerComponents, Request}
 import play.api.libs.json._
 import services.decoding.RequestDecoder
@@ -29,16 +30,16 @@ class AuthController @Inject() (decoder: RequestDecoder,
   case object BasicAuth extends CredentialSource
   case object NoCredentials extends CredentialSource
 
+  private def pullUserFromHeader(header: String): Option[User] = {
+    val rawAuthData = header.replaceFirst("Basic ", "")
+    val Array(username, password) = new String(Base64.decodeBase64(rawAuthData)).split(":", 2)
+    userMatcher.validUser(username, password)
+  }
+
   private def pullLoginInfoFromRequest[_](request: Request[_]): (Option[User], CredentialSource) = {
     (request.session.get("user"), request.headers.get(config.headerName)) match {
       case (Some(username), _)   => (userMatcher.getUser(username), Session) //logged in via session, continue on
-      case (_, Some(authHeader)) =>
-        val rawAuthData = authHeader.replaceFirst("Basic ", "")
-        val Array(username, password) = new String(Base64.decodeBase64(rawAuthData)).split(":", 2)
-        userMatcher.validUser(username, password) match {
-          case Some(user) if user.doesNotUseTotp => (Some(user), BasicAuth)
-          case _                                 => (None, BasicAuth) //TODO: see if 2fa code has been appended to password for accounts that use it
-        }
+      case (_, Some(authHeader)) => (pullUserFromHeader(authHeader), BasicAuth)
       case _                     => (None, NoCredentials)
     }
   }
@@ -83,10 +84,11 @@ class AuthController @Inject() (decoder: RequestDecoder,
       //figure out if the user is logged in or gave us basic-auth credentials
       val (user, credentialSource) = pullLoginInfoFromRequest(request)
       Logger.debug(s"Logged in user: ${user.map(_.username)}")
+      val loginTime = request.session.get("authTime").map(x => new DateTime(x.toLong))
 
       //figure out what to do and return the proper response
       resolver.resolveUserAccessForRule(user, rule) match {
-        case Allowed =>
+        case Allowed if (credentialSource == BasicAuth || credentialSource == Session && rule.map(_.withinTimeframe(loginTime)).contains(true)) =>
           Logger.debug("Access allowed")
           NoContent
 

@@ -89,6 +89,7 @@
                 <th scope="col">Protocol</th>
                 <th scope="col">Host</th>
                 <th scope="col">Path</th>
+                <th scope="col">Timeout</th>
                 <th scope="col">Permitted Roles</th>
               </tr>
             </thead>
@@ -106,6 +107,9 @@
                   </td>
                   <td>
                     @rule.pathPattern.getOrElse("*")
+                  </td>
+                  <td>
+                    @rule.timeout.map(_.toString).getOrElse("")
                   </td>
                   <td>
                     @if(rule.public) {

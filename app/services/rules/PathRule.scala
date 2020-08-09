@@ -1,10 +1,10 @@
 package services.rules
 
 import java.time.Duration
-import java.util
 
 import com.typesafe.config.Config
 import org.apache.commons.io.{FilenameUtils, IOCase}
+import org.joda.time.DateTime
 import play.api.ConfigLoader
 
 import scala.jdk.CollectionConverters._
@@ -46,5 +46,13 @@ case class PathRule(name: String, protocolPattern: Option[String], hostPattern: 
   def matches(protocol: String, host: String, path: String): Boolean = {
     Logger.debug(s"[$name] Checking rule")
     matches(protocol, protocolPattern) && matches(host, hostPattern) && matches(path, pathPattern)
+  }
+
+  def withinTimeframe(loginTime: Option[DateTime]): Boolean = (loginTime, timeout) match {
+    case (_, None) => true // no timeout; as long as they have a valid session, we're ok
+    case (None, _) => false
+    case (Some(ourTime), Some(sessionDuration)) =>
+      val firstValidLogin = DateTime.now().minus(sessionDuration.toMillis)
+      ourTime.isAfter(firstValidLogin)// user must have logged after this time
   }
 }
