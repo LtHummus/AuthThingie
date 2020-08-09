@@ -98,6 +98,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
         knownUser match {
           case Some(user) if user.totpCorrect(data.totpCode) =>
             Logger.info(s"Successful auth for user ${user.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}")
+            Logger.debug(s"Redirecting to $redirectUrl")
             Redirect(redirectUrl, FOUND).withSession("user" -> user.username, "authTime" -> System.currentTimeMillis().toString)
 
           case Some(user) =>
@@ -123,6 +124,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
       userMatcher.validUser(data.username, data.password) match {
         case Some(user) if user.doesNotUseTotp =>
           Logger.info(s"Successful auth for user ${user.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}")
+          Logger.debug(s"Redirecting to $redirectUrl")
           Redirect(redirectUrl, FOUND).withSession("user" -> user.username, "authTime" -> System.currentTimeMillis().toString)
         case Some(user) if user.usesTotp =>
           Logger.info(s"Successful username/password combo for ${user.username}. Forwarding for 2FA")

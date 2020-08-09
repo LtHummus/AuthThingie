@@ -71,6 +71,7 @@ class AuthController @Inject() (decoder: RequestDecoder,
     //decode request to find out where the user was heading...
     val requestInfo = decoder.decodeRequestHeaders(request.headers)
     Logger.debug(s"Decoded request: protocol = ${requestInfo.protocol}; host = ${requestInfo.host}; path = ${requestInfo.path}")
+    Logger.debug(s"Session contents: ${request.session}")
 
     //does that destination match a rule we know about?
     val rule: Option[PathRule] = pathMatcher.getRule(requestInfo)
@@ -88,7 +89,7 @@ class AuthController @Inject() (decoder: RequestDecoder,
 
       //figure out what to do and return the proper response
       resolver.resolveUserAccessForRule(user, rule) match {
-        case Allowed if (credentialSource == BasicAuth || credentialSource == Session && rule.map(_.withinTimeframe(loginTime)).contains(true)) =>
+        case Allowed if (credentialSource == BasicAuth || credentialSource == Session && (rule.isEmpty || rule.exists(_.withinTimeframe(loginTime)))) =>
           Logger.debug("Access allowed")
           NoContent
 
