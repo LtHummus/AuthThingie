@@ -9,19 +9,15 @@ import services.totp.TotpUtil
 import services.validator.HashValidator
 
 import scala.jdk.CollectionConverters._
+import scala.util.Try
 
 object User {
   implicit val configLoader: ConfigLoader[List[User]] = (config: Config, path: String) => {
-    config.getObjectList(path).asScala.map { curr =>
-      val unwrapped = curr.unwrapped().asScala
-
-      val passwdLine = unwrapped("htpasswdLine").asInstanceOf[String]
-      val admin = unwrapped.get("admin").exists(x => x.asInstanceOf[Boolean])
-      val totpSecret = unwrapped.get("totpSecret").map(_.asInstanceOf[String])
-      val roles = unwrapped.get("roles") match {
-        case Some(roleList) => roleList.asInstanceOf[util.ArrayList[String]].asScala.toList
-        case None => List.empty[String]
-      }
+    config.getConfigList(path).asScala.map { curr =>
+      val passwdLine = curr.getString("htpasswdLine")
+      val admin = Try(curr.getBoolean("admin")).getOrElse(false)
+      val totpSecret = Try(curr.getString("totpSecret")).toOption
+      val roles = Try(curr.getStringList("roles").asScala.toList).getOrElse(List.empty[String])
 
       User(passwdLine, admin, totpSecret, roles)
     }.toList

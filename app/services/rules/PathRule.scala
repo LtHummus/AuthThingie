@@ -22,7 +22,7 @@ object PathRule {
         val hostPattern = Try(curr.getString("hostPattern")).toOption
         val pathPattern = Try(curr.getString("pathPattern")).toOption
         val isPublic = Try(curr.getBoolean("public")).getOrElse(false)
-        val permittedRoles = Try(curr.getStringList("permittedRoles").asScala.toSeq).getOrElse(Seq.empty[String])
+        val permittedRoles = Try(curr.getStringList("permittedRoles").asScala.toList).getOrElse(List.empty[String])
         val timeout = Try(curr.getDuration("timeout")).toOption
 
         Logger.info(s"Parsed $timeout for $name")
@@ -33,7 +33,7 @@ object PathRule {
   }
 }
 
-case class PathRule(name: String, protocolPattern: Option[String], hostPattern: Option[String], pathPattern: Option[String], public: Boolean, permittedRoles: Seq[String], timeout: Option[Duration] = None) {
+case class PathRule(name: String, protocolPattern: Option[String], hostPattern: Option[String], pathPattern: Option[String], public: Boolean, permittedRoles: List[String], timeout: Option[Duration] = None) {
   import PathRule._
 
   private def matches(subject: String, pattern: Option[String]): Boolean = {
