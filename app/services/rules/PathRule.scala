@@ -25,8 +25,6 @@ object PathRule {
         val permittedRoles = Try(curr.getStringList("permittedRoles").asScala.toList).getOrElse(List.empty[String])
         val timeout = Try(curr.getDuration("timeout")).toOption
 
-        Logger.info(s"Parsed $timeout for $name")
-
         PathRule(name, protocolPattern, hostPattern, pathPattern, isPublic, permittedRoles, timeout)
       }.toList
     }

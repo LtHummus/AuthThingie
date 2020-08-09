@@ -1,5 +1,6 @@
 @import services.rules.PathRule
 @import services.users.User
+@import util.RichDuration._
 @(user: Option[User], rules: List[PathRule], users: List[User], showConfigWarning: Boolean, siteName: String)
 
 @main("Authentication") {
@@ -109,7 +110,7 @@
                     @rule.pathPattern.getOrElse("*")
                   </td>
                   <td>
-                    @rule.timeout.map(_.toString).getOrElse("")
+                    @rule.timeout.map(_.prettyPrint).getOrElse("")
                   </td>
                   <td>
                     @if(rule.public) {
