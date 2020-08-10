@@ -18,6 +18,8 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
   private val PlaySessionExpirationPath = "play.http.session.maxAge"
   private val PlayJwtExpirationPath = "play.http.session.jwt.expiresAfter"
 
+  private val OneYear = "365d"
+
   private val SecretKeyEnvVarName = "AUTHTHINGIE_SECRET_KEY"
 
   private def secretKeyIsBad(key: String): Boolean = key.length < MinSecretKeyLength || key.equalsIgnoreCase("SAMPLE_SECRET_KEY")
@@ -51,9 +53,9 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
 
     val combinedConfiguration = Configuration(additionalConfig).withFallback(context.initialConfiguration)
 
-    val authThingieTimeout = combinedConfiguration.getOptional[String]("auththingie.timeout").map { timeout =>
-      Seq(PlaySessionExpirationPath -> timeout, PlayJwtExpirationPath -> timeout)
-    }.getOrElse(Seq())
+    //TODO: check to see if user has set either of the following keys....then swap some things around so
+    //      things still work
+    val authThingieTimeout = Seq(PlaySessionExpirationPath -> OneYear, PlayJwtExpirationPath -> OneYear)
 
     val domain = combinedConfiguration.getOptional[String]("auththingie.domain").map { domain =>
       Seq(PlayDomainConfigPath -> domain)

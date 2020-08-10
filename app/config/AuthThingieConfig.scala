@@ -24,7 +24,12 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
   }
 
   private def loadPathRules: ValidationResult[List[PathRule]] = {
-    Try(baseConfig.getDeprecated[List[PathRule]]("auththingie.rules", "rules")).toValidated
+    Try(baseConfig.getDeprecated[List[PathRule]]("auththingie.rules", "rules").map(rule => {
+      rule.timeout match {
+        case None    => rule.copy(timeout = Some(baseConfig.underlying.getDuration("auththingie.timeout")))
+        case Some(_) => rule
+      }
+    })).toValidated
   }
 
   private def loadUsers: ValidationResult[List[User]] = {
