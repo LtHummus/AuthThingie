@@ -1,5 +1,7 @@
 package controllers
 
+import java.time.ZoneId
+
 import config.AuthThingieConfig
 import org.mockito.IdiomaticMockito
 import org.scalatestplus.play._
@@ -38,16 +40,18 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       fakeConfig.users returns List(User("test:foo", admin = true, None, List()))
       fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
       fakeConfig.siteName returns "AuthThingie"
+      fakeConfig.timeZone returns ZoneId.systemDefault()
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
 
-      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test"))
+      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test", "authTime" -> System.currentTimeMillis().toString))
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
       contentAsString(home) must include ("Welcome to AuthThingie!")
       contentAsString(home) must include ("<h3>Users</h3>") //users header
       contentAsString(home) must include ("<h3>Rules</h3>") //path rules header
+      contentAsString(home) must include ("Last login at ")
 
     }
 
@@ -55,26 +59,29 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       fakeConfig.users returns List(User("test:foo", admin = false, None, List()))
       fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
       fakeConfig.siteName returns "AuthThingie"
+      fakeConfig.timeZone returns ZoneId.systemDefault()
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = false, None, List()))
 
-      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test"))
+      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test", "authTime" -> System.currentTimeMillis().toString))
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
       contentAsString(home) must include ("Welcome to AuthThingie!")
       contentAsString(home) mustNot include ("<h3>Users</h3>") //users header
       contentAsString(home) mustNot include ("<h3>Rules</h3>") //path rules header
+      contentAsString(home) must include ("Last login at ")
     }
 
     "render public access properly" in new Setup() {
       fakeConfig.users returns List(User("test:foo", admin = true, None, List()))
       fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
       fakeConfig.siteName returns "AuthThingie"
+      fakeConfig.timeZone returns ZoneId.systemDefault()
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
 
-      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test"))
+      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test", "authTime" -> System.currentTimeMillis().toString))
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
@@ -86,10 +93,11 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       fakeConfig.users returns List(User("test:foo", admin = true, None, List()))
       fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = false, List()))
       fakeConfig.siteName returns "AuthThingie"
+      fakeConfig.timeZone returns ZoneId.systemDefault()
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
 
-      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test"))
+      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test", "authTime" -> System.currentTimeMillis().toString))
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
@@ -101,10 +109,11 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       fakeConfig.users returns List(User("test:foo", admin = true, None, List()))
       fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = false, List("a", "b", "c")))
       fakeConfig.siteName returns "AuthThingie"
+      fakeConfig.timeZone returns ZoneId.systemDefault()
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
 
-      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test"))
+      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test", "authTime" -> System.currentTimeMillis().toString))
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
@@ -117,10 +126,11 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       fakeConfig.users returns List(User("test:foo", admin = true, None, List()))
       fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = false, List("d", "e", "f", "g")))
       fakeConfig.siteName returns "AuthThingie"
+      fakeConfig.timeZone returns ZoneId.systemDefault()
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List("a", "b", "c")))
 
-      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test"))
+      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test", "authTime" -> System.currentTimeMillis().toString))
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
