@@ -7,9 +7,18 @@
 @(user: Option[User], rules: List[PathRule], users: List[User], showConfigWarning: Boolean, siteName: String, showTimeoutWarning: Boolean, loginTime: Option[ZonedDateTime])
 
 @main("Authentication") {
-  <div class="container-fluid row">
-    <h1>Welcome to @siteName!</h1>
+  <div class="row">
+    <div class="col-md-10">
+      <h1>Welcome to @siteName!</h1>
+    </div>
+
+    @if(user.isDefined) {
+      <div class="col-md-2">
+        <h3><a class="btn btn-danger" href="@routes.LoginController.logout()">Click here to logout</a></h3>
+      </div>
+    }
   </div>
+
 
   @if(showConfigWarning) {
     <div class="alert alert-warning">
@@ -36,14 +45,11 @@
   } else {
     <div class="container-fluid row py-3">
       <div class="row align-items-start">
-        <div class="col col-md-5 col-sm-8">
+        <div class="col">
           <h2>Logged in as @user.get.username</h2>
           @if(loginTime.isDefined) {
             <p>Last login at <strong>@DateTimeFormatter.RFC_1123_DATE_TIME.format(loginTime.get)</strong></p>
           }
-        </div>
-        <div class="col col-4">
-          <h3><a class="btn btn-danger" href="@routes.LoginController.logout()">Click here to logout</a></h3>
         </div>
       </div>
     </div>
