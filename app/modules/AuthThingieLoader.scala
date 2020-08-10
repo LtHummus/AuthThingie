@@ -13,6 +13,7 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
   private val MinSecretKeyLength = 16
 
   private val AuthThingieSecretKeyConfigPath = "auththingie.secretKey"
+  private val AuthThingieTimeoutConfigPath = "auththingie.timeout"
   private val SecretKeyConfigPath = "play.http.secret.key"
   private val PlayDomainConfigPath = "play.http.session.domain"
   private val PlaySessionExpirationPath = "play.http.session.maxAge"
@@ -53,9 +54,12 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
 
     val combinedConfiguration = Configuration(additionalConfig).withFallback(context.initialConfiguration)
 
-    //TODO: check to see if user has set either of the following keys....then swap some things around so
-    //      things still work
-    val authThingieTimeout = Seq(PlaySessionExpirationPath -> OneYear, PlayJwtExpirationPath -> OneYear)
+    val authThingieTimeout = if (combinedConfiguration.has(PlaySessionExpirationPath) || combinedConfiguration.has(PlayJwtExpirationPath)) {
+      Logger.warn(s"I've changed the way that I handle timeouts in 0.1.1. Please set the config key $AuthThingieTimeoutConfigPath with the timeout instead")
+      Seq()
+    } else {
+      Seq(PlaySessionExpirationPath -> OneYear, PlayJwtExpirationPath -> OneYear)
+    }
 
     val domain = combinedConfiguration.getOptional[String]("auththingie.domain").map { domain =>
       Seq(PlayDomainConfigPath -> domain)

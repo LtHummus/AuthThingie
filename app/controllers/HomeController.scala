@@ -31,7 +31,7 @@ class HomeController @Inject()(config: AuthThingieConfig,
     val rules = if (isAdmin) config.pathRules else List()
     val allUsers = if (isAdmin) config.users else List()
 
-    Ok(views.html.index(loggedInUser, rules, allUsers, isAdmin && !config.isUsingNewConfig, config.siteName))
+    Ok(views.html.index(loggedInUser, rules, allUsers, isAdmin && !config.isUsingNewConfig, config.siteName, !config.hasTimeoutSetProperly))
   }
 
 

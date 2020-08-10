@@ -1,7 +1,7 @@
 @import services.rules.PathRule
 @import services.users.User
 @import util.RichDuration._
-@(user: Option[User], rules: List[PathRule], users: List[User], showConfigWarning: Boolean, siteName: String)
+@(user: Option[User], rules: List[PathRule], users: List[User], showConfigWarning: Boolean, siteName: String, showTimeoutWarning: Boolean)
 
 @main("Authentication") {
   <div class="container-fluid row">
@@ -13,6 +13,12 @@
       Hi there! A major change was made to the way AuthThingie loads configuration. You're still using the old-style method.
       You should probably change that. Checkout the README at <a href="https://github.com/LtHummus/AuthThingie" target="_blank">https://github.com/LtHummus/AuthThingie</a> for
       information on how to get up to date.
+    </div>
+  }
+
+  @if(showTimeoutWarning) {
+    <div class="alert alert-warning">
+      I noticed you haven't set the config key `auththingie.timeout`. Please set that for how long you want sessions to last. See the README for more details.
     </div>
   }
 

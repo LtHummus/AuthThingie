@@ -1,5 +1,7 @@
 package config
 
+import java.time.Duration
+
 import cats.data.{Validated, ValidatedNec}
 import cats.data.Validated.Valid
 import cats.implicits._
@@ -13,6 +15,7 @@ import scala.util.{Failure, Success, Try}
 
 @Singleton
 class AuthThingieConfig @Inject() (baseConfig: Configuration) {
+  private val PlaySessionExpirationPath = "play.http.session.maxAge"
 
   type ValidationResult[T] = ValidatedNec[String, T]
 
@@ -26,7 +29,7 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
   private def loadPathRules: ValidationResult[List[PathRule]] = {
     Try(baseConfig.getDeprecated[List[PathRule]]("auththingie.rules", "rules").map(rule => {
       rule.timeout match {
-        case None    => rule.copy(timeout = Some(baseConfig.underlying.getDuration("auththingie.timeout")))
+        case None    => rule.copy(timeout = Some(baseConfig.underlying.getDuration(PlaySessionExpirationPath)))
         case Some(_) => rule
       }
     })).toValidated
@@ -69,7 +72,8 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
       (List(), List(), false, "", "", "")
   }
 
-  val isUsingNewConfig: Boolean = baseConfig.has("auththingie.users")
+  val isUsingNewConfig: Boolean = baseConfig.has("auththingie.users") || !baseConfig.getOptional[String](PlaySessionExpirationPath).contains("365d")
+  val hasTimeoutSetProperly: Boolean = baseConfig.getOptional[String](PlaySessionExpirationPath).contains("365d")
   val configErrors: List[String] = parsedConfig match {
     case Valid(_)                  => List()
     case Validated.Invalid(errors) => errors.toList

@@ -3,6 +3,7 @@ package controllers
 import config.AuthThingieConfig
 import org.mockito.IdiomaticMockito
 import org.scalatestplus.play._
+import org.scalatest.OptionValues._
 import play.api.test._
 import play.api.test.Helpers._
 import play.api.mvc.Session
@@ -37,9 +38,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
       val returnedSession = session(result)
       returnedSession.get("user") mustBe Some("user")
 
-      val authedTime = returnedSession.get("authTime").getOrElse(fail("no auth time returned")).toLong
-
-      authedTime mustBe System.currentTimeMillis() +- TimeTolerance.toMillis
+      returnedSession.get("authTime").flatMap(_.toLongOption).value mustBe System.currentTimeMillis() +- TimeTolerance.toMillis
     }
 
     "reject invalid login info" in new Setup() {
@@ -55,7 +54,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
       status(result) mustBe UNAUTHORIZED
       contentType(result) mustBe Some("text/html")
       contentAsString(result) must include("Invalid username or password")
-      session(result).get("user").isEmpty mustBe true
+      session(result).get("user") mustBe None
     }
   }
 
@@ -70,7 +69,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
           "redirectUrl" -> "someUrl")))
 
       status(result) mustBe SEE_OTHER
-      redirectLocation(result).getOrElse(fail("No redirect url")) must startWith ("/totp?")
+      redirectLocation(result).value must startWith ("/totp?")
     }
 
     "not redirect to totp page when not needed" in new Setup() {
@@ -125,8 +124,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
 
       returnedSession.get("user") mustBe(Some("test"))
 
-      val authedTime = returnedSession.get("authTime").getOrElse(fail("no auth time set")).toLong
-      authedTime mustBe System.currentTimeMillis() +- TimeTolerance.toMillis
+      returnedSession.get("authTime").flatMap(_.toLongOption).value mustBe System.currentTimeMillis() +- TimeTolerance.toMillis
     }
 
     "respect auth timeout" in new Setup() {
