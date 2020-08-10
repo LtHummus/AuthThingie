@@ -1,7 +1,10 @@
 @import services.rules.PathRule
 @import services.users.User
 @import util.RichDuration._
-@(user: Option[User], rules: List[PathRule], users: List[User], showConfigWarning: Boolean, siteName: String, showTimeoutWarning: Boolean)
+@import java.time.LocalDateTime
+@import java.time.format.DateTimeFormatter
+@import java.time.ZonedDateTime
+@(user: Option[User], rules: List[PathRule], users: List[User], showConfigWarning: Boolean, siteName: String, showTimeoutWarning: Boolean, loginTime: Option[ZonedDateTime])
 
 @main("Authentication") {
   <div class="container-fluid row">
@@ -35,6 +38,9 @@
       <div class="row align-items-start">
         <div class="col col-md-5 col-sm-8">
           <h2>Logged in as @user.get.username</h2>
+          @if(loginTime.isDefined) {
+            <p>Last login at <strong>@DateTimeFormatter.RFC_1123_DATE_TIME.format(loginTime.get)</strong></p>
+          }
         </div>
         <div class="col col-4">
           <h3><a class="btn btn-danger" href="@routes.LoginController.logout()">Click here to logout</a></h3>

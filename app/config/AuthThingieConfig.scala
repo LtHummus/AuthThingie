@@ -1,6 +1,6 @@
 package config
 
-import java.time.Duration
+import java.time.{Duration, ZoneId}
 
 import cats.data.{Validated, ValidatedNec}
 import cats.data.Validated.Valid
@@ -55,25 +55,29 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
     Try(baseConfig.getOptional[String]("auththingie.authHeader").getOrElse(HeaderNames.AUTHORIZATION)).toValidated
   }
 
+  private val readTimeZone: ValidationResult[ZoneId] = {
+    Try(baseConfig.getOptional[String]("auththingie.timeZone").map(ZoneId.of).getOrElse(ZoneId.systemDefault())).toValidated
+  }
+
   private val Logger = play.api.Logger(this.getClass)
 
-  case class AuthThingieConfig(rules: List[PathRule], users: List[User], forceRedirectToHttps: Boolean, siteUrl: String, siteName: String, headerName: String)
+  case class AuthThingieConfig(rules: List[PathRule], users: List[User], forceRedirectToHttps: Boolean, siteUrl: String, siteName: String, headerName: String, timeZone: ZoneId)
 
   private val parsedConfig = {
-    (loadPathRules, loadUsers, loadForceRedirect, loadSiteUrl, loadSiteName, authHeaderName).mapN(AuthThingieConfig)
+    (loadPathRules, loadUsers, loadForceRedirect, loadSiteUrl, loadSiteName, authHeaderName, readTimeZone).mapN(AuthThingieConfig)
   }
 
-  val (pathRules, users, forceHttpsRedirect, siteUrl, siteName, headerName) = parsedConfig match {
+  val (pathRules, users, forceHttpsRedirect, siteUrl, siteName, headerName, timeZone) = parsedConfig match {
     case Valid(a) =>
       Logger.info("Valid configuration parsed and loaded")
-      (a.rules, a.users, a.forceRedirectToHttps, a.siteUrl, a.siteName, a.headerName)
+      (a.rules, a.users, a.forceRedirectToHttps, a.siteUrl, a.siteName, a.headerName, a.timeZone)
     case Validated.Invalid(e) =>
       Logger.warn("Invalid configuration!")
-      (List(), List(), false, "", "", "")
+      (List(), List(), false, "", "", "", ZoneId.systemDefault())
   }
 
-  val isUsingNewConfig: Boolean = baseConfig.has("auththingie.users") || !baseConfig.getOptional[String](PlaySessionExpirationPath).contains("365d")
   val hasTimeoutSetProperly: Boolean = baseConfig.getOptional[String](PlaySessionExpirationPath).contains("365d")
+  val isUsingNewConfig: Boolean = baseConfig.has("auththingie.users") || !hasTimeoutSetProperly
   val configErrors: List[String] = parsedConfig match {
     case Valid(_)                  => List()
     case Validated.Invalid(errors) => errors.toList
