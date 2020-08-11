@@ -147,9 +147,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
     "be able to logout" in new Setup() {
       val result = controller.logout().apply(FakeRequest(GET, "/logout").withSession("user" -> "someone"))
 
-      status(result) mustBe OK
-      contentType(result) mustBe Some("text/html")
-      contentAsString(result) must include("Logged out")
+      status(result) mustBe SEE_OTHER
       session(result) mustBe Session()
     }
   }

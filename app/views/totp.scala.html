@@ -2,10 +2,6 @@
 
 
 @main("TOTP") {
-    @request.flash.data.map{ case (name, value) =>
-    <div>@name: @value</div>
-    }
-
     @if(form.hasGlobalErrors) {
         @form.globalErrors.map { error: FormError =>
             <div>

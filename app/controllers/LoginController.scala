@@ -46,7 +46,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
       case Some(user) => Logger.info(s"Logging out $user")
       case None       => Logger.info("Log out called with no user")
     }
-    Ok(views.html.logged_out("Logged out successfully", routes.HomeController.index())).withNewSession
+    Redirect(routes.HomeController.index()).withNewSession
   }
 
 

@@ -32,7 +32,7 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
       contentAsString(home) must include ("Welcome to AuthThingie!")
-      contentAsString(home) must include ("Click here to login")
+      contentAsString(home) must include ("Login")
 
     }
 

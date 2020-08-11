@@ -7,18 +7,24 @@
 @(user: Option[User], rules: List[PathRule], users: List[User], showConfigWarning: Boolean, siteName: String, showTimeoutWarning: Boolean, loginTime: Option[ZonedDateTime])
 
 @main("Authentication") {
-  <div class="row">
-    <div class="col-md-10">
-      <h1>Welcome to @siteName!</h1>
-    </div>
+  <div class="jumbotron mt-3">
+    <h1>Welcome to @siteName!</h1>
 
-    @if(user.isDefined) {
-      <div class="col-md-2">
-        <h3><a class="btn btn-danger" href="@routes.LoginController.logout()">Click here to logout</a></h3>
-      </div>
+    @if(user.isEmpty) {
+      <p class="lead">You are not logged in</p>
+      <a class="btn btn-primary" href="@routes.LoginController.showLoginForm">Login</a>
+    } else {
+      <p class="lead">Logged in as @user.get.username</p>
+      @if(loginTime.isDefined) {
+        <p>Last login at <strong>@DateTimeFormatter.RFC_1123_DATE_TIME.format(loginTime.get)</strong></p>
+      }
     }
   </div>
-
+  @if(user.isDefined) {
+    <div>
+      <h3><a class="btn btn-danger" href="@routes.LoginController.logout()">Logout</a></h3>
+    </div>
+  }
 
   @if(showConfigWarning) {
     <div class="alert alert-warning">
@@ -34,27 +40,7 @@
     </div>
   }
 
-  @if(user.isEmpty) {
-    <div class="row align-items-start">
-      <div class="col">
-        <h2>Not logged in</h2>
-        <a class="btn btn-primary" href="@routes.LoginController.showLoginForm">Click here to login</a>
-      </div>
-
-    </div>
-  } else {
-    <div class="container-fluid row py-3">
-      <div class="row align-items-start">
-        <div class="col">
-          <h2>Logged in as @user.get.username</h2>
-          @if(loginTime.isDefined) {
-            <p>Last login at <strong>@DateTimeFormatter.RFC_1123_DATE_TIME.format(loginTime.get)</strong></p>
-          }
-        </div>
-      </div>
-    </div>
-
-
+  @if(user.isDefined) {
     <div class="container-fluid row py-3">
       @if(users.nonEmpty) {
         <h3>Users</h3>
