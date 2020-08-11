@@ -13,54 +13,63 @@ Everything is handled in a `auththingie_config.conf` file. Here's an example:
 ```hocon
 auththingie {
   timeout: 24h
-  domain: localhost // set this to  your domain (so if AuthThingie is at auth.example.com, this should be example.com
+  domain: example.com
+  timeZone: America/Los_Angeles
   secretKey: "SAMPLE_SECRET_KEY" // this should be a strong and secure key! It can also be specified in the AUTHTHINGIE_SECRET_KEY envvar
   rules: [
     {
-      "name": "/css* on test.example.com",
-      "pathPattern": "/css*",
-      "hostPattern": "test.example.com",
-      "public": true,
-      "permittedRoles": []
+      name: "/css* on test.example.com"
+      pathPattern: "/css*"
+      hostPattern: "test.example.com"
+      public: true
+      permittedRoles: []
     },
     {
-      "name": "/js* on test.example.com",
-      "pathPattern": "/js*",
-      "hostPattern": "test.example.com",
-      "public": true,
-      "permittedRoles": []
+      name: "/js* on test.example.com"
+      pathPattern: "/js*"
+      hostPattern: "test.example.com"
+      public: true
+      permittedRoles: []
     },
     {
-      "name": "/animals* on test.example.com",
-      "pathPattern": "/animals*",
-      "hostPattern": "test.example.com",
-      "public": false,
-      "permittedRoles": ["animal_role"]
+      name: "/animals* on test.example.com"
+      pathPattern: "/animals*"
+      hostPattern: "test.example.com"
+      public: false
+      permittedRoles: ["animal_role"]
+      timeout: 2d
     },
     {
-      "name": "test.example.com root",
-      "hostPattern": "test.example.com",
-      "pathPattern": "/",
-      "public": true,
-      "permittedRoles": []
+      name: "/colors* on test.example.com"
+      pathPattern: "/colors*"
+      hostPattern: "test.example.com"
+      public: false,
+      permittedRoles: ["animal_role"]
+    },
+    {
+      name: "test.example.com root"
+      hostPattern: "test.example.com"
+      pathPattern: "/"
+      public: true
+      permittedRoles: []
     }
   ]
 
   users: [
     {
-      "htpasswdLine": "ben:$2y$05$WvtSdzLmwYqZqUe/EdLt1uG250dUmHAdQ4nKEDP.J5KRM2u3JbTCS",
-      "admin": true,
-      "roles": [],
+      htpasswdLine: "ben:$2y$05$WvtSdzLmwYqZqUe/EdLt1uG250dUmHAdQ4nKEDP.J5KRM2u3JbTCS"
+      admin: true
+      roles: []
     },
     {
-      "htpasswdLine": "dog:$2y$05$/WME1Gi5RRG/or8To0BjQewJ6lg0z/IyaRjLyhW8yx0ygVwMoJjGO",
-      "admin": false,
-      "totpSecret": "T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH",
-      "roles": ["animal_role", "foo_role"],
+      htpasswdLine: "dog:$2y$05$/WME1Gi5RRG/or8To0BjQewJ6lg0z/IyaRjLyhW8yx0ygVwMoJjGO"
+      admin: false
+      totpSecret: "T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH"
+      roles: ["animal_role", "foo_role"]
     }
   ]
 
-  authSiteUrl = "http://localhost:9000"
+  authSiteUrl: "http://auth.example.com"
 }
 
 ``` 

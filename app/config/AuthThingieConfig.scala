@@ -16,6 +16,7 @@ import scala.util.{Failure, Success, Try}
 @Singleton
 class AuthThingieConfig @Inject() (baseConfig: Configuration) {
   private val PlaySessionExpirationPath = "play.http.session.maxAge"
+  private val OneYear = "365d"
 
   type ValidationResult[T] = ValidatedNec[String, T]
 
@@ -76,7 +77,7 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
       (List(), List(), false, "", "", "", ZoneId.systemDefault())
   }
 
-  val hasTimeoutSetProperly: Boolean = baseConfig.getOptional[String](PlaySessionExpirationPath).contains("365d")
+  val hasTimeoutSetProperly: Boolean = baseConfig.getOptional[String](PlaySessionExpirationPath).contains(OneYear)
   val isUsingNewConfig: Boolean = baseConfig.has("auththingie.users") || !hasTimeoutSetProperly
   val configErrors: List[String] = parsedConfig match {
     case Valid(_)                  => List()
