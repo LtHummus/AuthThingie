@@ -115,7 +115,11 @@
                                 @rule.pathPattern.getOrElse("*")
                                 </td>
                                 <td>
-                                @rule.timeout.map(_.prettyPrint).getOrElse("")
+                                    @if(rule.public) {
+                                        Infinite
+                                    } else {
+                                        @rule.timeout.map(_.prettyPrint).getOrElse("")
+                                    }
                                 </td>
                                 <td>
                                 @if(rule.public) {
