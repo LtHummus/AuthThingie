@@ -1,5 +1,6 @@
 package config
 
+import java.time.temporal.TemporalAmount
 import java.time.{Duration, ZoneId}
 
 import cats.data.{Validated, ValidatedNec}
@@ -10,6 +11,7 @@ import play.api.Configuration
 import play.mvc.Http.HeaderNames
 import services.rules.PathRule
 import services.users.User
+import util.RichDuration.PrettyPrintableDuration
 
 import scala.util.{Failure, Success, Try}
 
@@ -60,21 +62,28 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
     Try(baseConfig.getOptional[String]("auththingie.timeZone").map(ZoneId.of).getOrElse(ZoneId.systemDefault())).toValidated
   }
 
-  private val Logger = play.api.Logger(this.getClass)
-
-  case class AuthThingieConfig(rules: List[PathRule], users: List[User], forceRedirectToHttps: Boolean, siteUrl: String, siteName: String, headerName: String, timeZone: ZoneId)
-
-  private val parsedConfig = {
-    (loadPathRules, loadUsers, loadForceRedirect, loadSiteUrl, loadSiteName, authHeaderName, readTimeZone).mapN(AuthThingieConfig)
+  private val loadTimeout: ValidationResult[Duration] = {
+    val auththingieTimeout = baseConfig.getOptional[TemporalAmount]("auththingie.timeout")
+    val playMaxAge = baseConfig.getOptional[TemporalAmount]("play.http.session.maxAge")
+    val playJwtExpire = baseConfig.getOptional[TemporalAmount]("play.http.session.jwt.expiresAfter")
+    Try(List(auththingieTimeout, playMaxAge, playJwtExpire).flatten.head).map(Duration.from).toValidated
   }
 
-  val (pathRules, users, forceHttpsRedirect, siteUrl, siteName, headerName, timeZone) = parsedConfig match {
+  private val Logger = play.api.Logger(this.getClass)
+
+  case class AuthThingieConfig(rules: List[PathRule], users: List[User], forceRedirectToHttps: Boolean, siteUrl: String, siteName: String, headerName: String, timeZone: ZoneId, sessionTimeout: Duration)
+
+  private val parsedConfig = {
+    (loadPathRules, loadUsers, loadForceRedirect, loadSiteUrl, loadSiteName, authHeaderName, readTimeZone, loadTimeout).mapN(AuthThingieConfig)
+  }
+
+  val (pathRules, users, forceHttpsRedirect, siteUrl, siteName, headerName, timeZone, sessionTimeout) = parsedConfig match {
     case Valid(a) =>
       Logger.info("Valid configuration parsed and loaded")
-      (a.rules, a.users, a.forceRedirectToHttps, a.siteUrl, a.siteName, a.headerName, a.timeZone)
+      (a.rules, a.users, a.forceRedirectToHttps, a.siteUrl, a.siteName, a.headerName, a.timeZone, a.sessionTimeout)
     case Validated.Invalid(e) =>
       Logger.warn("Invalid configuration!")
-      (List(), List(), false, "", "", "", ZoneId.systemDefault())
+      (List(), List(), false, "", "", "", ZoneId.systemDefault(), Duration.ofDays(1))
   }
 
   val hasTimeoutSetProperly: Boolean = baseConfig.getOptional[String](PlaySessionExpirationPath).contains(OneYear)
@@ -82,6 +91,16 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
   val configErrors: List[String] = parsedConfig match {
     case Valid(_)                  => List()
     case Validated.Invalid(errors) => errors.toList
+  }
+
+  def asMap: Map[String, String] = {
+    Map(
+      "Site URL" -> siteUrl,
+      "Site Name" -> siteName,
+      "Header Name" -> headerName,
+      "Time Zone" -> timeZone.toString,
+      "Session Timeout" -> sessionTimeout.prettyPrint
+    )
   }
 
   if (!isUsingNewConfig) {

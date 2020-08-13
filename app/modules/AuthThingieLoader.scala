@@ -20,6 +20,7 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
   private val PlayJwtExpirationPath = "play.http.session.jwt.expiresAfter"
 
   private val OneYear = "365d"
+  private val OneDay = "1d"
 
   private val SecretKeyEnvVarName = "AUTHTHINGIE_SECRET_KEY"
 
@@ -54,9 +55,13 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
 
     val combinedConfiguration = Configuration(additionalConfig).withFallback(context.initialConfiguration)
 
-    val authThingieTimeout = if (combinedConfiguration.has(PlaySessionExpirationPath) || combinedConfiguration.has(PlayJwtExpirationPath)) {
+    val authThingieTimeout = if (!combinedConfiguration.has(AuthThingieTimeoutConfigPath)) {
       Logger.warn(s"I've changed the way that I handle timeouts in 0.1.1. Please set the config key $AuthThingieTimeoutConfigPath with the timeout instead")
-      Seq()
+      if (!combinedConfiguration.has(PlaySessionExpirationPath)) {
+        Seq(PlaySessionExpirationPath -> OneDay)
+      } else {
+        Seq()
+      }
     } else {
       Seq(PlaySessionExpirationPath -> OneYear, PlayJwtExpirationPath -> OneYear)
     }

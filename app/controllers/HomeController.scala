@@ -25,16 +25,22 @@ class HomeController @Inject()(config: AuthThingieConfig,
    */
   def index() = Action { implicit request: Request[AnyContent] =>
     val loggedInUser = for {
-      sessionUser <- request.session.get("user")
-      knownUser   <- userMatcher.getUser(sessionUser)
-    } yield knownUser
+      sessionUser      <- request.session.get("user")
+      authTime         <- request.session.get("authTime")
+      authTimeLong     <- authTime.toLongOption
+      realAuthTime     =  ZonedDateTime.ofInstant(Instant.ofEpochMilli(authTimeLong), config.timeZone)
+      earliestAuthTime =  ZonedDateTime.now(config.timeZone).minus(config.sessionTimeout)
+      knownUser        <- userMatcher.getUser(sessionUser)
+      timedUser        <- if (realAuthTime.isAfter(earliestAuthTime)) Some(knownUser) else None
+    } yield timedUser
 
     val isAdmin = loggedInUser.exists(_.admin)
     val rules = if (isAdmin) config.pathRules else List()
     val allUsers = if (isAdmin) config.users else List()
+    val settings = if (isAdmin) Some(config.asMap) else None
     val loginTime = request.session.get("authTime").flatMap(_.toLongOption).map(x => ZonedDateTime.ofInstant(Instant.ofEpochMilli(x), config.timeZone))
 
-    Ok(views.html.index(loggedInUser, rules, allUsers, isAdmin && !config.isUsingNewConfig, config.siteName, !config.hasTimeoutSetProperly, loginTime))
+    Ok(views.html.index(loggedInUser, rules, allUsers, isAdmin && !config.isUsingNewConfig, config.siteName, !config.hasTimeoutSetProperly, loginTime, settings))
   }
 
 

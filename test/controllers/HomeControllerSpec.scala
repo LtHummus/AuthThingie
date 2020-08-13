@@ -1,6 +1,6 @@
 package controllers
 
-import java.time.ZoneId
+import java.time.{Duration, ZoneId, ZonedDateTime}
 
 import config.AuthThingieConfig
 import org.mockito.IdiomaticMockito
@@ -41,6 +41,8 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
+      fakeConfig.asMap returns Map("foo" -> "bar")
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
 
@@ -52,6 +54,7 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       contentAsString(home) must include ("<h3>Users</h3>") //users header
       contentAsString(home) must include ("<h3>Rules</h3>") //path rules header
       contentAsString(home) must include ("Last login at ")
+      contentAsString(home) must include ("<h3>Settings</h3>")
 
     }
 
@@ -60,6 +63,8 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
+      fakeConfig.asMap returns Map("foo" -> "bar")
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = false, None, List()))
 
@@ -71,6 +76,7 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       contentAsString(home) mustNot include ("<h3>Users</h3>") //users header
       contentAsString(home) mustNot include ("<h3>Rules</h3>") //path rules header
       contentAsString(home) must include ("Last login at ")
+      contentAsString(home) mustNot include ("Settings")
     }
 
     "render public access properly" in new Setup() {
@@ -78,6 +84,8 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
+      fakeConfig.asMap returns Map("foo" -> "bar")
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
 
@@ -94,6 +102,8 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = false, List()))
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
+      fakeConfig.asMap returns Map("foo" -> "bar")
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
 
@@ -110,6 +120,8 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = false, List("a", "b", "c")))
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
+      fakeConfig.asMap returns Map("foo" -> "bar")
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
 
@@ -127,6 +139,8 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = false, List("d", "e", "f", "g")))
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
+      fakeConfig.asMap returns Map("foo" -> "bar")
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List("a", "b", "c")))
 
@@ -139,6 +153,21 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       contentAsString(home) must include ("<span class=\"badge badge-primary\">e</span>")
       contentAsString(home) must include ("<span class=\"badge badge-primary\">f</span>")
       contentAsString(home) must include ("<span class=\"badge badge-primary\">g</span>")
+    }
+
+    "treat a user as logged out if they are past the session expiration" in new Setup() {
+      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
+
+      fakeConfig.siteName returns "AuthThingie"
+      fakeConfig.timeZone returns ZoneId.systemDefault()
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
+
+      val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test", "authTime" -> ZonedDateTime.now().minusDays(3).toInstant.toEpochMilli.toString))
+
+      status(home) mustBe OK
+      contentType(home) mustBe Some("text/html")
+      contentAsString(home) must include ("Welcome to AuthThingie!")
+      contentAsString(home) must include ("Login")
     }
   }
 }

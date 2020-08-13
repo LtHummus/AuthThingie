@@ -4,7 +4,7 @@
 @import java.time.LocalDateTime
 @import java.time.format.DateTimeFormatter
 @import java.time.ZonedDateTime
-@(user: Option[User], rules: List[PathRule], users: List[User], showConfigWarning: Boolean, siteName: String, showTimeoutWarning: Boolean, loginTime: Option[ZonedDateTime])
+@(user: Option[User], rules: List[PathRule], users: List[User], showConfigWarning: Boolean, siteName: String, showTimeoutWarning: Boolean, loginTime: Option[ZonedDateTime], settings: Option[Map[String, String]])
 
     @main("Authentication") {
         <div class="jumbotron mt-3">
@@ -129,6 +129,32 @@
                                         }
                                     }
                                 }
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div>
+                <h3>Settings</h3>
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm rule-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Name</th>
+                                <th scope="col">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @for(setting <- settings.get) {
+                            <tr>
+                                <td>
+                                @(setting._1)
+                                </td>
+                                <td>
+                                @(setting._2)
                                 </td>
                             </tr>
                         }

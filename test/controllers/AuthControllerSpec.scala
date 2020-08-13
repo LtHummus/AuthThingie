@@ -1,6 +1,6 @@
 package controllers
 
-import java.time.Duration
+import java.time.{Duration, ZoneId}
 import java.time.temporal.TemporalUnit
 
 import scala.concurrent.duration._
@@ -31,7 +31,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
 
   "Normal auth flow" should {
 
-    "properly let people in when the matcher says so" in new Setup() {
+    "redirect to login page if there's no auth time" in new Setup() {
       val requestInfo = RequestInfo("https", "test.example.com", "/")
       val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
       val user = User("ben:test", admin = true, None, List())
@@ -40,10 +40,11 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
       fakeUserMatcher.getUser("ben") returns Some(user)
       fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) returns Allowed
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
 
       val result = controller.auth().apply(FakeRequest(GET, "/auth").withSession("user" -> "ben"))
 
-      status(result) mustBe NO_CONTENT
+      status(result) mustBe FOUND
 
       fakeRequestDecoder.decodeRequestHeaders(*) wasCalled once
       fakePathMatcher.getRule(requestInfo) was called
@@ -59,8 +60,10 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
       fakePathMatcher.getRule(requestInfo) returns None
       fakeUserMatcher.getUser("ben") returns Some(user)
       fakeResolver.resolveUserAccessForRule(Some(user), None) returns Allowed
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
+      fakeConfig.timeZone returns ZoneId.of("UTC")
 
-      val result = controller.auth().apply(FakeRequest(GET, "/auth").withSession("user" -> "ben", "authTime" -> "9999"))
+      val result = controller.auth().apply(FakeRequest(GET, "/auth").withSession("user" -> "ben", "authTime" -> System.currentTimeMillis().toString))
 
       status(result) mustBe NO_CONTENT
 
@@ -80,6 +83,8 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
       fakeUserMatcher.validUser("test", "test") returns Some(user)
       fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) returns Denied
       fakeConfig.headerName returns "Authorization"
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
+      fakeConfig.timeZone returns ZoneId.of("UTC")
 
       val result = controller.auth().apply(FakeRequest(GET, "/auth").withHeaders("Authorization" -> "Basic dGVzdDp0ZXN0"))
 
@@ -102,6 +107,8 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
       fakeUserMatcher.getUser("test") returns Some(user)
       fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) returns Denied
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
+      fakeConfig.timeZone returns ZoneId.of("UTC")
 
       val result = controller.auth().apply(FakeRequest(GET, "/auth").withSession("user" -> "test"))
 
@@ -119,10 +126,12 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
       val requestInfo = RequestInfo("https", "test.example.com", "/")
       val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
       val user = User("test:test", admin = true, None, List())
+      fakeConfig.timeZone returns ZoneId.of("UTC")
 
       fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
       fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) returns Denied
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
 
       val result = controller.auth().apply(FakeRequest(GET, "/auth"))
 
@@ -144,6 +153,8 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
       fakeUserMatcher.validUser("test", "test") returns Some(user)
       fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) returns Allowed
       fakeConfig.headerName returns "Authorization"
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
+      fakeConfig.timeZone returns ZoneId.of("UTC")
 
       val result = controller.auth().apply(FakeRequest(GET, "/auth").withHeaders("Authorization" -> "Basic dGVzdDp0ZXN0"))
 
@@ -165,6 +176,8 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
       fakeUserMatcher.validUser("test", "test") returns Some(user)
       fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) returns Allowed
       fakeConfig.headerName returns "FooBarBaz"
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
+      fakeConfig.timeZone returns ZoneId.of("UTC")
 
       val result = controller.auth().apply(FakeRequest(GET, "/auth").withHeaders("FooBarBaz" -> "Basic dGVzdDp0ZXN0"))
 
@@ -185,6 +198,8 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
       fakeUserMatcher.getUser("ben") returns Some(user)
       fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) returns Allowed
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
+      fakeConfig.timeZone returns ZoneId.of("UTC")
 
       val result = controller.auth().apply(FakeRequest(GET, "/auth").withSession("user" -> "ben", "authTime" -> DateTime.now().minusMinutes(10).getMillis.toString))
 
@@ -194,6 +209,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
       fakePathMatcher.getRule(requestInfo) was called
       fakeUserMatcher.getUser("ben") was called
       fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) was called
+      fakeConfig.sessionTimeout wasNever called
     }
 
     "work with a custom timeout" in new Setup() {
@@ -205,6 +221,8 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
       fakeUserMatcher.getUser("ben") returns Some(user)
       fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) returns Allowed
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
+      fakeConfig.timeZone returns ZoneId.of("UTC")
 
       val result = controller.auth().apply(FakeRequest(GET, "/auth").withSession("user" -> "ben", "authTime" -> DateTime.now().minusMinutes(10).getMillis.toString))
 
@@ -225,8 +243,10 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
       fakeUserMatcher.getUser("test") returns Some(user)
       fakeResolver.resolveUserAccessForRule(Some(user), Some(pathRule)) returns Allowed
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
+      fakeConfig.timeZone returns ZoneId.of("UTC")
 
-      val result = controller.auth().apply(FakeRequest(GET, "/auth").withSession("user" -> "test"))
+      val result = controller.auth().apply(FakeRequest(GET, "/auth").withSession("user" -> "test", "authTime" -> System.currentTimeMillis().toString))
 
       status(result) mustBe NO_CONTENT
 
@@ -242,6 +262,8 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
 
       fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
+      fakeConfig.timeZone returns ZoneId.of("UTC")
 
       val result = controller.auth().apply(FakeRequest(GET, "/auth"))
 
@@ -262,6 +284,8 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
       fakeUserMatcher.validUser("test", "test") returns None
       fakeResolver.resolveUserAccessForRule(None, Some(pathRule)) returns Denied
       fakeConfig.headerName returns "Authorization"
+      fakeConfig.sessionTimeout returns Duration.ofDays(1)
+      fakeConfig.timeZone returns ZoneId.of("UTC")
 
       val result = controller.auth().apply(FakeRequest(GET, "/auth").withHeaders("Authorization" -> "Basic dGVzdDp0ZXN0"))
 
