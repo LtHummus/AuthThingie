@@ -4,6 +4,7 @@
 @import java.time.LocalDateTime
 @import java.time.format.DateTimeFormatter
 @import java.time.ZonedDateTime
+@import java.time.format.FormatStyle
 @(user: Option[User], rules: List[PathRule], users: List[User], showConfigWarning: Boolean, siteName: String, showTimeoutWarning: Boolean, loginTime: Option[ZonedDateTime], settings: Option[Map[String, String]])
 
     @main("Authentication") {
@@ -16,7 +17,7 @@
             } else {
                 <p class="lead">Logged in as @user.get.username</p>
                 @if(loginTime.isDefined) {
-                    <p>Last login at <strong>@DateTimeFormatter.RFC_1123_DATE_TIME.format(loginTime.get)</strong></p>
+                    <p>Last login at <strong>@DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).format(loginTime.get)</strong></p>
                 }
             }
         </div>
