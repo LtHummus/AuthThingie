@@ -9,13 +9,13 @@ import org.joda.time.format.PeriodFormatterBuilder
 object RichDuration {
   private val CustomFormatter = new PeriodFormatterBuilder()
     .appendDays()
-    .appendSuffix(" day", " days")
+    .appendSuffix(" day ", " days ")
     .appendHours()
-    .appendSuffix(" hour", " hours")
+    .appendSuffix(" hour ", " hours ")
     .appendMinutes()
-    .appendSuffix(" minute", " minutes")
+    .appendSuffix(" minute ", " minutes ")
     .appendSeconds()
-    .appendSuffix(" second", " seconds")
+    .appendSuffix(" second ", " seconds ")
     .toFormatter
 
   implicit class PrettyPrintableDuration(x: Duration) {

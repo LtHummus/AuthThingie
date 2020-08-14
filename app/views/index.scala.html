@@ -5,7 +5,8 @@
 @import java.time.format.DateTimeFormatter
 @import java.time.ZonedDateTime
 @import java.time.format.FormatStyle
-@(user: Option[User], rules: List[PathRule], users: List[User], showConfigWarning: Boolean, siteName: String, showTimeoutWarning: Boolean, loginTime: Option[ZonedDateTime], settings: Option[Map[String, String]])
+@import java.time.Duration
+@(user: Option[User], rules: List[PathRule], users: List[User], showConfigWarning: Boolean, siteName: String, showTimeoutWarning: Boolean, loginTime: Option[ZonedDateTime], settings: Option[Map[String, String]], loginDuration: Option[Duration])
 
     @main("Authentication") {
         <div class="jumbotron mt-3">
@@ -17,7 +18,15 @@
             } else {
                 <p class="lead">Logged in as @user.get.username</p>
                 @if(loginTime.isDefined) {
-                    <p>Last login at <strong>@DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).format(loginTime.get)</strong></p>
+                    <p>
+                        Last login at <strong>@DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).format(loginTime.get)</strong> @if(loginDuration.isDefined) {
+                            @if(loginDuration.get.getSeconds == 0) {
+                                <em>(just now)</em>
+                            } else {
+                                <em>(@(loginDuration.get.prettyPrint) ago)</em>
+                            }
+                        }
+                    </p>
                 }
             }
         </div>
