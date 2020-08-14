@@ -116,9 +116,9 @@
                                 </td>
                                 <td>
                                     @if(rule.public) {
-                                        Infinite
+                                        ∞
                                     } else {
-                                        @rule.timeout.map(_.prettyPrint).getOrElse("")
+                                        @rule.timeout.map(_.prettyPrint).getOrElse("Default")
                                     }
                                 </td>
                                 <td>

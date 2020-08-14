@@ -7,10 +7,11 @@ import javax.inject._
 import play.api.mvc._
 import services.users.UserMatcher
 
+import util.SessionImplicits._
+
 @Singleton
-class HomeController @Inject()(config: AuthThingieConfig,
-                               userMatcher: UserMatcher,
-                               cc: MessagesControllerComponents) extends MessagesAbstractController(cc) {
+class HomeController @Inject()(userMatcher: UserMatcher,
+                               cc: MessagesControllerComponents)(implicit config: AuthThingieConfig) extends MessagesAbstractController(cc) {
 
   private val Logger = play.api.Logger(this.getClass)
 
@@ -25,14 +26,9 @@ class HomeController @Inject()(config: AuthThingieConfig,
    */
   def index() = Action { implicit request: Request[AnyContent] =>
     val loggedInUser = for {
-      sessionUser      <- request.session.get("user")
-      authTime         <- request.session.get("authTime")
-      authTimeLong     <- authTime.toLongOption
-      realAuthTime     =  ZonedDateTime.ofInstant(Instant.ofEpochMilli(authTimeLong), config.timeZone)
-      earliestAuthTime =  ZonedDateTime.now(config.timeZone).minus(config.sessionTimeout)
+      sessionUser      <- request.session.getUserAuthedWithin(config.sessionTimeout)
       knownUser        <- userMatcher.getUser(sessionUser)
-      timedUser        <- if (realAuthTime.isAfter(earliestAuthTime)) Some(knownUser) else None
-    } yield timedUser
+    } yield knownUser
 
     val isAdmin = loggedInUser.exists(_.admin)
     val rules = if (isAdmin) config.pathRules else List()

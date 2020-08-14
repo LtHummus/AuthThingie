@@ -3,10 +3,11 @@ package controllers
 import java.net.URI
 import java.time.{Instant, ZonedDateTime}
 
+import util.SessionImplicits._
+
 import config.AuthThingieConfig
 import javax.inject.{Inject, Singleton}
 import org.apache.commons.codec.binary.Base64
-import org.joda.time.DateTime
 import play.api.mvc.{AbstractController, AnyContent, ControllerComponents, Request}
 import play.api.libs.json._
 import services.decoding.RequestDecoder
@@ -20,9 +21,8 @@ import scala.util.Try
 class AuthController @Inject() (decoder: RequestDecoder,
                                 userMatcher: UserMatcher,
                                 pathMatcher: PathMatcher,
-                                config: AuthThingieConfig,
                                 resolver: RuleResolver,
-                                cc: ControllerComponents) extends AbstractController(cc) {
+                                cc: ControllerComponents)(implicit config: AuthThingieConfig) extends AbstractController(cc) {
 
   private val Logger = play.api.Logger(this.getClass)
 
@@ -86,15 +86,12 @@ class AuthController @Inject() (decoder: RequestDecoder,
       //figure out if the user is logged in or gave us basic-auth credentials
       val (user, credentialSource) = pullLoginInfoFromRequest(request)
       Logger.debug(s"Logged in user: ${user.map(_.username)}")
-      val loginTime = request.session.get("authTime").map(x => ZonedDateTime.ofInstant(Instant.ofEpochMilli(x.toLong), config.timeZone))
 
       val ruleTimeout = rule.flatMap(_.timeout).getOrElse(config.sessionTimeout)
-      val earliestAuthTime = ZonedDateTime.now().minus(ruleTimeout) // the earliest time a user could have logged in and still be ok
-      val isSessionTimeActive = loginTime.exists(_.isAfter(earliestAuthTime)) // make sure our session started after the above date
 
       //figure out what to do and return the proper response
       resolver.resolveUserAccessForRule(user, rule) match {
-        case Allowed if (credentialSource == BasicAuth || (credentialSource == Session && isSessionTimeActive)) =>
+        case Allowed if (credentialSource == BasicAuth || (credentialSource == Session && request.session.isAuthTimeWithinDuration(ruleTimeout))) =>
           Logger.debug("Access allowed")
           NoContent
 

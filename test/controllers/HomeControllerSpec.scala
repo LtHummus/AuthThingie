@@ -16,10 +16,10 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
   "HomeController GET" should {
 
     trait Setup {
-      val fakeConfig = mock[AuthThingieConfig]
+      implicit val fakeConfig = mock[AuthThingieConfig]
       val fakeUserMatcher = mock[UserMatcher]
 
-      val controller = new HomeController(fakeConfig, fakeUserMatcher, Helpers.stubMessagesControllerComponents())
+      val controller = new HomeController(fakeUserMatcher, Helpers.stubMessagesControllerComponents())
     }
 
     "render the login page when a logged out user is there" in new Setup() {

@@ -22,11 +22,12 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
     val fakeRequestDecoder = mock[RequestDecoder]
     val fakeUserMatcher = mock[UserMatcher]
     val fakePathMatcher = mock[PathMatcher]
-    val fakeConfig = mock[AuthThingieConfig]
     val fakeResolver = mock[RuleResolver]
     val fakeComponents = Helpers.stubControllerComponents()
 
-    val controller = new AuthController(fakeRequestDecoder, fakeUserMatcher, fakePathMatcher, fakeConfig, fakeResolver, fakeComponents)
+    implicit val fakeConfig = mock[AuthThingieConfig]
+
+    val controller = new AuthController(fakeRequestDecoder, fakeUserMatcher, fakePathMatcher, fakeResolver, fakeComponents)
   }
 
   "Normal auth flow" should {
