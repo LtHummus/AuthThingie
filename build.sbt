@@ -14,6 +14,8 @@ javaOptions in Universal ++= Seq(
   "-Dpidfile.path=/dev/null"
 )
 
+resolvers += "OneHippo" at "https://maven.onehippo.com/maven2/"
+
 libraryDependencies ++= List(
   guice,
 
@@ -34,7 +36,11 @@ libraryDependencies ++= List(
   "com.github.scopt" %% "scopt" % "3.7.1",
 
   //look nice
-  "com.adrianhurt" %% "play-bootstrap" % "1.6.1-P28-B4"
+  "com.adrianhurt" %% "play-bootstrap" % "1.6.1-P28-B4",
+
+  //duo
+  "com.duosecurity" % "DuoWeb" % "1.1-20150226"
+
 )
 
 

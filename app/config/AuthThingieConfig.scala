@@ -64,21 +64,25 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
     Try(List(auththingieTimeout, playMaxAge, playJwtExpire).flatten.head).map(Duration.from).toValidated
   }
 
-  private val Logger = play.api.Logger(this.getClass)
-
-  case class AuthThingieConfig(rules: List[PathRule], users: List[User], forceRedirectToHttps: Boolean, siteUrl: String, siteName: String, headerName: String, timeZone: ZoneId, sessionTimeout: Duration)
-
-  private val parsedConfig = {
-    (loadPathRules, loadUsers, loadForceRedirect, loadSiteUrl, loadSiteName, authHeaderName, readTimeZone, loadTimeout).mapN(AuthThingieConfig)
+  private val loadDuoSecurity: ValidationResult[Option[DuoSecurityConfig]] = {
+    Try(baseConfig.getOptional[DuoSecurityConfig]("auththingie.duo")).toValidated
   }
 
-  val (pathRules, users, forceHttpsRedirect, siteUrl, siteName, headerName, timeZone, sessionTimeout) = parsedConfig match {
+  private val Logger = play.api.Logger(this.getClass)
+
+  case class AuthThingieConfig(rules: List[PathRule], users: List[User], forceRedirectToHttps: Boolean, siteUrl: String, siteName: String, headerName: String, timeZone: ZoneId, sessionTimeout: Duration, duoSecurity: Option[DuoSecurityConfig])
+
+  private val parsedConfig = {
+    (loadPathRules, loadUsers, loadForceRedirect, loadSiteUrl, loadSiteName, authHeaderName, readTimeZone, loadTimeout, loadDuoSecurity).mapN(AuthThingieConfig)
+  }
+
+  val (pathRules, users, forceHttpsRedirect, siteUrl, siteName, headerName, timeZone, sessionTimeout, duoSecurity) = parsedConfig match {
     case Valid(a) =>
       Logger.info("Valid configuration parsed and loaded")
-      (a.rules, a.users, a.forceRedirectToHttps, a.siteUrl, a.siteName, a.headerName, a.timeZone, a.sessionTimeout)
+      (a.rules, a.users, a.forceRedirectToHttps, a.siteUrl, a.siteName, a.headerName, a.timeZone, a.sessionTimeout, a.duoSecurity)
     case Validated.Invalid(e) =>
       Logger.warn("Invalid configuration!")
-      (List(), List(), false, "", "", "", ZoneId.systemDefault(), Duration.ofDays(1))
+      (List(), List(), false, "", "", "", ZoneId.systemDefault(), Duration.ofDays(1), None)
   }
 
   val hasTimeoutSetProperly: Boolean = baseConfig.getOptional[String](PlaySessionExpirationPath).contains(OneYear)
