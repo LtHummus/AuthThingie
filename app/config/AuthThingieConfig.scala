@@ -98,7 +98,8 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
       "Site Name" -> siteName,
       "Header Name" -> headerName,
       "Time Zone" -> timeZone.toString,
-      "Session Timeout" -> sessionTimeout.prettyPrint
+      "Session Timeout" -> sessionTimeout.prettyPrint,
+      "Duo Security Enabled" -> duoSecurity.isDefined.toString
     )
   }
 
