@@ -7,8 +7,10 @@ import org.scalatest.OptionValues._
 import play.api.test._
 import play.api.test.Helpers._
 import play.api.mvc.Session
+import services.DuoSecurity
 import services.totp.TotpUtil
 import services.users.{User, UserMatcher}
+
 import scala.concurrent.duration._
 
 class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
@@ -18,14 +20,15 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
     val fakeUserMatcher = mock[UserMatcher]
     val fakeComponents = Helpers.stubMessagesControllerComponents()
     val fakeConfig = mock[AuthThingieConfig]
+    val fakeDuo = mock[DuoSecurity]
 
-    val controller = new LoginController(fakeConfig, fakeUserMatcher, fakeComponents)
+    val controller = new LoginController(fakeConfig, fakeUserMatcher, fakeDuo, fakeComponents)
 
   }
 
   "Normal login flow" should {
     "validate login info" in new Setup() {
-      fakeUserMatcher.validUser("user", "pass") returns Some(User("user:pass", admin = true, None, List()))
+      fakeUserMatcher.validUser("user", "pass") returns Some(User("user:pass", admin = true, None, List(), duoEnabled = false))
 
       val result = controller.login().apply(CSRFTokenHelper.addCSRFToken(FakeRequest(POST, "/login?redirect=http://foo.example.com")
         .withHeaders("X-Forwarded-For" -> "127.0.0.1")
@@ -60,7 +63,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
 
   "TOTP flow" should {
     "redirect to totp page when needed" in new Setup() {
-      fakeUserMatcher.validUser("user", "pass") returns Some(User("test:test", admin = true, Some("T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH"), List()))
+      fakeUserMatcher.validUser("user", "pass") returns Some(User("test:test", admin = true, Some("T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH"), List(), duoEnabled = false))
 
       val result = controller.login().apply(CSRFTokenHelper.addCSRFToken(FakeRequest(POST, "/login?redirect=someUrl")
         .withHeaders("X-Forwarded-For" -> "127.0.0.1")
@@ -73,7 +76,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "not redirect to totp page when not needed" in new Setup() {
-      fakeUserMatcher.validUser("user", "pass") returns Some(User("test:test", admin = true, None, List()))
+      fakeUserMatcher.validUser("user", "pass") returns Some(User("test:test", admin = true, None, List(), duoEnabled = false))
 
       val result = controller.login().apply(CSRFTokenHelper.addCSRFToken(FakeRequest(POST, "/login?redirect=someUrl")
         .withHeaders("X-Forwarded-For" -> "127.0.0.1")
@@ -93,7 +96,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "correctly reject incorrect totp code" in new Setup() {
-      fakeUserMatcher.getUser("test") returns Some(User("test:test", admin = true, Some("T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH"), List()))
+      fakeUserMatcher.getUser("test") returns Some(User("test:test", admin = true, Some("T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH"), List(), duoEnabled = false))
 
       val authExpiration = System.currentTimeMillis() + 5.minutes.toMillis
 
@@ -107,7 +110,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "correctly validate totp code" in new Setup() {
-      fakeUserMatcher.getUser("test") returns Some(User("test:test", admin = true, Some("T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH"), List()))
+      fakeUserMatcher.getUser("test") returns Some(User("test:test", admin = true, Some("T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH"), List(), duoEnabled = false))
 
       val authExpiration = System.currentTimeMillis() + 5.minutes.toMillis
       val correctCode = TotpUtil.genOneTimePassword("T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH", System.currentTimeMillis())
@@ -128,7 +131,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "respect auth timeout" in new Setup() {
-      fakeUserMatcher.getUser("test") returns Some(User("test:test", admin = true, Some("T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH"), List()))
+      fakeUserMatcher.getUser("test") returns Some(User("test:test", admin = true, Some("T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH"), List(), duoEnabled = false))
 
       val authExpiration = System.currentTimeMillis() - 5.minutes.toMillis
       val correctCode = TotpUtil.genOneTimePassword("T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH", System.currentTimeMillis())

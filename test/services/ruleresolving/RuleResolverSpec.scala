@@ -8,10 +8,10 @@ class RuleResolverSpec extends PlaySpec {
 
   val publicRule = PathRule("test", None, None, None, public = true, List())
   val privateRuleWithA = PathRule("foo", None, None, None, public = false, List("a"))
-  val userWithNone = User("a:q", admin = false, None, List())
-  val userWithA = User("a:b", admin = false, None, List("a"))
-  val userWithB = User("a:c", admin = false, None, List("b"))
-  val admin = User("b:c", admin = true, None, List())
+  val userWithNone = User("a:q", admin = false, None, List(), duoEnabled = false)
+  val userWithA = User("a:b", admin = false, None, List("a"), duoEnabled = false)
+  val userWithB = User("a:c", admin = false, None, List("b"), duoEnabled = false)
+  val admin = User("b:c", admin = true, None, List(), duoEnabled = false)
 
   val resolver = new RuleResolver
 

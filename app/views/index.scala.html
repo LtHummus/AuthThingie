@@ -61,6 +61,7 @@
                             <tr>
                                 <th scope="col">Username</th>
                                 <th scope="col">Uses TOTP?</th>
+                                <th scope="col">Duo Enabled?</th>
                                 <th scope="col">Roles</th>
                             </tr>
                         </thead>
@@ -72,6 +73,13 @@
                                 </td>
                                 <td>
                                 @if(user.usesTotp) {
+                                    ✅
+                                } else {
+                                    ❌
+                                }
+                                </td>
+                                <td>
+                                @if(user.duoEnabled) {
                                     ✅
                                 } else {
                                     ❌

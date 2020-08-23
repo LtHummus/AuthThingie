@@ -19,13 +19,14 @@ object User {
       val admin = Try(curr.getBoolean("admin")).getOrElse(false)
       val totpSecret = Try(curr.getString("totpSecret")).toOption
       val roles = Try(curr.getStringList("roles").asScala.toList).getOrElse(List.empty[String])
+      val duoEnabled = Try(curr.getBoolean("duoEnabled")).getOrElse(false)
 
-      User(passwdLine, admin, totpSecret, roles)
+      User(passwdLine, admin, totpSecret, roles, duoEnabled)
     }.toList
   }
 }
 
-case class User(htpasswdLine: String, admin: Boolean, totpSecret: Option[String], roles: List[String]) {
+case class User(htpasswdLine: String, admin: Boolean, totpSecret: Option[String], roles: List[String], duoEnabled: Boolean) {
 
   private val Logger = play.api.Logger(this.getClass)
 
@@ -41,7 +42,8 @@ case class User(htpasswdLine: String, admin: Boolean, totpSecret: Option[String]
   //note for later: should `isPermitted` be on the PathRule instead?
 
   def usesTotp: Boolean = totpSecret.isDefined
-  def doesNotUseTotp: Boolean = !usesTotp
+  def usesSecondFactor: Boolean = usesTotp || duoEnabled
+  def doesNotUseSecondFactor: Boolean = !usesSecondFactor
   def isPermitted(rule: PathRule): Boolean = admin || rule.public || rule.permittedRoles.intersect(roles).nonEmpty
   def passwordCorrect(guess: String): Boolean = HashValidator.validateHash(passwordHash, guess)
 

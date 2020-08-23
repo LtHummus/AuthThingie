@@ -35,7 +35,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
     "redirect to login page if there's no auth time" in new Setup() {
       val requestInfo = RequestInfo("https", "test.example.com", "/")
       val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
-      val user = User("ben:test", admin = true, None, List())
+      val user = User("ben:test", admin = true, None, List(), duoEnabled = false)
 
       fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
@@ -55,7 +55,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
 
     "allow admin login with no rule" in new Setup() {
       val requestInfo = RequestInfo("https", "test.example.com", "/")
-      val user = User("ben:test", admin = true, None, List())
+      val user = User("ben:test", admin = true, None, List(), duoEnabled = false)
 
       fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
       fakePathMatcher.getRule(requestInfo) returns None
@@ -77,7 +77,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
     "redirect to error message if user is using basic auth and access is denied" in new Setup() {
       val requestInfo = RequestInfo("https", "test.example.com", "/")
       val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
-      val user = User("test:test", admin = true, None, List())
+      val user = User("test:test", admin = true, None, List(), duoEnabled = false)
 
       fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
@@ -102,7 +102,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
     "redirect to error message if user is logged in and access is denied" in new Setup() {
       val requestInfo = RequestInfo("https", "test.example.com", "/")
       val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
-      val user = User("test:test", admin = true, None, List())
+      val user = User("test:test", admin = true, None, List(), duoEnabled = false)
 
       fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
@@ -126,7 +126,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
     "redirect to login page if user is not logged in" in new Setup() {
       val requestInfo = RequestInfo("https", "test.example.com", "/")
       val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
-      val user = User("test:test", admin = true, None, List())
+      val user = User("test:test", admin = true, None, List(), duoEnabled = false)
       fakeConfig.timeZone returns ZoneId.of("UTC")
 
       fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
@@ -147,7 +147,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
     "properly decode basic auth headers" in new Setup() {
       val requestInfo = RequestInfo("https", "test.example.com", "/")
       val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List(), Some(Duration.ofHours(1)))
-      val user = User("test:test", admin = true, None, List())
+      val user = User("test:test", admin = true, None, List(), duoEnabled = false)
 
       fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
@@ -170,7 +170,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
     "properly decode basic auth headers with an arbitrary name" in new Setup() {
       val requestInfo = RequestInfo("https", "test.example.com", "/")
       val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
-      val user = User("test:test", admin = true, None, List())
+      val user = User("test:test", admin = true, None, List(), duoEnabled = false)
 
       fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
@@ -193,7 +193,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
     "respect timeouts even with a valid session" in new Setup() {
       val requestInfo = RequestInfo("https", "test.example.com", "/")
       val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List(), Some(Duration.ofMinutes(1)))
-      val user = User("ben:test", admin = true, None, List())
+      val user = User("ben:test", admin = true, None, List(), duoEnabled = false)
 
       fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
@@ -216,7 +216,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
     "work with a custom timeout" in new Setup() {
       val requestInfo = RequestInfo("https", "test.example.com", "/")
       val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List(), Some(Duration.ofMinutes(100)))
-      val user = User("ben:test", admin = true, None, List())
+      val user = User("ben:test", admin = true, None, List(), duoEnabled = false)
 
       fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
@@ -238,7 +238,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
     "properly decode session data" in new Setup() {
       val requestInfo = RequestInfo("https", "test.example.com", "/")
       val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
-      val user = User("test:test", admin = true, None, List())
+      val user = User("test:test", admin = true, None, List(), duoEnabled = false)
 
       fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)
@@ -278,7 +278,7 @@ class AuthControllerSpec extends PlaySpec with IdiomaticMockito with ArgumentMat
     "show error if using basic auth and incorrect credentials" in new Setup() {
       val requestInfo = RequestInfo("https", "test.example.com", "/")
       val pathRule = PathRule("Some path", None, Some("test.example.com"), None, public = false, List())
-      val user = User("test:test", admin = true, None, List())
+      val user = User("test:test", admin = true, None, List(), duoEnabled = false)
 
       fakeRequestDecoder.decodeRequestHeaders(*) returns requestInfo
       fakePathMatcher.getRule(requestInfo) returns Some(pathRule)

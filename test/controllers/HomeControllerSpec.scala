@@ -37,14 +37,14 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "render some path rules and user info when logged in as admin" in new Setup() {
-      fakeConfig.users returns List(User("test:foo", admin = true, None, List()))
+      fakeConfig.users returns List(User("test:foo", admin = true, None, List(), duoEnabled = false))
       fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()
       fakeConfig.sessionTimeout returns Duration.ofDays(1)
       fakeConfig.asMap returns Map("foo" -> "bar")
 
-      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
+      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List(), duoEnabled = false))
 
       val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test", "authTime" -> System.currentTimeMillis().toString))
 
@@ -59,14 +59,14 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "render no path rules and no user info when not admin" in new Setup() {
-      fakeConfig.users returns List(User("test:foo", admin = false, None, List()))
+      fakeConfig.users returns List(User("test:foo", admin = false, None, List(), duoEnabled = false))
       fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()
       fakeConfig.sessionTimeout returns Duration.ofDays(1)
       fakeConfig.asMap returns Map("foo" -> "bar")
 
-      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = false, None, List()))
+      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = false, None, List(), duoEnabled = false))
 
       val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test", "authTime" -> System.currentTimeMillis().toString))
 
@@ -80,14 +80,14 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "render public access properly" in new Setup() {
-      fakeConfig.users returns List(User("test:foo", admin = true, None, List()))
+      fakeConfig.users returns List(User("test:foo", admin = true, None, List(), duoEnabled = false))
       fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = true, List()))
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()
       fakeConfig.sessionTimeout returns Duration.ofDays(1)
       fakeConfig.asMap returns Map("foo" -> "bar")
 
-      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
+      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List(), duoEnabled = false))
 
       val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test", "authTime" -> System.currentTimeMillis().toString))
 
@@ -98,14 +98,14 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "render admin only properly" in new Setup() {
-      fakeConfig.users returns List(User("test:foo", admin = true, None, List()))
+      fakeConfig.users returns List(User("test:foo", admin = true, None, List(), duoEnabled = false))
       fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = false, List()))
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()
       fakeConfig.sessionTimeout returns Duration.ofDays(1)
       fakeConfig.asMap returns Map("foo" -> "bar")
 
-      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
+      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List(), duoEnabled = false))
 
       val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test", "authTime" -> System.currentTimeMillis().toString))
 
@@ -116,14 +116,14 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "render role tags properly on path rules" in new Setup() {
-      fakeConfig.users returns List(User("test:foo", admin = true, None, List()))
+      fakeConfig.users returns List(User("test:foo", admin = true, None, List(), duoEnabled = false))
       fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = false, List("a", "b", "c")))
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()
       fakeConfig.sessionTimeout returns Duration.ofDays(1)
       fakeConfig.asMap returns Map("foo" -> "bar")
 
-      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
+      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List(), duoEnabled = false))
 
       val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test", "authTime" -> System.currentTimeMillis().toString))
 
@@ -135,14 +135,14 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "render role tags properly on users" in new Setup() {
-      fakeConfig.users returns List(User("test:foo", admin = true, None, List()))
+      fakeConfig.users returns List(User("test:foo", admin = true, None, List(), duoEnabled = false))
       fakeConfig.pathRules returns List(PathRule("Test Rule", None, Some("test.example.com"), None, public = false, List("d", "e", "f", "g")))
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()
       fakeConfig.sessionTimeout returns Duration.ofDays(1)
       fakeConfig.asMap returns Map("foo" -> "bar")
 
-      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List("a", "b", "c")))
+      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List("a", "b", "c"), duoEnabled = false))
 
       val home = controller.index().apply(FakeRequest(GET, "/").withSession("user" -> "test", "authTime" -> System.currentTimeMillis().toString))
 
@@ -156,7 +156,7 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "treat a user as logged out if they are past the session expiration" in new Setup() {
-      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List()))
+      fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List(), duoEnabled = false))
 
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()

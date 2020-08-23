@@ -12,10 +12,9 @@ POST    /login                      controllers.LoginController.login
 GET     /totp                       controllers.LoginController.showTotpForm
 POST    /totp                       controllers.LoginController.totp
 GET     /test                       controllers.AuthController.testUrl
-
-GET     /duo                        controllers.DuoController.sampleDuo
 +nocsrf
-POST    /duo                        controllers.DuoController.verifyDuo
+POST    /duo                        controllers.LoginController.duo
+
 
 GET     /logout                     controllers.LoginController.logout
 # Map static resources from the /public folder to the /assets URL path
