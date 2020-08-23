@@ -42,7 +42,7 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()
       fakeConfig.sessionTimeout returns Duration.ofDays(1)
-      fakeConfig.asMap returns Map("foo" -> "bar")
+      fakeConfig.asEntries returns List("foo" -> "bar")
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List(), duoEnabled = false))
 
@@ -64,7 +64,7 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()
       fakeConfig.sessionTimeout returns Duration.ofDays(1)
-      fakeConfig.asMap returns Map("foo" -> "bar")
+      fakeConfig.asEntries returns List("foo" -> "bar")
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = false, None, List(), duoEnabled = false))
 
@@ -85,7 +85,7 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()
       fakeConfig.sessionTimeout returns Duration.ofDays(1)
-      fakeConfig.asMap returns Map("foo" -> "bar")
+      fakeConfig.asEntries returns List("foo" -> "bar")
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List(), duoEnabled = false))
 
@@ -103,7 +103,7 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()
       fakeConfig.sessionTimeout returns Duration.ofDays(1)
-      fakeConfig.asMap returns Map("foo" -> "bar")
+      fakeConfig.asEntries returns List("foo" -> "bar")
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List(), duoEnabled = false))
 
@@ -121,7 +121,7 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()
       fakeConfig.sessionTimeout returns Duration.ofDays(1)
-      fakeConfig.asMap returns Map("foo" -> "bar")
+      fakeConfig.asEntries returns List("foo" -> "bar")
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List(), duoEnabled = false))
 
@@ -140,7 +140,7 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
       fakeConfig.siteName returns "AuthThingie"
       fakeConfig.timeZone returns ZoneId.systemDefault()
       fakeConfig.sessionTimeout returns Duration.ofDays(1)
-      fakeConfig.asMap returns Map("foo" -> "bar")
+      fakeConfig.asEntries returns List("foo" -> "bar")
 
       fakeUserMatcher.getUser("test") returns Some(User("test:foo", admin = true, None, List("a", "b", "c"), duoEnabled = false))
 

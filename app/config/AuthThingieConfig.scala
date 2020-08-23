@@ -92,14 +92,14 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
     case Validated.Invalid(errors) => errors.toList
   }
 
-  def asMap: Map[String, String] = {
-    Map(
+  def asEntries: List[(String, String)] = {
+    List(
       "Site URL" -> siteUrl,
       "Site Name" -> siteName,
       "Header Name" -> headerName,
       "Time Zone" -> timeZone.toString,
       "Session Timeout" -> sessionTimeout.prettyPrint,
-      "Duo Security Enabled" -> duoSecurity.isDefined.toString
+      "Duo Security Enabled" -> (if (duoSecurity.isDefined) "Yes" else "No")
     )
   }
 

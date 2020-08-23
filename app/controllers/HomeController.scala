@@ -32,7 +32,7 @@ class HomeController @Inject()(userMatcher: UserMatcher,
     val isAdmin = loggedInUser.exists(_.admin)
     val rules = if (isAdmin) config.pathRules else List()
     val allUsers = if (isAdmin) config.users else List()
-    val settings = if (isAdmin) Some(config.asMap) else None
+    val settings = if (isAdmin) Some(config.asEntries) else None
     val loginTime = request.session.get("authTime").flatMap(_.toLongOption).map(x => ZonedDateTime.ofInstant(Instant.ofEpochMilli(x), config.timeZone))
     val loginDuration = loginTime.map(x => Duration.between(x, ZonedDateTime.now(config.timeZone)))
 

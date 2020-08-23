@@ -6,7 +6,7 @@
 @import java.time.ZonedDateTime
 @import java.time.format.FormatStyle
 @import java.time.Duration
-@(user: Option[User], rules: List[PathRule], users: List[User], showConfigWarning: Boolean, siteName: String, showTimeoutWarning: Boolean, loginTime: Option[ZonedDateTime], settings: Option[Map[String, String]], loginDuration: Option[Duration])
+@(user: Option[User], rules: List[PathRule], users: List[User], showConfigWarning: Boolean, siteName: String, showTimeoutWarning: Boolean, loginTime: Option[ZonedDateTime], settings: Option[List[(String, String)]], loginDuration: Option[Duration])
 
     @main("Authentication") {
         <div class="jumbotron mt-3">
