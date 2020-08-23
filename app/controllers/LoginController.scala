@@ -97,15 +97,16 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
       validation <- Try(ds.verifyRequest(signature))
     } yield validation
 
+    val knownUser = for {
+      potentialUser <- request.session.get(PartialAuthUsername)
+      user <- userMatcher.getUser(potentialUser)
+    } yield {
+      user
+    }
+
     signResult match {
       case Success(username) =>
         if (request.session.get(PartialAuthUsername).contains(username)) {
-          val knownUser = for {
-            potentialUser <- request.session.get(PartialAuthUsername)
-            user <- userMatcher.getUser(potentialUser)
-          } yield {
-            user
-          }
 
           knownUser match {
             case Some(user) =>
@@ -115,11 +116,19 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
             case None       => Logger.warn("Couldn't find a partially authed username for validation"); BadRequest("Couldn't find a partially authed username for validation")
           }
         } else {
-          Unauthorized("Bad")
+          Logger.info(s"Partially authed user ${request.session.get(PartialAuthUsername)} does not match Duo username $username")
+          Unauthorized("Partial auth user error")
         }
       case Failure(e) =>
         Logger.warn(s"Error on Duo auth for ${request.session.get(PartialAuthUsername)}", e)
-        Unauthorized("Bad failure")
+        (knownUser, request.session.get(PartialAuthUsername)) match {
+          case (Some(u), Some(pu)) =>
+            val duoCode = generateDuoCodeIfNeeded(u, pu)
+            Unauthorized(views.html.totp(knownUser.exists(_.usesTotp), totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), Some("Auth Error from Duo"), config.duoSecurity.map(_.apiHostname), duoCode, routes.LoginController.duo().appendQueryString(Map(Redirect -> Seq(redirectUrl))))).withSession(request.session)
+          case _ =>
+            Logger.warn(s"Duo auth error result with knownUser = $knownUser and partial auth = ${request.session.get(PartialAuthUsername)}")
+            BadRequest("Missing either user or partially authed user")
+        }
     }
   }
 
@@ -143,7 +152,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
       } else {
         val knownUser = for {
           potentialUser <- request.session.get(PartialAuthUsername)
-          user <- userMatcher.getUser(potentialUser)
+          user          <- userMatcher.getUser(potentialUser)
         } yield {
           user
         }
