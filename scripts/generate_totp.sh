@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-java -cp '/svc/auththingie-0.1.1/lib/*' util.GenerateTotp "$@"
+java -cp '/svc/auththingie-0.2.0/lib/*' util.GenerateTotp "$@"
