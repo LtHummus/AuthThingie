@@ -152,6 +152,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
     }
 
     "correctly reject incorrect totp code" in new Setup() {
+      fakeConfig.duoSecurity returns None
       fakeUserMatcher.getUser("test") returns Some(User("test:test", admin = true, Some("T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH"), List(), duoEnabled = false))
 
       val authExpiration = System.currentTimeMillis() + 5.minutes.toMillis

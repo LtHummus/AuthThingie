@@ -6,7 +6,7 @@ import play.api.data.Forms._
 import play.api.data._
 import play.api.mvc.{AnyContent, MessagesAbstractController, MessagesControllerComponents, MessagesRequest, Request}
 import services.duo.DuoSecurity
-import services.users.UserMatcher
+import services.users.{User, UserMatcher}
 import util.CallImplicits._
 
 import scala.concurrent.duration._
@@ -38,6 +38,16 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
       "password" -> nonEmptyText
     )(LoginData.apply)(LoginData.unapply)
   )
+
+  private def generateDuoCodeIfNeeded(user: User, username: String): Option[String] = {
+    if (user.duoEnabled) {
+      config.duoSecurity.map{ _ =>
+        ds.signRequest(username)
+      }
+    } else {
+      None
+    }
+  }
 
   private def redirectUrl[T](implicit request: Request[T]): String = {
     request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(config.siteUrl)
@@ -76,14 +86,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
     partialAuthUser match {
       case None => Unauthorized(views.html.denied("Error: No partially authed username."))
       case Some(user) =>
-        val duoSigRequest = if (user.duoEnabled) {
-          config.duoSecurity.map{ _ =>
-            ds.signRequest(request.session.get(PartialAuthUsername).get)
-          }
-        } else {
-          None
-        }
-        // TODO: change to only show 2FA if needed
+        val duoSigRequest = generateDuoCodeIfNeeded(user, request.session.get(PartialAuthUsername).get)
         Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), None, config.duoSecurity.map(_.apiHostname), duoSigRequest, routes.LoginController.duo().appendQueryString(Map(Redirect -> Seq(redirectUrl)))))
     }
   }
@@ -153,7 +156,8 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
 
           case Some(user) =>
             Logger.warn(s"Bad login attempt for user ${user.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}")
-            Unauthorized(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), Some("Invalid Auth Code"), None, None, routes.LoginController.duo().appendQueryString(Map(Redirect -> Seq(redirectUrl))))).withSession(request.session)
+            val duoSigRequest = generateDuoCodeIfNeeded(user, request.session.get(PartialAuthUsername).get)
+            Unauthorized(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), Some("Invalid Auth Code"), config.duoSecurity.map(_.apiHostname), duoSigRequest, routes.LoginController.duo().appendQueryString(Map(Redirect -> Seq(redirectUrl))))).withSession(request.session)
           case None => Logger.warn("Couldn't find a partially authed username for validation"); BadRequest("Couldn't find a partially authed username for validation")
         }
       }
