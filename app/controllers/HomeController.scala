@@ -1,6 +1,6 @@
 package controllers
 
-import java.time.{Duration, Instant, LocalDateTime, Period, ZoneId, ZonedDateTime}
+import java.time.{Duration, Instant, ZonedDateTime}
 
 import config.AuthThingieConfig
 import javax.inject._

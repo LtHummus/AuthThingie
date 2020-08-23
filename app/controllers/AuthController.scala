@@ -1,7 +1,6 @@
 package controllers
 
 import java.net.URI
-import java.time.{Instant, ZonedDateTime}
 
 import util.SessionImplicits._
 

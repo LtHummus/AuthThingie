@@ -4,7 +4,7 @@ import config.AuthThingieConfig
 import javax.inject.Inject
 import play.api.data.Forms._
 import play.api.data._
-import play.api.mvc.{AnyContent, MessagesAbstractController, MessagesControllerComponents, MessagesRequest, Request}
+import play.api.mvc.{AnyContent, MessagesAbstractController, MessagesControllerComponents, MessagesRequest, Request, Result}
 import services.duo.DuoSecurity
 import services.users.{User, UserMatcher}
 import util.CallImplicits._
@@ -38,6 +38,12 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
       "password" -> nonEmptyText
     )(LoginData.apply)(LoginData.unapply)
   )
+
+  private def loginAndRedirect(user: User)(implicit request: Request[_]): Result = {
+    Logger.info(s"Successful auth for ${user.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}")
+    Logger.debug(s"Redirecting to $redirectUrl")
+    Redirect(redirectUrl, FOUND).withSession("user" -> user.username, "authTime" -> System.currentTimeMillis().toString)
+  }
 
   private def generateDuoCodeIfNeeded(user: User, username: String): Option[String] = {
     if (user.duoEnabled) {
@@ -109,10 +115,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
         if (request.session.get(PartialAuthUsername).contains(username)) {
 
           knownUser match {
-            case Some(user) =>
-              Logger.info(s"Successful auth for ${user.username} via Duo")
-              Logger.debug(s"Redirecting to $redirectUrl")
-              Redirect(redirectUrl, FOUND).withSession("user" -> user.username, "authTime" -> System.currentTimeMillis().toString)
+            case Some(user) => loginAndRedirect(user)
             case None       => Logger.warn("Couldn't find a partially authed username for validation"); BadRequest("Couldn't find a partially authed username for validation")
           }
         } else {
@@ -140,8 +143,8 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
         for (error <- formWithErrors.errors) {
           Logger.warn(s"${error.key} -> ${error.message}")
         }
-        // TODO: same
-        BadRequest(views.html.totp(true, formWithErrors, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), Some("Invalid Request"), None, None, routes.LoginController.duo().appendQueryString(Map(Redirect -> Seq(redirectUrl)))))
+        // we can assume true here since if they submitted the form, they must have totp enabled
+        BadRequest(views.html.totp(showTotp = true, formWithErrors, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), Some("Invalid Request"), None, None, routes.LoginController.duo().appendQueryString(Map(Redirect -> Seq(redirectUrl)))))
     }
 
     val success = { data: TotpData =>
@@ -158,11 +161,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
         }
 
         knownUser match {
-          case Some(user) if user.totpCorrect(data.totpCode) =>
-            Logger.info(s"Successful auth for user ${user.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}")
-            Logger.debug(s"Redirecting to $redirectUrl")
-            Redirect(redirectUrl, FOUND).withSession("user" -> user.username, "authTime" -> System.currentTimeMillis().toString)
-
+          case Some(user) if user.totpCorrect(data.totpCode) => loginAndRedirect(user)
           case Some(user) =>
             Logger.warn(s"Bad login attempt for user ${user.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}")
             val duoSigRequest = generateDuoCodeIfNeeded(user, request.session.get(PartialAuthUsername).get)
@@ -185,10 +184,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
 
     val success = { data: LoginData =>
       userMatcher.validUser(data.username, data.password) match {
-        case Some(user) if user.doesNotUseSecondFactor =>
-          Logger.info(s"Successful auth for user ${user.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}")
-          Logger.debug(s"Redirecting to $redirectUrl")
-          Redirect(redirectUrl, FOUND).withSession("user" -> user.username, "authTime" -> System.currentTimeMillis().toString)
+        case Some(user) if user.doesNotUseSecondFactor => loginAndRedirect(user)
         case Some(user) if user.usesSecondFactor =>
           Logger.info(s"Successful username/password combo for ${user.username}. Forwarding for 2FA")
           val timeout = System.currentTimeMillis() + PartialAuthExpirationTime

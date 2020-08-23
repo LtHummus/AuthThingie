@@ -3,8 +3,6 @@ package config
 import com.typesafe.config.Config
 import play.api.ConfigLoader
 
-import scala.jdk.CollectionConverters.ListHasAsScala
-
 case class DuoSecurityConfig(integrationKey: String, secretKey: String, apiHostname: String)
 object DuoSecurityConfig {
   implicit val configLoader = new ConfigLoader[DuoSecurityConfig] {
