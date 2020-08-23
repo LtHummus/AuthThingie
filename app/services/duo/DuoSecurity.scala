@@ -1,10 +1,9 @@
-package services
+package services.duo
 
 import com.duosecurity.duoweb.DuoWeb
 import config.AuthThingieConfig
 import javax.inject.{Inject, Singleton}
 import org.apache.commons.lang3.RandomStringUtils
-import play.api.Configuration
 
 @Singleton
 class DuoSecurity @Inject() (config: AuthThingieConfig) {

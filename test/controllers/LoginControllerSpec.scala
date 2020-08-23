@@ -7,7 +7,7 @@ import org.scalatest.OptionValues._
 import play.api.test._
 import play.api.test.Helpers._
 import play.api.mvc.Session
-import services.DuoSecurity
+import services.duo.DuoSecurity
 import services.totp.TotpUtil
 import services.users.{User, UserMatcher}
 

@@ -5,7 +5,7 @@ import javax.inject.Inject
 import play.api.data.Forms._
 import play.api.data._
 import play.api.mvc.{AnyContent, MessagesAbstractController, MessagesControllerComponents, MessagesRequest, Request}
-import services.DuoSecurity
+import services.duo.DuoSecurity
 import services.users.UserMatcher
 import util.CallImplicits._
 
@@ -66,14 +66,25 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
   }
 
   def showTotpForm() = Action { implicit request: MessagesRequest[AnyContent] =>
-    if (request.session.get(PartialAuthUsername).isEmpty) {
-      Unauthorized(views.html.denied("Error: No partially authed username."))
-    } else {
-      val duoSigRequest = config.duoSecurity.map{ _ =>
-        ds.signRequest(request.session.get(PartialAuthUsername).get)
-      }
-      // TODO: change to only show 2FA if needed
-      Ok(views.html.totp(true, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), None, config.duoSecurity.map(_.apiHostname), duoSigRequest, routes.LoginController.duo().appendQueryString(Map(Redirect -> Seq(redirectUrl)))))
+    val partialAuthUser = for {
+      potentialUser <- request.session.get(PartialAuthUsername)
+      user <- userMatcher.getUser(potentialUser)
+    } yield {
+      user
+    }
+
+    partialAuthUser match {
+      case None => Unauthorized(views.html.denied("Error: No partially authed username."))
+      case Some(user) =>
+        val duoSigRequest = if (user.duoEnabled) {
+          config.duoSecurity.map{ _ =>
+            ds.signRequest(request.session.get(PartialAuthUsername).get)
+          }
+        } else {
+          None
+        }
+        // TODO: change to only show 2FA if needed
+        Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), None, config.duoSecurity.map(_.apiHostname), duoSigRequest, routes.LoginController.duo().appendQueryString(Map(Redirect -> Seq(redirectUrl)))))
     }
   }
 
