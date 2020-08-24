@@ -53,14 +53,14 @@ class DuoWebAuth @Inject() (config: AuthThingieConfig, ws: WSClient) {
       val signatureBlock = s"$dateString\n$method\n$host\n$path\n$canonicalParams"
       val signature = computeSignature(signatureBlock)
 
-      val methodedRequest = x.withMethod(method)
-
-      val paramedRequest = if (method == "GET") {
-        methodedRequest.withQueryStringParameters(params.toList: _*)
+      val paramedRequest = if (method == "GET" || method == "DELETE") {
+        x.withQueryStringParameters(params.toList: _*)
       } else {
-        methodedRequest.withBody(params)
+        x.withBody(params)
       }
+
       paramedRequest
+        .withMethod(method)
         .withHttpHeaders("Date" -> dateString)
         .withAuth(config.duoSecurity.get.integrationKey, signature, WSAuthScheme.BASIC)
     }
