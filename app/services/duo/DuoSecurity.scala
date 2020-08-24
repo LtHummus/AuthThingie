@@ -10,13 +10,19 @@ class DuoSecurity @Inject() (config: AuthThingieConfig) {
 
   private lazy val applicationKey = RandomStringUtils.randomAlphanumeric(40)
 
-  val HostUrl = config.duoSecurity.get.apiHostname
-
   def signRequest(username: String): String = {
-    DuoWeb.signRequest(config.duoSecurity.get.integrationKey, config.duoSecurity.get.secretKey, applicationKey, username)
+    config.duoSecurity match {
+      case None => throw new IllegalStateException("Trying to sign Duo auth when not configured!")
+      case Some(duo) =>
+        DuoWeb.signRequest(duo.integrationKey, duo.secretKey, applicationKey, username)
+    }
   }
 
   def verifyRequest(sigResponse: String): String = {
-    DuoWeb.verifyResponse(config.duoSecurity.get.integrationKey, config.duoSecurity.get.secretKey, applicationKey, sigResponse)
+    config.duoSecurity match {
+      case None => throw new IllegalArgumentException("Trying to validate Duo auth when not configured!")
+      case Some(duo) =>
+        DuoWeb.verifyResponse(duo.integrationKey, duo.secretKey, applicationKey, sigResponse)
+    }
   }
 }
