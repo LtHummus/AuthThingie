@@ -18,6 +18,7 @@ resolvers += "OneHippo" at "https://maven.onehippo.com/maven2/"
 
 libraryDependencies ++= List(
   guice,
+  ws,
 
   //cats (meow)
   "org.typelevel" %% "cats-core" % "2.0.0",
