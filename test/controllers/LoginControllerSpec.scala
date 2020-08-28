@@ -1,17 +1,22 @@
 package controllers
 
+import java.util.concurrent.Executors
+
+import akka.actor.ActorSystem
 import com.duosecurity.duoweb.DuoWebException
 import config.{AuthThingieConfig, DuoSecurityConfig}
 import org.mockito.IdiomaticMockito
 import org.scalatestplus.play._
 import org.scalatest.OptionValues._
+import play.api.Play.materializer
 import play.api.test._
 import play.api.test.Helpers._
 import play.api.mvc.Session
-import services.duo.DuoSecurity
+import services.duo.{DuoSecurity, DuoWebAuth, PreAuthResponse}
 import services.totp.TotpUtil
 import services.users.{User, UserMatcher}
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
@@ -21,7 +26,10 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
     val fakeUserMatcher = mock[UserMatcher]
     val fakeComponents = Helpers.stubMessagesControllerComponents()
     val fakeConfig = mock[AuthThingieConfig]
-    val fakeDuo = mock[DuoSecurity]
+    val fakeDuo = mock[DuoWebAuth]
+
+    implicit val actorSystem = ActorSystem("test")
+    implicit val executionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
     val controller = new LoginController(fakeConfig, fakeUserMatcher, fakeDuo, fakeComponents)
 
@@ -112,6 +120,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
     "properly draw both forms when needed" in new Setup() {
       fakeConfig.duoSecurity returns Some(DuoSecurityConfig("integ-key", "security-key", "api-host"))
       fakeUserMatcher.getUser("test") returns Some(User("test:test", admin = true, Some("T2LMGZPFG4ANKCXKNPGETW7MOTVGPCLH"), List(), duoEnabled = true))
+      fakeDuo.preauth("test") returns Future.successful(PreAuthResponse("auth", "Auth ok", List()))
 
       val authExpiration = System.currentTimeMillis() + 5.minutes.toMillis
       val result = controller.showTotpForm().apply(CSRFTokenHelper.addCSRFToken(FakeRequest(GET, "/totp?redirect=someUrl")
@@ -120,7 +129,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
 
       status(result) mustBe OK
       contentAsString(result) must include("<input type=\"text\" id=\"totpCode\" name=\"totpCode\" value=\"\" required=\"true\" class=\"form-control\" size=\"10\" autofocus=\"autofocus\">")
-      contentAsString(result) must include("#duo_iframe")
+      contentAsString(result) must include("<label for=\"device\">Select a device for push notifications:</label>")
     }
 
     "only draw TOTP form if user is not duo enabled" in new Setup() {
@@ -140,6 +149,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
     "only draw Duo form if user is not TOTP enabled" in new Setup() {
       fakeConfig.duoSecurity returns Some(DuoSecurityConfig("integ-key", "security-key", "api-host"))
       fakeUserMatcher.getUser("test") returns Some(User("test:test", admin = true, None, List(), duoEnabled = true))
+      fakeDuo.preauth("test") returns Future.successful(PreAuthResponse("auth", "Auth ok", List()))
 
       val authExpiration = System.currentTimeMillis() + 5.minutes.toMillis
       val result = controller.showTotpForm().apply(CSRFTokenHelper.addCSRFToken(FakeRequest(GET, "/totp?redirect=someUrl")
@@ -148,7 +158,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
 
       status(result) mustBe OK
       contentAsString(result) must not include("<input type=\"text\" id=\"totpCode\" name=\"totpCode\" value=\"\" required=\"true\" class=\"form-control\" size=\"10\" autofocus=\"autofocus\">")
-      contentAsString(result) must include("#duo_iframe")
+      contentAsString(result) must include("<label for=\"device\">Select a device for push notifications:</label>")
     }
 
     "correctly reject incorrect totp code" in new Setup() {
@@ -185,55 +195,6 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
       returnedSession.get("user") mustBe(Some("test"))
 
       returnedSession.get("authTime").flatMap(_.toLongOption).value mustBe System.currentTimeMillis() +- TimeTolerance.toMillis
-    }
-
-    "correctly validate duo" in new Setup() {
-      fakeUserMatcher.getUser("test") returns Some(User("test:test", admin = true, None, List(), duoEnabled = true))
-      fakeDuo.verifyRequest("some_test_sig") returns "test"
-
-      val authExpiration = System.currentTimeMillis() + 5.minutes.toMillis
-      val result = controller.duo().apply(FakeRequest(POST, "/totp?redirect=someUrl")
-        .withSession("partialAuthUsername" -> "test", "partialAuthTimeout" -> authExpiration.toString)
-        .withHeaders("X-Forwarded-For" -> "127.0.0.1")
-        .withFormUrlEncodedBody("sig_response" -> "some_test_sig"))
-
-      status(result) mustBe FOUND
-      redirectLocation(result) mustBe Some("someUrl")
-
-      val returnedSession = session(result)
-
-      returnedSession.get("user") mustBe(Some("test"))
-
-      returnedSession.get("authTime").flatMap(_.toLongOption).value mustBe System.currentTimeMillis() +- TimeTolerance.toMillis
-    }
-
-    "correctly reject incorrect duo username" in new Setup() {
-      fakeUserMatcher.getUser("test") returns Some(User("test:test", admin = true, None, List(), duoEnabled = true))
-      fakeDuo.verifyRequest("some_test_sig") returns "test12345"
-
-      val authExpiration = System.currentTimeMillis() + 5.minutes.toMillis
-      val result = controller.duo().apply(FakeRequest(POST, "/totp?redirect=someUrl")
-        .withSession("partialAuthUsername" -> "test", "partialAuthTimeout" -> authExpiration.toString)
-        .withHeaders("X-Forwarded-For" -> "127.0.0.1")
-        .withFormUrlEncodedBody("sig_response" -> "some_test_sig"))
-
-      status(result) mustBe UNAUTHORIZED
-      session(result) mustBe empty
-    }
-
-    "correctly handle exception from duo" in new Setup() {
-      fakeConfig.duoSecurity returns Some(DuoSecurityConfig("integ", "secret", "host"))
-      fakeUserMatcher.getUser("test") returns Some(User("test:test", admin = true, None, List(), duoEnabled = true))
-      fakeDuo.verifyRequest("some_test_sig") throws new DuoWebException("bad signature")
-
-      val authExpiration = System.currentTimeMillis() + 5.minutes.toMillis
-      val result = controller.duo().apply(FakeRequest(POST, "/totp?redirect=someUrl")
-        .withSession("partialAuthUsername" -> "test", "partialAuthTimeout" -> authExpiration.toString)
-        .withHeaders("X-Forwarded-For" -> "127.0.0.1")
-        .withFormUrlEncodedBody("sig_response" -> "some_test_sig"))
-
-      status(result) mustBe UNAUTHORIZED
-      
     }
 
     "respect auth timeout" in new Setup() {

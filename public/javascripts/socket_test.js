@@ -1,19 +1,28 @@
-function initLogin() {
+function initLogin(socketUrl) {
     const deviceId = document.getElementById("device").value;
 
-    const url = "http://localhost:9000/push?device=" + deviceId;
+    const params = new URLSearchParams();
+    params.append('device', deviceId);
+
+    const url = "/duoPush?" + params.toString();
     document.getElementById("spinner").style.display = '';
     fetch(url).then(res => {
         return res.json();
     }).then(payload => {
         console.log(payload);
-        getStatus(payload.txId);
+        getStatus(payload.txId, socketUrl);
     });
 }
 
 
-function getStatus(txId) {
-    let socket = new WebSocket("ws://localhost:9000/status?txId=" + txId);
+function getStatus(txId, socketUrl) {
+    const ourUrl = new URL(window.location.href);
+
+    const params = new URLSearchParams();
+    params.append('txId', txId);
+    params.append('redirectUrl', ourUrl.searchParams.get('redirect'));
+
+    let socket = new WebSocket(socketUrl + "?" + params.toString());
 
     socket.onopen = (e) => {
         console.log('connected to socket');

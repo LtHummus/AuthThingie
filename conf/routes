@@ -12,14 +12,16 @@ POST    /login                      controllers.LoginController.login
 GET     /totp                       controllers.LoginController.showTotpForm
 POST    /totp                       controllers.LoginController.totp
 GET     /test                       controllers.AuthController.testUrl
-+nocsrf
-POST    /duo                        controllers.LoginController.duo
 
-GET     /ping                       controllers.DuoAuthTestController.ping
-GET     /stest                      controllers.DuoAuthTestController.socketHome
-GET     /push                       controllers.DuoAuthTestController.sendPush
-GET     /status                     controllers.DuoAuthTestController.streamTest
-GET     /duoPostCheck               controllers.DuoAuthTestController.redirect
+GET     /duoPush                    controllers.LoginController.sendPush
+GET     /duoStatus                  controllers.LoginController.duoPushStatus
+GET     /duoPostCheck               controllers.LoginController.duoRedirect
+
+#GET     /ping                       controllers.DuoAuthTestController.ping
+#GET     /stest                      controllers.DuoAuthTestController.socketHome
+#GET     /push                       controllers.DuoAuthTestController.sendPush
+#GET     /status                     controllers.DuoAuthTestController.streamTest
+#GET     /duoPostCheck               controllers.DuoAuthTestController.redirect
 
 GET     /logout                     controllers.LoginController.logout
 # Map static resources from the /public folder to the /assets URL path
