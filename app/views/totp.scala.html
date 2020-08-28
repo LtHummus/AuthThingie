@@ -44,7 +44,7 @@
                     </select>
 
                     <div>
-                        <span><button class="btn btn-primary" onclick="initLogin('@duoSocket.webSocketURL(request.secure)')">Send Notification</button></span>
+                        <span><button class="btn btn-primary" onclick="initLogin('@duoSocket.webSocketURL(request.uri.toLowerCase.startsWith("https"))')">Send Notification</button></span>
                         <span id="spinner" class="spinner-border" style="display: none"></span><span style="padding-left: 10px" id="status"></span>
                     </div>
 
