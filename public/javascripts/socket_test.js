@@ -1,3 +1,11 @@
+function websocketScheme() {
+    if (window.location.href.startsWith("https")) {
+        return "wss";
+    } else {
+        return "ws";
+    }
+}
+
 function initLogin(socketUrl) {
     const deviceId = document.getElementById("device").value;
 
@@ -22,7 +30,9 @@ function getStatus(txId, socketUrl) {
     params.append('txId', txId);
     params.append('redirectUrl', ourUrl.searchParams.get('redirect'));
 
-    let socket = new WebSocket(socketUrl + "?" + params.toString());
+    const fixedSocketUrl = websocketScheme() + socketUrl.substring(2);
+
+    let socket = new WebSocket(fixedSocketUrl + "?" + params.toString());
 
     socket.onopen = (e) => {
         console.log('connected to socket');
