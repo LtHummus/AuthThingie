@@ -194,6 +194,12 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
     val payload = DuoAsyncAuthStatus(request.queryString("key").head)
     val signatureValid = HmacUtils.validate(payload.signaturePayload, payload.signature)
 
+    val knownUser = for {
+      potentialUser <- request.session.get(PartialAuthUsername)
+      user          <- userMatcher.getUser(potentialUser)
+    } yield {
+      user
+    }
     // time to do a bunch of checks
     if (!signatureValid) {
       Forbidden(Json.obj("error" -> "invalid signature"))
@@ -202,16 +208,9 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
     } else if (!request.session.get(PartialAuthUsername).contains(payload.username)) {
       Forbidden(Json.obj("error" -> "mismatched username"))
     } else if (payload.status != "allow") {
-      //TODO: more sane deny
-      Redirect(routes.HomeController.index(), FOUND)
+      // TODO: this is bad, do better next time
+      Unauthorized(views.html.totp(knownUser.exists(_.usesTotp), totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(payload.redirectUrl))), Some("Duo Request Denied"), None, routes.LoginController.duoPushStatus())).withSession(request.session)
     } else {
-      val knownUser = for {
-        potentialUser <- request.session.get(PartialAuthUsername)
-        user          <- userMatcher.getUser(potentialUser)
-      } yield {
-        user
-      }
-
       knownUser match {
         case Some(user) => loginAndRedirect(user, payload.redirectUrl)
         case None       => BadRequest(Json.obj("error" -> "no redirect url"))
