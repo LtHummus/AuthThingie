@@ -16,6 +16,10 @@ GET     /test                       controllers.AuthController.testUrl
 POST    /duo                        controllers.LoginController.duo
 
 GET     /ping                       controllers.DuoAuthTestController.ping
+GET     /stest                      controllers.DuoAuthTestController.socketHome
+GET     /push                       controllers.DuoAuthTestController.sendPush
+GET     /status                     controllers.DuoAuthTestController.streamTest
+GET     /duoPostCheck               controllers.DuoAuthTestController.redirect
 
 GET     /logout                     controllers.LoginController.logout
 # Map static resources from the /public folder to the /assets URL path
