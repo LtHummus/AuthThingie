@@ -114,6 +114,20 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
       redirectLocation(result) mustBe Some("someUrl")
     }
 
+    "not redirect to totp page if duo is disabled config wide" in new Setup() {
+      fakeUserMatcher.validUser("user", "pass") returns Some(User("test:test", admin = true, None, List(), duoEnabled = true))
+      fakeConfig.duoSecurity returns None
+
+      val result = controller.login().apply(CSRFTokenHelper.addCSRFToken(FakeRequest(POST, "/login?redirect=someUrl")
+        .withHeaders("X-Forwarded-For" -> "127.0.0.1")
+        .withFormUrlEncodedBody("username" -> "user",
+          "password" -> "pass",
+          "redirectUrl" -> "someUrl")))
+
+      status(result) mustBe FOUND
+      redirectLocation(result) mustBe Some("someUrl")
+    }
+
     "error when no partial auth is defined" in new Setup() {
       val result = controller.showTotpForm().apply(FakeRequest(GET, "/totp?redirect=someUrl"))
 

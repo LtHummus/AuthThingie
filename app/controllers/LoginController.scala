@@ -47,6 +47,8 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
     )(LoginData.apply)(LoginData.unapply)
   )
 
+  private def shouldShowTotpPage(user: User): Boolean = user.usesTotp || (user.duoEnabled && config.duoSecurity.isDefined)
+
   private def loginAndRedirect(user: User)(implicit request: Request[_]): Future[Result] = {
     Logger.info(s"Successful auth for ${user.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}")
     Logger.debug(s"Redirecting to $redirectUrl")
@@ -96,7 +98,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
     partialAuthUser match {
       case None => Future.successful(Unauthorized(views.html.denied("Error: No partially authed username.")))
       case Some(user) =>
-        if (user.duoEnabled) {
+        if (config.duoSecurity.isDefined && user.duoEnabled) {
           duoWebAuth.preauth(user.username).map{ di =>
             Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), None, Some(di), routes.LoginController.duoPushStatus()))
           }
@@ -160,15 +162,16 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
 
     val success = { data: LoginData =>
       userMatcher.validUser(data.username, data.password) match {
-        case Some(user) if user.doesNotUseSecondFactor => loginAndRedirect(user)
-        case Some(user) if user.usesSecondFactor =>
+        case Some(user) if shouldShowTotpPage(user) =>
           Logger.info(s"Successful username/password combo for ${user.username}. Forwarding for 2FA")
           val timeout = System.currentTimeMillis() + PartialAuthExpirationTime
           Future.successful(Redirect(routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl)))).withSession(PartialAuthUsername -> user.username, PartialAuthTimeout -> timeout.toString))
+        case Some(user) => loginAndRedirect(user)
         case None =>
           Logger.warn(s"Bad login attempt for user ${data.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}")
           Future.successful(Unauthorized(views.html.login(loginForm.fill(data.copy(password = "")), request.session.get(Redirect + "Url").getOrElse(""), routes.LoginController.login().appendQueryString(Map(Redirect -> Seq(redirectUrl))), config.siteName, Some("Invalid username or password"))))
       }
+
     }
 
     loginForm.bindFromRequest.fold(error, success)
