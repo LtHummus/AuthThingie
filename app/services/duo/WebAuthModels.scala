@@ -49,8 +49,8 @@ object DuoAsyncAuthStatus {
   implicit val config = JsonConfiguration(SnakeCase)
   implicit val format = Json.format[DuoAsyncAuthStatus]
 
-  def apply(syncResult: SyncAuthResult, username: String, redirectUrl: String, time: ZonedDateTime, signature: String): DuoAsyncAuthStatus = {
-    DuoAsyncAuthStatus(syncResult.status, syncResult.result, syncResult.statusMsg, username, redirectUrl, time.toInstant.toEpochMilli, signature)
+  def apply(syncResult: SyncAuthResult, username: String, redirectUrl: String, time: ZonedDateTime): DuoAsyncAuthStatus = {
+    DuoAsyncAuthStatus(syncResult.status, syncResult.result, syncResult.statusMsg, username, redirectUrl, time.toInstant.toEpochMilli, "").withSignature
   }
 
   def apply(x: String): DuoAsyncAuthStatus = {

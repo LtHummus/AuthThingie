@@ -11,7 +11,7 @@ import play.api.data._
 import play.api.libs.json.Json
 import play.api.libs.streams.ActorFlow
 import play.api.mvc.{AnyContent, MessagesAbstractController, MessagesControllerComponents, MessagesRequest, Request, Result, WebSocket}
-import services.duo.{DuoAsyncActor, DuoAsyncAuthStatus, DuoSecurity, DuoWebAuth}
+import services.duo.{DuoAsyncActor, DuoAsyncAuthStatus, DuoWebAuth}
 import services.hmac.HmacUtils
 import services.users.{User, UserMatcher}
 import util.CallImplicits._

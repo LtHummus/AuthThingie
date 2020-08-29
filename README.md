@@ -70,6 +70,14 @@ auththingie {
   ]
 
   authSiteUrl: "http://auth.example.com"
+  
+  # this section is optional and only needed for Duo Security integration (see below)
+  duo: {
+    integrationKey: XXXXXXXXXXXXXXXXXX
+    secretKey: yyyyyyyyyyyyyyyyyyyyyyyyyy
+    apiHostname: api-zzzzzzzz.duosecurity.com
+  }
+
 }
 
 ``` 
@@ -99,6 +107,7 @@ Here's a table of all the configuration values
 | `auththingie.siteName`    | No       | The name of the site. Show on login pages.                                                                                                                                  |
 | `auththingie.timeout`     | No       | Determines how long logging in is good for. If not set, cookie is cleared on browser exit. Takes durations like `1h`, `2d`, etc.                                            |
 | `auththingie.authHeader`  | No       | The name of the header to use for basic auth. Defaults to `Authorization` if not set                                                                                        |
+| `auththingie.duo`         | No       | The configuration for Duo security if desired (see section below)                                                                                                           |
 
 #### Rule Configuration
 Rules consist of the following values
@@ -118,8 +127,20 @@ Users consist of the following values
 |--------------|----------|--------------------------------------------------------------------------------------------------------------------|
 | `passwdLine` | Yes      | The output of `htpasswd -nB <username>`. This generally looks like `<username>:<hashed+salted password>`           |
 | `admin`      | No       | If this user is an `admin`. Defaults to `false` if not given                                                       |
+| `duoEnabled` | No       | If the user uses Duo second factor auth (see section below). Defaults to `false`                                   |
 | `totpSecret` | No       | If the user has a TOTP token, this is the secret. This can be generated with the built in `generate_totp` command. |
 | `roles`      | No       | Roles that this user has. These should match up with ones in the path rules.                                       |
+
+#### Duo Security Configuration
+
+If Duo security is used, the following values must be set.
+
+| Key              | Required | Value                                                                 |
+|------------------|----------|-----------------------------------------------------------------------|
+| `integrationKey` | Yes      | Duo integration key.                                                  |
+| `secretKey`      | Yes      | Duo secret key.                                                       |
+| `apiHostname`    | Yes      | Duo hostname. Should be in the format `api-xxxxxxxx.duosecurity.com`  |
+
 
 #### Final note
 
@@ -146,6 +167,10 @@ In AuthThingie 0.1.0, I changed the config file format a bit. For now, things ar
 ## TOTP
 
 AuthThingie supports Time-Based One-Time Passwords. They do require some special setup. AuthThingie includes a script to help generate secrets and set up your app of choice. Once you have AuthThingie up and running in a docker container, you can generate everything with `docker exec -it <container name> generate-totp <username>` (if you are using Docker Compose, you can do `docker-compose exec auth generate-totp <username>`). This will generate a random secret for you and give you instructions on what to do next. The app will also display a QR code in your terminal for scanning in to your authentication application as well as a field to add to your config file. Scan the code, update the config file, then restart the container and you should be good to go.
+
+## Duo Security
+
+AuthThingie supports second factor authentication via [DuoSecurity](https://duo.com/) push notifications. Sign up for a free account and install the app on your smart phone. In the Duo Admin control panel, add a new Application with the type "Partner Auth API".  You should be given an integration key, a secret key, and an API hostname. Create a user in the Admin panel as well. The username of your Duo user MUST MATCH the AuthThingie username. In the AuthThingie config file, add a section called `duo` inside the `auththingie` section. Additionally, add `duoEnabled: true` to each user you want to enable. The user in Duo must support push notifications, as that is all that AuthThingie supports.
 
 ## Deployment
 

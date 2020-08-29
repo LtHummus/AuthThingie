@@ -23,7 +23,7 @@ class DuoAsyncActor(out: ActorRef, duoClient: DuoWebAuth, txId: String, redirect
             out ! Json.toJson(res).toString()
           } else {
             val instant = ZonedDateTime.now(timeZone)
-            val duoRes = DuoAsyncAuthStatus(res, username, redirectUrl, instant, "").withSignature
+            val duoRes = DuoAsyncAuthStatus(res, username, redirectUrl, instant).withSignature
             val json = Json.toJson(duoRes).toString()
 
             out ! json

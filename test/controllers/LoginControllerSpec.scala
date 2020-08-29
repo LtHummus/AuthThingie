@@ -5,7 +5,6 @@ import java.util.Base64
 import java.util.concurrent.Executors
 
 import akka.actor.ActorSystem
-import com.duosecurity.duoweb.DuoWebException
 import config.{AuthThingieConfig, DuoSecurityConfig}
 import org.mockito.IdiomaticMockito
 import org.scalatestplus.play._
@@ -15,7 +14,7 @@ import play.api.libs.json.Json
 import play.api.test._
 import play.api.test.Helpers._
 import play.api.mvc.Session
-import services.duo.{AsyncAuthResult, DuoAsyncAuthStatus, DuoSecurity, DuoWebAuth, PreAuthResponse}
+import services.duo.{AsyncAuthResult, DuoAsyncAuthStatus, DuoWebAuth, PreAuthResponse}
 import services.hmac.HmacUtils
 import services.totp.TotpUtil
 import services.users.{User, UserMatcher}
