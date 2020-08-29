@@ -39,7 +39,7 @@ class DuoWebAuth @Inject() (config: AuthThingieConfig, ws: WSClient) {
       Hex.encodeHexString(mac.doFinal(payload.getBytes(StandardCharsets.UTF_8)))
     }
 
-    def duoSign(methodInput: String, params: Map[String, String] = Map.empty): WSRequest = {
+    private[duo] def duoSign(methodInput: String, params: Map[String, String] = Map.empty): WSRequest = {
       val dateString = ZonedDateTime.now().format(CanonicalDateTime)
       val method = methodInput.toUpperCase
       val host = x.uri.getHost.toLowerCase
