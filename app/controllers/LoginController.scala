@@ -195,7 +195,6 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
 
   def duoRedirect = Action { implicit request =>
     val payload = DuoAsyncAuthStatus(request.queryString("key").head)
-    val signatureValid = HmacUtils.validate(payload.signaturePayload, payload.signature)
 
     val knownUser = for {
       potentialUser <- request.session.get(PartialAuthUsername)
@@ -204,7 +203,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
       user
     }
     // time to do a bunch of checks
-    if (!signatureValid) {
+    if (!payload.validateSignature) {
       Unauthorized(views.html.totp(knownUser.exists(_.usesTotp), totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(payload.redirectUrl))), Some("Invalid Duo key signature"), None, routes.LoginController.duoPushStatus())).withSession(request.session)
     } else if (payload.timeSinceSignature(config.timeZone).compareTo(Duration.ofSeconds(60)) > 0) {
       Unauthorized(views.html.totp(knownUser.exists(_.usesTotp), totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(payload.redirectUrl))), Some("Duo Request timed out"), None, routes.LoginController.duoPushStatus())).withSession(request.session)

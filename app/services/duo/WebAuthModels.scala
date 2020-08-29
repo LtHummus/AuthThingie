@@ -5,6 +5,7 @@ import java.util.Base64
 
 import play.api.libs.json.JsonNaming.SnakeCase
 import play.api.libs.json.{Json, JsonConfiguration}
+import services.hmac.HmacUtils
 
 case class PingResponse(time: Long)
 object PingResponse {
@@ -38,6 +39,11 @@ case class DuoAsyncAuthStatus(status: String, result: String, statusMsg: String,
     val initTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(time), timeZone)
     Duration.between(initTime, ZonedDateTime.now(timeZone))
   }
+  def withSignature: DuoAsyncAuthStatus = {
+    val signature = HmacUtils.sign(signaturePayload)
+    this.copy(signature = signature)
+  }
+  def validateSignature: Boolean = HmacUtils.validate(signaturePayload, signature)
 }
 object DuoAsyncAuthStatus {
   implicit val config = JsonConfiguration(SnakeCase)
