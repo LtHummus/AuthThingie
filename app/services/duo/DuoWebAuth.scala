@@ -22,7 +22,17 @@ class DuoWebAuth @Inject() (config: AuthThingieConfig, ws: WSClient) {
   private val CanonicalDateTime = DateTimeFormatter.ofPattern("EEE', 'dd' 'MMM' 'yyyy' 'HH:mm:ss' 'Z", Locale.US)
   private val SigningAlgorithm = "HmacSHA1"
 
-  private val baseUrl = "https://" + config.duoSecurity.get.apiHostname
+  private val baseUrl = {
+    config.duoSecurity match {
+      case None => ""
+      case Some(c) =>
+        if (c.apiHostname != "" && !c.apiHostname.startsWith("https")) {
+          "https://" + c.apiHostname
+        } else {
+          c.apiHostname
+        }
+    }
+  }
 
   implicit class SignableRequest(x: WSRequest) {
     private def urlEncode(input: String): String = {
