@@ -7,13 +7,15 @@ function websocketScheme() {
 }
 
 function initLogin(socketUrl) {
+    const button = document.getElementById("duo_submit");
+    button.disabled = true;
     const deviceId = document.getElementById("device").value;
 
     const params = new URLSearchParams();
     params.append('device', deviceId);
 
     const url = "/duoPush?" + params.toString();
-    document.getElementById("spinner").style.display = '';
+    document.getElementById("duo_spinner").style.display = '';
     fetch(url).then(res => {
         return res.json();
     }).then(payload => {
@@ -43,9 +45,9 @@ function getStatus(txId, socketUrl) {
         console.log(e.data);
         const data = JSON.parse(e.data);
         console.log(data);
-        document.getElementById("status").innerText = data.status_msg;
+        document.getElementById("duo_status").innerText = data.status_msg;
         if (data.result !== "waiting") {
-            document.getElementById("spinner").style.display = 'none';
+            document.getElementById("duo_spinner").style.display = 'none';
             socket.send("die");
 
             const b64 = btoa(e.data).replace(/\+/g, '-').replace(/\//g, '_').replace(/\=+$/, '');

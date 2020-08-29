@@ -30,25 +30,31 @@
             }
 
             @if(duoInfo.isDefined) {
-                <h4>Duo Two Factor</h4>
+                <h5>Duo Two Factor</h5>
                 @if(duoInfo.get.result != "auth") {
                     <p>
                         Duo Auth is enabled for this user, but the user is not set up properly in Duo
                     </p>
                 } else {
-                    <label for="device">Select a device for push notifications:</label>
-                    <select name="device" id="device" class="custom-select">
-                    @for(curr <- duoInfo.get.devices.filter(_.capabilities.contains("push"))) {
-                        <option value="@curr.device">@curr.number</option>
-                    }
-                    </select>
+                    <form class="form-vertical" onsubmit="return false;">
+                        <div id="duoAuth_select" class="form-group">
+                            <label for="device">Select a device for push notifications:</label>
+                            <select name="device" id="device" class="custom-select form-control">
+                            @for(curr <- duoInfo.get.devices.filter(_.capabilities.contains("push"))) {
+                                <option value="@curr.device">@curr.number</option>
+                            }
+                            </select>
+                        </div>
 
-                    <div>
-                        <span><button class="btn btn-primary" onclick="initLogin('@duoSocket.webSocketURL(request.uri.toLowerCase.startsWith("https"))')">Send Notification</button></span>
-                        <span id="spinner" class="spinner-border" style="display: none"></span><span style="padding-left: 10px" id="status"></span>
-                    </div>
+                        <div id="duoAuth_submit" class="form-group">
+                            <button id="duo_submit" class="btn btn-primary" onclick="initLogin('@duoSocket.webSocketURL(request.uri.toLowerCase.startsWith("https"))')">
+                                <span id="duo_spinner" class="spinner-border spinner-border-sm" role="status" style="display: none"></span>
+                                <span id="duo_status">Send Notification</span>
+                            </button>
+                        </div>
+                    </form>
 
-                    <script src="@routes.Assets.versioned("javascripts/socket_test.js")" type="text/javascript"></script>
+                    <script src="@routes.Assets.versioned("javascripts/duo_socket.js")" type="text/javascript"></script>
                 }
             }
         </div>
