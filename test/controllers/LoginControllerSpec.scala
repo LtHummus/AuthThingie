@@ -261,8 +261,8 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
       val request = FakeRequest(GET, "/duoPostCheck?key=" + serialized).withSession("partialAuthUsername" -> "test")
       val result = controller.duoRedirect.apply(request)
 
-      status(result) mustBe FORBIDDEN
-      (contentAsJson(result) \ "error").as[String] mustBe "invalid signature"
+      status(result) mustBe UNAUTHORIZED
+      contentAsString(result) must include("Invalid Duo key signature")
     }
 
     "error on long delay" in new Setup() {
@@ -275,8 +275,8 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
       val request = FakeRequest(GET, "/duoPostCheck?key=" + serialized).withSession("partialAuthUsername" -> "test")
       val result = controller.duoRedirect.apply(request)
 
-      status(result) mustBe FORBIDDEN
-      (contentAsJson(result) \ "error").as[String] mustBe "took too long"
+      status(result) mustBe UNAUTHORIZED
+      contentAsString(result) must include("Duo Request timed out")
     }
 
     "error on mismatch username" in new Setup() {
@@ -289,8 +289,8 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
       val request = FakeRequest(GET, "/duoPostCheck?key=" + serialized).withSession("partialAuthUsername" -> "nottest")
       val result = controller.duoRedirect.apply(request)
 
-      status(result) mustBe FORBIDDEN
-      (contentAsJson(result) \ "error").as[String] mustBe "mismatched username"
+      status(result) mustBe UNAUTHORIZED
+      contentAsString(result) must include("Duo auth username does not match")
     }
 
     "error on request denied" in new Setup() {

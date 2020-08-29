@@ -205,13 +205,12 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
     }
     // time to do a bunch of checks
     if (!signatureValid) {
-      Forbidden(Json.obj("error" -> "invalid signature"))
+      Unauthorized(views.html.totp(knownUser.exists(_.usesTotp), totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(payload.redirectUrl))), Some("Invalid Duo key signature"), None, routes.LoginController.duoPushStatus())).withSession(request.session)
     } else if (payload.timeSinceSignature(config.timeZone).compareTo(Duration.ofSeconds(60)) > 0) {
-      Forbidden(Json.obj("error" -> "took too long"))
+      Unauthorized(views.html.totp(knownUser.exists(_.usesTotp), totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(payload.redirectUrl))), Some("Duo Request timed out"), None, routes.LoginController.duoPushStatus())).withSession(request.session)
     } else if (!request.session.get(PartialAuthUsername).contains(payload.username)) {
-      Forbidden(Json.obj("error" -> "mismatched username"))
+      Unauthorized(views.html.totp(knownUser.exists(_.usesTotp), totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(payload.redirectUrl))), Some("Duo auth username does not match"), None, routes.LoginController.duoPushStatus())).withSession(request.session)
     } else if (payload.status != "allow") {
-      // TODO: this is bad, do better next time
       Unauthorized(views.html.totp(knownUser.exists(_.usesTotp), totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(payload.redirectUrl))), Some("Duo Request Denied"), None, routes.LoginController.duoPushStatus())).withSession(request.session)
     } else {
       knownUser match {
