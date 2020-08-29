@@ -101,7 +101,8 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
         if (config.duoSecurity.isDefined && user.duoEnabled) {
           duoWebAuth.preauth(user.username).map{ di =>
             Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), None, Some(di), routes.LoginController.duoPushStatus()))
-          }.recover { _ =>
+          }.recover { error =>
+            Logger.warn("Error contacting Duo", error)
             InternalServerError(views.html.config_errors(List("Duo credential errors")))
           }
         } else {
@@ -142,7 +143,8 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
             if (user.duoEnabled) {
               duoWebAuth.preauth(user.username).map { di =>
                 Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), None, Some(di), routes.LoginController.duoPushStatus()))
-              }.recover { _ =>
+              }.recover { error =>
+                Logger.warn("Error contacting Duo", error)
                 InternalServerError(views.html.config_errors(List("Duo credential errors")))
               }
 
