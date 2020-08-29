@@ -8,7 +8,7 @@ import config.AuthThingieConfig
 import javax.inject.Inject
 import play.api.data.Forms._
 import play.api.data._
-import play.api.libs.json.Json
+import play.api.libs.json.{JsResultException, Json}
 import play.api.libs.streams.ActorFlow
 import play.api.mvc.{AnyContent, MessagesAbstractController, MessagesControllerComponents, MessagesRequest, Request, Result, WebSocket}
 import services.duo.{DuoAsyncActor, DuoAsyncAuthStatus, DuoWebAuth}
@@ -101,6 +101,8 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
         if (config.duoSecurity.isDefined && user.duoEnabled) {
           duoWebAuth.preauth(user.username).map{ di =>
             Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), None, Some(di), routes.LoginController.duoPushStatus()))
+          }.recover { _ =>
+            InternalServerError(views.html.config_errors(List("Duo credential errors")))
           }
         } else {
           Future.successful(Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), None, None, routes.LoginController.duoPushStatus())))
@@ -140,7 +142,10 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
             if (user.duoEnabled) {
               duoWebAuth.preauth(user.username).map { di =>
                 Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), None, Some(di), routes.LoginController.duoPushStatus()))
+              }.recover { _ =>
+                InternalServerError(views.html.config_errors(List("Duo credential errors")))
               }
+
             } else {
               Future.successful(Unauthorized(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), Some("Invalid Auth Code"), None, routes.LoginController.duoPushStatus())).withSession(request.session))
             }
