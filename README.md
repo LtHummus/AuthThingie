@@ -112,13 +112,14 @@ Here's a table of all the configuration values
 #### Rule Configuration
 Rules consist of the following values
 
-| Key              | Required | Value                                                                                                  |
-|------------------|----------|--------------------------------------------------------------------------------------------------------|
-| `name`           | Yes      | A name for the rule                                                                                    |
-| `pathPattern`    | No       | The path the request should match. If not given, matches any.                                          |
-| `hostPattern`    | No       | The host the request should match. If not given, matches any.                                          |
-| `public`         | No       | If the path should be considered "public" (i.e. accessible without logging in). Defaults to `false`    |
-| `permittedRoles` | No       | A list of roles that are allowed to access this path. If empty or not given, defaults to `admin` only. |
+| Key              | Required | Value                                                                                                                                                 |
+|------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `name`           | Yes      | A name for the rule                                                                                                                                   |
+| `pathPattern`    | No       | The path the request should match. If not given, matches any.                                                                                         |
+| `hostPattern`    | No       | The host the request should match. If not given, matches any.                                                                                         |
+| `public`         | No       | If the path should be considered "public" (i.e. accessible without logging in). Defaults to `false`                                                   |
+| `permittedRoles` | No       | A list of roles that are allowed to access this path. If empty or not given, defaults to `admin` only.                                                |
+| `timeout`        | No       | Set a custom timeout for this rule (i.e. a user must have authed within the timeout to be allowed access). If not set, uses the global timeout above. |
 
 #### User Configuration
 Users consist of the following values
