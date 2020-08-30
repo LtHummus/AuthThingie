@@ -1,22 +1,19 @@
 package services.duo
 
-import java.util.concurrent.Executors
-
-import akka.util.Helpers.Requiring
 import config.{AuthThingieConfig, DuoSecurityConfig}
 import org.mockito.IdiomaticMockito.StubbingOps
 import org.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import play.api.{ApplicationLoader, BuiltInComponentsFromContext}
+import play.api.BuiltInComponentsFromContext
 import play.api.libs.json.Json
 import play.api.mvc._
 import play.api.routing.Router
 import play.api.routing.sird._
-import play.core.server.{Server, ServerConfig}
 import play.api.test._
+import play.core.server.Server
 import play.filters.HttpFiltersComponents
 
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 class DuoWebAuthSpec extends PlaySpec with MockitoSugar {
   import scala.concurrent.ExecutionContext.Implicits.global

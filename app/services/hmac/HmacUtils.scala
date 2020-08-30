@@ -1,6 +1,6 @@
 package services.hmac
 
-import java.security.{MessageDigest, SecureRandom}
+import java.security.SecureRandom
 import java.util.Base64
 
 import javax.crypto.Mac

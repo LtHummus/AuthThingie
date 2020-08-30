@@ -8,17 +8,15 @@ import config.AuthThingieConfig
 import javax.inject.Inject
 import play.api.data.Forms._
 import play.api.data._
-import play.api.libs.json.{JsResultException, Json}
+import play.api.libs.json.Json
 import play.api.libs.streams.ActorFlow
-import play.api.mvc.{AnyContent, MessagesAbstractController, MessagesControllerComponents, MessagesRequest, Request, Result, WebSocket}
+import play.api.mvc._
 import services.duo.{DuoAsyncActor, DuoAsyncAuthStatus, DuoWebAuth}
-import services.hmac.HmacUtils
 import services.users.{User, UserMatcher}
 import util.CallImplicits._
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ExecutionContext, Future}
 
 case class LoginData(username: String, password: String)
 case class TotpData(totpCode: String)
