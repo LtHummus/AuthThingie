@@ -14,7 +14,7 @@ class HmacUtilsSpec extends PlaySpec with MockitoSugar{
       HmacUtils.validate("abc", "a" + res.tail) mustBe false
 
       // if this line of code fails, buy a lottery ticket
-      HmacUtils.validate("abc", "R_8HCTpDYI7CPA8TytwN-F5Tk0NhSZms8ijA8jbFDiA=") mustBe false
+      HmacUtils.validate("abc", "FwyukBnlhhEGGiYOT5K8V2NeY8spbEB8m5IZR5Yap-R7tYmuKoSWNwb79L-z2Shs") mustBe false
     }
   }
 }
