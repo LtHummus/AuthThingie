@@ -186,7 +186,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
     val deviceName = request.queryString("device").head
 
     for {
-      txid <- duoWebAuth.authAsync(request.session(PartialAuthUsername), "push", deviceName)
+      txid <- duoWebAuth.authAsync(request.session(PartialAuthUsername), "push", deviceName, request.headers.get(XForwardedFor))
     } yield {
       Ok(Json.obj("txId" -> txid.txid))
     }

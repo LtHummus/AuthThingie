@@ -94,24 +94,32 @@ class DuoWebAuth @Inject() (config: AuthThingieConfig, ws: WSClient) {
     }
   }
 
-  def authSync(username: String, factor: String, deviceId: String)(implicit ec: ExecutionContext): Future[SyncAuthResult] = {
+  def authSync(username: String, factor: String, deviceId: String, ipAddr: Option[String])(implicit ec: ExecutionContext): Future[SyncAuthResult] = {
+    val ipAddrParam = ipAddr match {
+      case None => Map.empty[String, String]
+      case Some(ip) => Map("ipaddr" -> ip)
+    }
     val params = Map(
       "username" -> username,
       "factor" -> factor,
       "device" -> deviceId
-    )
+    ) ++ ipAddrParam
     ws.url(baseUrl + "/auth/v2/auth").duoSign("POST", params).execute().map{ resp =>
       (resp.json \ "response").as[SyncAuthResult]
     }
   }
 
-  def authAsync(username: String, factor: String, deviceId: String)(implicit ec: ExecutionContext): Future[AsyncAuthResult] = {
+  def authAsync(username: String, factor: String, deviceId: String, ipAddr: Option[String])(implicit ec: ExecutionContext): Future[AsyncAuthResult] = {
+    val ipAddrParam = ipAddr match {
+      case None => Map.empty[String, String]
+      case Some(ip) => Map("ipaddr" -> ip)
+    }
     val params = Map(
       "username" -> username,
       "factor" -> factor,
       "device" -> deviceId,
       "async" -> "1"
-    )
+    ) ++ ipAddrParam
     ws.url(baseUrl + "/auth/v2/auth").duoSign("POST", params).execute().map{ resp =>
       (resp.json \ "response").as[AsyncAuthResult]
     }

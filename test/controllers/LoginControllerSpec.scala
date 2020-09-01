@@ -232,7 +232,7 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
 
   "Send duo push" should {
     "properly send a push" in new Setup() {
-      fakeDuo.authAsync("test", "push", "fake-device") returns Future.successful(AsyncAuthResult("fake-tx"))
+      fakeDuo.authAsync("test", "push", "fake-device", None) returns Future.successful(AsyncAuthResult("fake-tx"))
 
       val result = controller.sendPush().apply(FakeRequest(GET, "/sendPush?device=fake-device").withSession("partialAuthUsername" -> "test"))
 

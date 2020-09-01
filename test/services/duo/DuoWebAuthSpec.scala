@@ -98,7 +98,7 @@ class DuoWebAuthSpec extends PlaySpec with MockitoSugar {
       fakeConfig.duoSecurity returns Some(DuoSecurityConfig("integ", "secret", ""))
 
       withMockDuoService(fakeConfig) { client =>
-        val res = Await.result(client.authAsync("test-user", "push", "fooo"), 10.seconds)
+        val res = Await.result(client.authAsync("test-user", "push", "fooo", None), 10.seconds)
         res.txid mustBe "test-transaction"
       }
     }
