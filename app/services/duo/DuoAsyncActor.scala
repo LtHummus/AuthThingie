@@ -27,6 +27,7 @@ class DuoAsyncActor(out: ActorRef, duoClient: DuoWebAuth, txId: String, redirect
             val json = Json.toJson(duoRes).toString()
 
             out ! json
+            self ! PoisonPill
           }
         }
       }
