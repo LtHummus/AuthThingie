@@ -192,10 +192,19 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
     }
   }
 
-  def duoPushStatus = WebSocket.accept[String, String] { request =>
-    ActorFlow.actorRef { out =>
-      DuoAsyncActor.props(out, duoWebAuth, request.queryString("txId").head, request.queryString("redirectUrl").head, request.session(PartialAuthUsername), config.timeZone)
+  def duoPushStatus = WebSocket.acceptOrResult[String, String] { request =>
+    Future.successful( (request.queryString.get("txId"), request.queryString.get("redirectUrl"), request.session.get(PartialAuthUsername)) match {
+      case (Some(txId), Some(ru), Some(pau)) => Right(
+        ActorFlow.actorRef { out =>
+          DuoAsyncActor.props(out, duoWebAuth, txId.head, ru.head, pau, config.timeZone)
+        }
+      )
+      case _ =>
+        Logger.warn(s"Missing a param when attempting to listen to duo auth request. TXID = ${request.queryString.get("txId")}, redirect = ${request.queryString.get("redirectUrl")}, PAU = ${request.session.get(PartialAuthUsername)}")
+        Left(BadRequest(s"Missing a param"))
     }
+
+    )
   }
 
   def duoRedirect = Action { implicit request =>
