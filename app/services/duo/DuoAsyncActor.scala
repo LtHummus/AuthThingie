@@ -10,6 +10,10 @@ object DuoAsyncActor {
   def props(out: ActorRef, duoClient: DuoWebAuth, txId: String, redirectUrl: String, username: String, timeZone: ZoneId): Props = Props(new DuoAsyncActor(out, duoClient, txId, redirectUrl, username, timeZone))
 }
 
+// TODO: this actor only works in response to events from the client instead of listening to Duo API itself...this should
+//       actually just be an event stream, but i wasn't able to get that to work, so this is the work around we're using
+//       for now. Some day, https://www.playframework.com/documentation/2.8.x/ScalaWebSockets#Handling-WebSockets-with-Akka-streams-directly
+//       will work for us. But today is not that day.
 class DuoAsyncActor(out: ActorRef, duoClient: DuoWebAuth, txId: String, redirectUrl: String, username: String, timeZone: ZoneId) extends Actor {
   import context.dispatcher
 
