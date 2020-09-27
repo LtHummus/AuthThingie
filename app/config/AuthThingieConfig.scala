@@ -81,7 +81,7 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
       Logger.info("Valid configuration parsed and loaded")
       (a.rules, a.users, a.forceRedirectToHttps, a.siteUrl, a.siteName, a.headerName, a.timeZone, a.sessionTimeout, a.duoSecurity)
     case Validated.Invalid(e) =>
-      Logger.warn("Invalid configuration!")
+      Logger.warn(s"Invalid configuration: ${e.mkString_(", ")}")
       (List(), List(), false, "", "", "", ZoneId.systemDefault(), Duration.ofDays(1), None)
   }
 
