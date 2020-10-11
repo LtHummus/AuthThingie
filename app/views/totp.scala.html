@@ -1,32 +1,61 @@
-@(form: Form[TotpData], postUrl: Call, error: Option[String])(implicit request: MessagesRequestHeader)
+@import services.duo.PreAuthResponse
+@(showTotp: Boolean, form: Form[TotpData], postUrl: Call, error: Option[String], duoInfo: Option[PreAuthResponse], duoSocket: Call)(implicit request: MessagesRequestHeader)
 
 
-@main("TOTP") {
-    @request.flash.data.map{ case (name, value) =>
-    <div>@name: @value</div>
+    @main("TOTP") {
+        @if(form.hasGlobalErrors) {
+            @form.globalErrors.map { error: FormError =>
+                <div>
+                    Error: @error.key: @error.message
+                </div>
+            }
+        }
+
+        <div class="col col-sm-6 offset-md-3 login-form">
+            <h3>Two-Factor Auth</h3>
+
+            @if(error.isDefined) {
+                <div class="alert alert-danger">
+                @error.get
+                </div>
+            }
+
+            @if(showTotp) {
+                @b4.vertical.formCSRF(postUrl) { implicit vfc =>
+                    @b4.text(form("totpCode"), Symbol("_label") -> "TOTP Code", Symbol("size") -> 10, Symbol("autofocus") -> "autofocus")
+
+                    @b4.submit(Symbol("class") -> "btn btn-primary") {
+                        <i class="fa fa-ok btn-submit"></i> Go }
+                }
+            }
+
+            @if(duoInfo.isDefined) {
+                <h5>Duo Two Factor</h5>
+                @if(duoInfo.get.result != "auth") {
+                    <p>
+                        Duo Auth is enabled for this user, but the user is not set up properly in Duo
+                    </p>
+                } else {
+                    <form class="form-vertical" onsubmit="return false;">
+                        <div id="duoAuth_select" class="form-group">
+                            <label for="device">Select a device for push notifications:</label>
+                            <select name="device" id="device" class="custom-select form-control">
+                            @for(curr <- duoInfo.get.devices.filter(_.capabilities.contains("push"))) {
+                                <option value="@curr.device">@curr.number</option>
+                            }
+                            </select>
+                        </div>
+
+                        <div id="duoAuth_submit" class="form-group">
+                            <button id="duo_submit" class="btn btn-primary" onclick="initLogin('@duoSocket.webSocketURL(request.uri.toLowerCase.startsWith("https"))')">
+                                <span id="duo_spinner" class="spinner-border spinner-border-sm" role="status" style="display: none"></span>
+                                <span id="duo_status">Send Notification</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <script src="@routes.Assets.versioned("javascripts/duo_socket.js")" type="text/javascript"></script>
+                }
+            }
+        </div>
     }
-
-    @if(form.hasGlobalErrors) {
-        @form.globalErrors.map { error: FormError =>
-            <div>
-                Error: @error.key: @error.message
-            </div>
-        }
-    }
-
-    <div class="col col-sm-6 offset-md-3 login-form">
-        <h3>Two-Factor Auth</h3>
-
-        @if(error.isDefined) {
-            <div class="alert alert-danger">
-            @error.get
-            </div>
-        }
-
-        @b4.vertical.formCSRF(postUrl) { implicit vfc =>
-            @b4.text(form("totpCode"), Symbol("_label") -> "TOTP Code", Symbol("size") -> 10, Symbol("autofocus") -> "autofocus")
-
-            @b4.submit(Symbol("class") -> "btn btn-primary"){ <i class="fa fa-ok btn-submit"></i> Go }
-        }
-    </div>
-}

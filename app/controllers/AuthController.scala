@@ -2,6 +2,8 @@ package controllers
 
 import java.net.URI
 
+import util.SessionImplicits._
+
 import config.AuthThingieConfig
 import javax.inject.{Inject, Singleton}
 import org.apache.commons.codec.binary.Base64
@@ -18,9 +20,8 @@ import scala.util.Try
 class AuthController @Inject() (decoder: RequestDecoder,
                                 userMatcher: UserMatcher,
                                 pathMatcher: PathMatcher,
-                                config: AuthThingieConfig,
                                 resolver: RuleResolver,
-                                cc: ControllerComponents) extends AbstractController(cc) {
+                                cc: ControllerComponents)(implicit config: AuthThingieConfig) extends AbstractController(cc) {
 
   private val Logger = play.api.Logger(this.getClass)
 
@@ -29,16 +30,16 @@ class AuthController @Inject() (decoder: RequestDecoder,
   case object BasicAuth extends CredentialSource
   case object NoCredentials extends CredentialSource
 
+  private def pullUserFromHeader(header: String): Option[User] = {
+    val rawAuthData = header.replaceFirst("Basic ", "")
+    val Array(username, password) = new String(Base64.decodeBase64(rawAuthData)).split(":", 2)
+    userMatcher.validUser(username, password)
+  }
+
   private def pullLoginInfoFromRequest[_](request: Request[_]): (Option[User], CredentialSource) = {
     (request.session.get("user"), request.headers.get(config.headerName)) match {
       case (Some(username), _)   => (userMatcher.getUser(username), Session) //logged in via session, continue on
-      case (_, Some(authHeader)) =>
-        val rawAuthData = authHeader.replaceFirst("Basic ", "")
-        val Array(username, password) = new String(Base64.decodeBase64(rawAuthData)).split(":", 2)
-        userMatcher.validUser(username, password) match {
-          case Some(user) if user.doesNotUseTotp => (Some(user), BasicAuth)
-          case _                                 => (None, BasicAuth) //TODO: see if 2fa code has been appended to password for accounts that use it
-        }
+      case (_, Some(authHeader)) => (pullUserFromHeader(authHeader), BasicAuth)
       case _                     => (None, NoCredentials)
     }
   }
@@ -70,6 +71,7 @@ class AuthController @Inject() (decoder: RequestDecoder,
     //decode request to find out where the user was heading...
     val requestInfo = decoder.decodeRequestHeaders(request.headers)
     Logger.debug(s"Decoded request: protocol = ${requestInfo.protocol}; host = ${requestInfo.host}; path = ${requestInfo.path}")
+    Logger.debug(s"Session contents: ${request.session}")
 
     //does that destination match a rule we know about?
     val rule: Option[PathRule] = pathMatcher.getRule(requestInfo)
@@ -84,9 +86,11 @@ class AuthController @Inject() (decoder: RequestDecoder,
       val (user, credentialSource) = pullLoginInfoFromRequest(request)
       Logger.debug(s"Logged in user: ${user.map(_.username)}")
 
+      val ruleTimeout = rule.flatMap(_.timeout).getOrElse(config.sessionTimeout)
+
       //figure out what to do and return the proper response
       resolver.resolveUserAccessForRule(user, rule) match {
-        case Allowed =>
+        case Allowed if (credentialSource == BasicAuth || (credentialSource == Session && request.session.isAuthTimeWithinDuration(ruleTimeout))) =>
           Logger.debug("Access allowed")
           NoContent
 

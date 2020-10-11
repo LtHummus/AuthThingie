@@ -17,6 +17,10 @@ body {
     padding: 15px;
 }
 
+.logout-button-container {
+    float: right;
+}
+
 .login-container {
     margin-top: 5%;
     margin-bottom: 5%;

@@ -1,7 +1,6 @@
 package services.validator
 
 import java.security.MessageDigest
-import java.util
 
 import at.favre.lib.crypto.bcrypt.BCrypt
 import org.apache.commons.codec.binary.Base64

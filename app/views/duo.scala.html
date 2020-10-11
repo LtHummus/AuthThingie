@@ -1,0 +1,25 @@
+@(host: String, sigRequest: String, postAction: String)
+
+@main("Duo Login") {
+
+    <iframe id="duo_iframe">
+    </iframe>
+    <style>
+            #duo_iframe {
+                width: 100%;
+                min-width: 304px;
+                max-width: 620px;
+                height: 330px;
+                border: none;
+            }
+    </style>
+
+    <script src="@routes.Assets.versioned("javascripts/Duo-Web-V2.js")" type="text/javascript"></script>
+    <script>
+        Duo.init({
+            'host': "@host",
+            'sig_request': "@sigRequest",
+            'post_action': "@postAction"
+        });
+    </script>
+}

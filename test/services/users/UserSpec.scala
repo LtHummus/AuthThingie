@@ -7,8 +7,8 @@ import services.rules.PathRule
 
 class UserSpec extends PlaySpec with MockitoSugar {
 
-  private val TestUser = User("test:$2y$05$x64wEIDNwkjRvbfRPheBfOa4E0.Z/V64Gu0aorNu5iEhsLmoNxCRq", admin = false, None, List("a", "b"))
-  private val AdminUser = User("admin:$2y$05$ktjBjGePZrol6bMrLKaWJOrK3a3xfX.ju1JCmxTowQnmr4VaT6xTC", admin = true, None, List())
+  private val TestUser = User("test:$2y$05$x64wEIDNwkjRvbfRPheBfOa4E0.Z/V64Gu0aorNu5iEhsLmoNxCRq", admin = false, None, List("a", "b"), duoEnabled = false)
+  private val AdminUser = User("admin:$2y$05$ktjBjGePZrol6bMrLKaWJOrK3a3xfX.ju1JCmxTowQnmr4VaT6xTC", admin = true, None, List(), duoEnabled = false)
 
   private val PublicTestRule = PathRule("abc", None, None, None, public = true, List())
   private val PrivateATestRule = PathRule("abc", None, None, None, public = false, List("a"))
@@ -36,6 +36,33 @@ class UserSpec extends PlaySpec with MockitoSugar {
 
       AdminUser.passwordCorrect("hello") must be (true)
       AdminUser.passwordCorrect("iello") must be (false)
+    }
+
+    "correctly understand totp state" in {
+      val no2fa = User("a:b", admin = false, totpSecret = None, List(), duoEnabled = false)
+      val onlyTotp = User("a:b", admin = false, totpSecret = Some(""), List(), duoEnabled = false)
+      val onlyDuo = User("a:b", admin = false, totpSecret = None, roles = List(), duoEnabled = true)
+      val both = User("a:b", admin = false, totpSecret = Some(""), roles = List(), duoEnabled = true)
+
+      no2fa.usesSecondFactor mustBe false
+      no2fa.doesNotUseSecondFactor mustBe true
+      no2fa.usesTotp mustBe false
+      no2fa.duoEnabled mustBe false
+
+      onlyTotp.usesSecondFactor mustBe true
+      onlyTotp.doesNotUseSecondFactor mustBe false
+      onlyTotp.usesTotp mustBe true
+      onlyTotp.duoEnabled mustBe false
+
+      onlyDuo.usesSecondFactor mustBe true
+      onlyDuo.doesNotUseSecondFactor mustBe false
+      onlyDuo.usesTotp mustBe false
+      onlyDuo.duoEnabled mustBe true
+
+      both.usesSecondFactor mustBe true
+      both.doesNotUseSecondFactor mustBe false
+      both.usesTotp mustBe true
+      both.duoEnabled mustBe true
     }
   }
 

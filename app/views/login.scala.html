@@ -1,34 +1,35 @@
 @(form: Form[LoginData], redirectUrl: String, postUrl: Call, siteName: String, error: Option[String])(implicit request: MessagesRequestHeader)
 
 
-@main("Login form") {
-    @request.flash.data.map{ case (name, value) =>
+    @main("Login form") {
+        @request.flash.data.map { case (name, value) =>
         <div>@name: @value</div>
-    }
-
-    @if(form.hasGlobalErrors) {
-        @form.globalErrors.map { error: FormError =>
-            <div>
-                Error: @error.key: @error.message
-            </div>
         }
-    }
 
-    <div class="col col-sm-6 offset-md-3 login-form">
+        @if(form.hasGlobalErrors) {
+            @form.globalErrors.map { error: FormError =>
+                <div>
+                    Error: @error.key: @error.message
+                </div>
+            }
+        }
 
-        <h3>@siteName Login</h3>
+        <div class="col col-sm-6 offset-md-3 login-form">
 
-        @if(error.isDefined) {
-            <div class="alert alert-danger">
+            <h3>@siteName Login</h3>
+
+            @if(error.isDefined) {
+                <div class="alert alert-danger">
                 @error.get
-            </div>
-        }
+                </div>
+            }
 
-        @b4.vertical.formCSRF(postUrl) { implicit vfc =>
-            @b4.text(form("username"), Symbol("_label") -> "Username", Symbol("placeholder") -> "Username", Symbol("autofocus") -> "autofocus")
-            @b4.password(form("password"), Symbol("_label") -> "Password", Symbol("placeholder") -> "Password")
-            @b4.submit(Symbol("class") -> "btn btn-primary"){ <i class="fa fa-ok btn-submit"></i> Sign In }
-        }
+            @b4.vertical.formCSRF(postUrl) { implicit vfc =>
+                @b4.text(form("username"), Symbol("_label") -> "Username", Symbol("placeholder") -> "Username", Symbol("autofocus") -> "autofocus")
+                @b4.password(form("password"), Symbol("_label") -> "Password", Symbol("placeholder") -> "Password")
+                @b4.submit(Symbol("class") -> "btn btn-primary") {
+                    <i class="fa fa-ok btn-submit"></i> Login }
+            }
 
-    </div>
-}
+        </div>
+    }

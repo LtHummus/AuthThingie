@@ -1,7 +1,7 @@
 name := """auththingie"""
 organization := "com.lthummus"
 
-version := "0.1.0"
+version := "0.2.1"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
@@ -16,6 +16,7 @@ javaOptions in Universal ++= Seq(
 
 libraryDependencies ++= List(
   guice,
+  ws,
 
   //cats (meow)
   "org.typelevel" %% "cats-core" % "2.0.0",
@@ -35,6 +36,7 @@ libraryDependencies ++= List(
 
   //look nice
   "com.adrianhurt" %% "play-bootstrap" % "1.6.1-P28-B4"
+
 )
 
 
