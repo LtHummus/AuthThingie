@@ -3,7 +3,6 @@ package controllers
 import java.time.ZoneId
 import java.util.Base64
 import java.util.concurrent.Executors
-
 import akka.actor.ActorSystem
 import config.{AuthThingieConfig, DuoSecurityConfig}
 import org.mockito.IdiomaticMockito
@@ -18,6 +17,7 @@ import services.duo.{AsyncAuthResult, DuoAsyncAuthStatus, DuoWebAuth, PreAuthRes
 import services.hmac.HmacUtils
 import services.totp.TotpUtil
 import services.users.{User, UserMatcher}
+import services.webauthn.WebAuthnService
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
@@ -30,11 +30,12 @@ class LoginControllerSpec extends PlaySpec with IdiomaticMockito {
     val fakeComponents = Helpers.stubMessagesControllerComponents()
     val fakeConfig = mock[AuthThingieConfig]
     val fakeDuo = mock[DuoWebAuth]
+    val fakeAuthn = mock[WebAuthnService]
 
     implicit val actorSystem = ActorSystem("test")
     implicit val executionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
-    val controller = new LoginController(fakeConfig, fakeUserMatcher, fakeDuo, fakeComponents)
+    val controller = new LoginController(fakeConfig, fakeUserMatcher, fakeDuo, fakeAuthn, fakeComponents)
 
   }
 

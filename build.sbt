@@ -1,7 +1,7 @@
 name := """auththingie"""
 organization := "com.lthummus"
 
-version := "0.2.1"
+version := "0.4.0"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
@@ -35,7 +35,16 @@ libraryDependencies ++= List(
   "com.github.scopt" %% "scopt" % "3.7.1",
 
   //look nice
-  "com.adrianhurt" %% "play-bootstrap" % "1.6.1-P28-B4"
+  "com.adrianhurt" %% "play-bootstrap" % "1.6.1-P28-B4",
+
+  "com.yubico" % "webauthn-server-core" % "1.9.1",
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.2",
+
+
+  jdbc,
+  evolutions,
+  "org.playframework.anorm" %% "anorm" % "2.6.10",
+  "org.xerial" % "sqlite-jdbc" % "3.36.0.1"
 
 )
 

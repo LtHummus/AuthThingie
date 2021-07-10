@@ -17,6 +17,20 @@ GET     /duoPush                    controllers.LoginController.sendPush
 GET     /duoStatus                  controllers.LoginController.duoPushStatus
 GET     /duoPostCheck               controllers.LoginController.duoRedirect
 
+GET     /authn/register             controllers.WebAuthnController.startRegistration
++nocsrf
+POST    /authn/register             controllers.WebAuthnController.complete
+GET     /authn/assert               controllers.WebAuthnController.authRequest
++nocsrf
+POST    /authn/assert               controllers.WebAuthnController.finishAuth
+GET     /authn                      controllers.WebAuthnController.registrationPage
++nocsrf
+DELETE  /authn                      controllers.WebAuthnController.unenrollEverything
+GET     /authn/complete             controllers.WebAuthnController.completeRedirect
+GET     /authn/assert_resident      controllers.WebAuthnController.authResident
++nocsrf
+POST    /authn/assert_resident      controllers.WebAuthnController.completeAuthResident
+
 #GET     /ping                       controllers.DuoAuthTestController.ping
 #GET     /stest                      controllers.DuoAuthTestController.socketHome
 #GET     /push                       controllers.DuoAuthTestController.sendPush

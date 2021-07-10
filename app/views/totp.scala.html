@@ -1,5 +1,5 @@
 @import services.duo.PreAuthResponse
-@(showTotp: Boolean, form: Form[TotpData], postUrl: Call, error: Option[String], duoInfo: Option[PreAuthResponse], duoSocket: Call)(implicit request: MessagesRequestHeader)
+@(showTotp: Boolean, form: Form[TotpData], postUrl: Call, error: Option[String], duoInfo: Option[PreAuthResponse], duoSocket: Call, showWebauthn: Boolean)(implicit request: MessagesRequestHeader)
 
 
     @main("TOTP") {
@@ -56,6 +56,13 @@
 
                     <script src="@routes.Assets.versioned("javascripts/duo_socket.js")" type="text/javascript"></script>
                 }
+            }
+
+            @if(showWebauthn) {
+                <h5>Hardware Security Key</h5>
+                <a class="btn btn-primary" onclick="doAuth()">Authenticate With Hardware Key</a>
+
+                <script src="@routes.Assets.versioned("javascripts/webauthn.js")" type="text/javascript"></script>
             }
         </div>
     }

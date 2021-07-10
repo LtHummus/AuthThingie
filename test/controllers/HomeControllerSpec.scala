@@ -1,7 +1,6 @@
 package controllers
 
 import java.time.{Duration, ZoneId, ZonedDateTime}
-
 import config.AuthThingieConfig
 import org.mockito.IdiomaticMockito
 import org.scalatestplus.play._
@@ -9,6 +8,7 @@ import play.api.test._
 import play.api.test.Helpers._
 import services.rules.PathRule
 import services.users.{User, UserMatcher}
+import services.webauthn.WebAuthnService
 
 
 class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
@@ -18,8 +18,9 @@ class HomeControllerSpec extends PlaySpec with IdiomaticMockito {
     trait Setup {
       implicit val fakeConfig = mock[AuthThingieConfig]
       val fakeUserMatcher = mock[UserMatcher]
+      val fakeWebAuthn = mock[WebAuthnService]
 
-      val controller = new HomeController(fakeUserMatcher, Helpers.stubMessagesControllerComponents())
+      val controller = new HomeController(fakeUserMatcher, fakeWebAuthn, Helpers.stubMessagesControllerComponents())
     }
 
     "render the login page when a logged out user is there" in new Setup() {
