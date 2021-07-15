@@ -33,7 +33,7 @@
 
             @if(webauthnEnabled) {
                 <div>
-                    <a class="btn btn-primary" onclick="residentEnroll()" href="#">Fast Login</a>
+                    <a class="btn btn-primary" onclick="residentEnroll()" href="#">Fast Login with Hardware Key</a>
                     <div id="webauthn_status"></div>
                     <script src="@routes.Assets.versioned("javascripts/webauthn.js")" type="text/javascript"></script>
                 </div>

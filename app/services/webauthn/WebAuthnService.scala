@@ -113,10 +113,16 @@ class WebAuthnService @Inject() (config: AuthThingieConfig, repo: SqlCredentialR
     val response = pkc.getResponse
 
     if (potentialKeys.isEmpty) {
+      Logger.info("Did not find any potentially matching keys. Stopping")
       None
     } else {
       val userHandle = potentialKeys.head.getUserHandle
       val authRequest = authCache(key)
+
+      // for some reason, the library we're using requires that the user handle is in the response in order
+      // to check it, but we don't have a username because it's usernameless login, so we can
+      // just fetch the userid from the database based on the key and then go from there and rebuild all
+      // the data to make it all work
       val rebuildResponse = AuthenticatorAssertionResponse.builder()
         .authenticatorData(response.getAuthenticatorData)
         .clientDataJSON(response.getClientDataJSON)
@@ -145,7 +151,7 @@ class WebAuthnService @Inject() (config: AuthThingieConfig, repo: SqlCredentialR
     }
   }
 
-  def startAssertion(username: String) = {
+  def startAssertion(username: String): String = {
     Logger.info(s"Starting auth for $username")
     val options = StartAssertionOptions.builder()
       .username(username)
@@ -157,7 +163,7 @@ class WebAuthnService @Inject() (config: AuthThingieConfig, repo: SqlCredentialR
     mapper.writeValueAsString(req)
   }
 
-  def finishAssertion(username: String, payload: String) = {
+  def finishAssertion(username: String, payload: String): Boolean = {
     val pkc = PublicKeyCredential.parseAssertionResponseJson(payload)
     val assertion = FinishAssertionOptions.builder()
       .request(authCache(username))
