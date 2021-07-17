@@ -57,6 +57,10 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
     Try(baseConfig.getOptional[String]("auththingie.timeZone").map(ZoneId.of).getOrElse(ZoneId.systemDefault())).toValidated
   }
 
+  private val loadWebauthn: ValidationResult[Option[WebAuthnConfig]] = {
+    Try(baseConfig.getOptional[WebAuthnConfig]("auththingie.webauthn")).toValidated
+  }
+
   private val loadTimeout: ValidationResult[Duration] = {
     val auththingieTimeout = baseConfig.getOptional[TemporalAmount]("auththingie.timeout")
     val playMaxAge = baseConfig.getOptional[TemporalAmount]("play.http.session.maxAge")
@@ -70,19 +74,19 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
 
   private val Logger = play.api.Logger(this.getClass)
 
-  case class AuthThingieConfig(rules: List[PathRule], users: List[User], forceRedirectToHttps: Boolean, siteUrl: String, siteName: String, headerName: String, timeZone: ZoneId, sessionTimeout: Duration, duoSecurity: Option[DuoSecurityConfig])
+  case class AuthThingieConfig(rules: List[PathRule], users: List[User], forceRedirectToHttps: Boolean, siteUrl: String, siteName: String, headerName: String, timeZone: ZoneId, sessionTimeout: Duration, duoSecurity: Option[DuoSecurityConfig], webauthn: Option[WebAuthnConfig])
 
   private val parsedConfig = {
-    (loadPathRules, loadUsers, loadForceRedirect, loadSiteUrl, loadSiteName, authHeaderName, readTimeZone, loadTimeout, loadDuoSecurity).mapN(AuthThingieConfig)
+    (loadPathRules, loadUsers, loadForceRedirect, loadSiteUrl, loadSiteName, authHeaderName, readTimeZone, loadTimeout, loadDuoSecurity, loadWebauthn).mapN(AuthThingieConfig)
   }
 
-  val (pathRules, users, forceHttpsRedirect, siteUrl, siteName, headerName, timeZone, sessionTimeout, duoSecurity) = parsedConfig match {
+  val (pathRules, users, forceHttpsRedirect, siteUrl, siteName, headerName, timeZone, sessionTimeout, duoSecurity, webauthn) = parsedConfig match {
     case Valid(a) =>
       Logger.info("Valid configuration parsed and loaded")
-      (a.rules, a.users, a.forceRedirectToHttps, a.siteUrl, a.siteName, a.headerName, a.timeZone, a.sessionTimeout, a.duoSecurity)
+      (a.rules, a.users, a.forceRedirectToHttps, a.siteUrl, a.siteName, a.headerName, a.timeZone, a.sessionTimeout, a.duoSecurity, a.webauthn)
     case Validated.Invalid(e) =>
       Logger.warn(s"Invalid configuration: ${e.mkString_(", ")}")
-      (List(), List(), false, "", "", "", ZoneId.systemDefault(), Duration.ofDays(1), None)
+      (List(), List(), false, "", "", "", ZoneId.systemDefault(), Duration.ofDays(1), None, None)
   }
 
   val hasTimeoutSetProperly: Boolean = baseConfig.getOptional[String](PlaySessionExpirationPath).contains(OneYear)
