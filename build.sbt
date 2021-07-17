@@ -35,8 +35,17 @@ libraryDependencies ++= List(
   "com.github.scopt" %% "scopt" % "3.7.1",
 
   //look nice
-  "com.adrianhurt" %% "play-bootstrap" % "1.6.1-P28-B4"
+  "com.adrianhurt" %% "play-bootstrap" % "1.6.1-P28-B4",
 
+  // webauthn
+  "com.webauthn4j" % "webauthn4j-core" % "0.16.2.RELEASE",
+  "com.github.blemale" %% "scaffeine" % "5.0.0",
+
+  jdbc,
+  evolutions,
+  "org.playframework.anorm" %% "anorm" % "2.6.10",
+  "org.xerial" % "sqlite-jdbc" % "3.36.0.1",
+  "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.2",
 )
 
 

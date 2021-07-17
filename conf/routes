@@ -17,6 +17,10 @@ GET     /duoPush                    controllers.LoginController.sendPush
 GET     /duoStatus                  controllers.LoginController.duoPushStatus
 GET     /duoPostCheck               controllers.LoginController.duoRedirect
 
+GET     /ticket                     controllers.TicketController.validateTicket
+
+GET     /authn/register             controllers.AuthnController.generateRegistrationData
+
 #GET     /ping                       controllers.DuoAuthTestController.ping
 #GET     /stest                      controllers.DuoAuthTestController.socketHome
 #GET     /push                       controllers.DuoAuthTestController.sendPush
