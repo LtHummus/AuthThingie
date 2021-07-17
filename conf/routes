@@ -21,6 +21,8 @@ GET     /ticket                     controllers.TicketController.validateTicket
 
 GET     /authn                      controllers.AuthnController.home
 GET     /authn/register             controllers.AuthnController.generateRegistrationData
++nocsrf
+POST    /authn/register             controllers.AuthnController.completeRegistration
 
 #GET     /ping                       controllers.DuoAuthTestController.ping
 #GET     /stest                      controllers.DuoAuthTestController.socketHome

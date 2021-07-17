@@ -32,12 +32,21 @@ const beginRegistration = async (residentKey) => {
     console.log(credential)
 
     const response = {
-        id: registrationInfo.registrationId,
+        id: responseJson.registrationId,
         keyId: base64Encode(credential.rawId),
         attestationObject: base64Encode(credential.response.attestationObject),
         clientData: base64Encode(credential.response.clientDataJSON),
         kind: credential.type
     }
 
-    console.log(response)
+    const completionResponse = await fetch('/authn/register', {
+        method: 'POST',
+        body: JSON.stringify(response),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+
+    console.log(completionResponse)
+
 }
