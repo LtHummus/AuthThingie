@@ -56,3 +56,49 @@ const beginRegistration = async (residentKey) => {
     console.log(completionResponse)
 
 }
+
+const beginAuthentication = async () => {
+    const authenticationResponse = await fetch(`/authn/validate`)
+    if (!authenticationResponse.ok) {
+        console.log("could not generate registration payload")
+    }
+    const responseJson = await authenticationResponse.json()
+    console.log(responseJson)
+
+    const registrationInfo = {
+        challenge: base64Decode(responseJson.authenticationPayload.challenge),
+        rp: responseJson.authenticationPayload.rp,
+        allowCredentials: responseJson.authenticationPayload.allowedKeys.map((x) => {
+            return {
+                type: 'public-key',
+                id: base64Decode(x)
+            }
+        })
+    }
+
+    console.log(registrationInfo)
+
+    const credential = await navigator.credentials.get({
+        publicKey: registrationInfo
+    })
+
+    console.log(credential)
+
+    const packedResponse = {
+        id: responseJson.authId,
+        keyId: base64Encode(credential.rawId),
+        authenticatorData: base64Encode(credential.response.authenticatorData),
+        clientData: base64Encode(credential.response.clientDataJSON),
+        signature: base64Encode(credential.response.signature)
+    }
+
+    const completionResponse = await fetch('/authn/validate', {
+        method: 'POST',
+        body: JSON.stringify(packedResponse),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+
+    console.log(completionResponse)
+}

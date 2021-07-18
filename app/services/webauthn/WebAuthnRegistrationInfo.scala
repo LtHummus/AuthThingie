@@ -1,6 +1,6 @@
 package services.webauthn
 
-import com.webauthn4j.authenticator.AuthenticatorImpl
+import com.webauthn4j.authenticator.{Authenticator, AuthenticatorImpl}
 import com.webauthn4j.converter.AttestedCredentialDataConverter
 import com.webauthn4j.converter.util.ObjectConverter
 import com.webauthn4j.data.RegistrationData
@@ -32,7 +32,37 @@ object RegistrationCompletionInfo {
   implicit val format = Json.format[RegistrationCompletionInfo]
 }
 
-case class SavedKey(keyId: Bytes, attestedCredentialData: Bytes, statement: Bytes, counter: Long)
+case class AuthenticationPayload(challenge: String, allowedKeys: List[String], rp: RelayingParty)
+object AuthenticationPayload {
+  implicit val format = Json.format[AuthenticationPayload]
+}
+
+case class AuthenticationInfo(authId: String, authenticationPayload: AuthenticationPayload)
+object AuthenticationInfo {
+  implicit val format = Json.format[AuthenticationInfo]
+}
+
+case class AuthenticationCompletionInfo(id: String, keyId: String, authenticatorData: String, clientData: String, signature: String) {
+  def keyIdBytes: Array[Byte] = Bytes.fromBase64(keyId).byteArray
+  def authenticatorDataBytes: Array[Byte] = Bytes.fromBase64(authenticatorData).byteArray
+  def clientDataBytes: Array[Byte] = Bytes.fromBase64(clientData).byteArray
+  def signatureBytes: Array[Byte] = Bytes.fromBase64(signature).byteArray
+}
+object AuthenticationCompletionInfo {
+  implicit val format = Json.format[AuthenticationCompletionInfo]
+}
+
+case class SavedKey(keyId: Bytes, attestedCredentialData: Bytes, statement: Bytes, counter: Long) {
+  def asAuthenticator: Authenticator = {
+    val envelope = SavedKey.ObjectConverter.getCborConverter.readValue(statement.byteArray, classOf[AttestationStatementEnvelope])
+    new AuthenticatorImpl(
+      SavedKey.AttestedDataConverter.convert(attestedCredentialData.byteArray),
+      envelope.getAttestationStatement,
+      counter
+    )
+  }
+}
+
 object SavedKey {
 
   private val ObjectConverter = new ObjectConverter()

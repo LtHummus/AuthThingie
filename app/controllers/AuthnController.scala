@@ -4,7 +4,7 @@ import config.AuthThingieConfig
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{AbstractController, AnyContent, ControllerComponents, Request}
 import services.users.{User, UserMatcher}
-import services.webauthn.{RegistrationCompletionInfo, WebAuthnService}
+import services.webauthn.{AuthenticationCompletionInfo, RegistrationCompletionInfo, WebAuthnService}
 
 import javax.inject.{Inject, Singleton}
 
@@ -40,18 +40,29 @@ class AuthnController @Inject() (authn: WebAuthnService, userMatcher: UserMatche
     }
   }
 
-  def completeRegistration = Action(parse.json) { implicit request: Request[JsValue] =>
+  def completeRegistration = Action(parse.json[RegistrationCompletionInfo]) { implicit request: Request[RegistrationCompletionInfo] =>
     val user = for {
       username <- request.session.get("user")
       user     <- userMatcher.getUser(username)
     } yield user
 
-    request.body.asOpt[RegistrationCompletionInfo] match {
-      case None     => UnprocessableEntity(Json.obj("error" -> "could not parse JSON payload"))
-      case Some(ri) =>
-        Logger.info(s"got registration info = ${ri}")
-        authn.completeRegistration(user.get, ri)
-        Ok("ok")
-    }
+    authn.completeRegistration(user.get, request.body)
+    Ok("ok")
+
+  }
+
+  def beginAuthentication = Action { implicit request: Request[AnyContent] =>
+    val user = for {
+      username <- request.session.get("user")  //TODO: switch to partial later
+      user    <- userMatcher.getUser(username)
+    } yield user
+
+    val info = authn.generateAuthenticationPayload(user)
+
+    Ok(Json.toJson(info))
+  }
+
+  def completeAuthentication = Action(parse.json[AuthenticationCompletionInfo]) { implicit request: Request[AuthenticationCompletionInfo] =>
+    Ok("got something")
   }
 }

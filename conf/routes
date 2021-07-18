@@ -23,6 +23,9 @@ GET     /authn                      controllers.AuthnController.home
 GET     /authn/register             controllers.AuthnController.generateRegistrationData
 +nocsrf
 POST    /authn/register             controllers.AuthnController.completeRegistration
+GET     /authn/validate             controllers.AuthnController.beginAuthentication
++nocsrf
+POST    /authn/validate             controllers.AuthnController.completeAuthentication
 
 #GET     /ping                       controllers.DuoAuthTestController.ping
 #GET     /stest                      controllers.DuoAuthTestController.socketHome

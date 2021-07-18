@@ -36,6 +36,10 @@ class WebAuthnService @Inject()(storage: SqlStorageService, config: AuthThingieC
     .expireAfterWrite(5.minutes)
     .build[String, RegistrationPayload]()
 
+  private val AuthenticationCache = Scaffeine()
+    .expireAfterWrite(5.minutes)
+    .build[String, AuthenticationPayload]()
+
   def generateRegistrationPayload(user: User, residentKey: Boolean): RegistrationInfo = {
     val u = storage.createOrGetUser(user.username)
     val challengeBytes = Bytes.cryptoRandom(32)
@@ -72,5 +76,25 @@ class WebAuthnService @Inject()(storage: SqlStorageService, config: AuthThingieC
       }
 
     }
+  }
+
+  def generateAuthenticationPayload(user: Option[User]): AuthenticationInfo = {
+    val allowedKeys = user match {
+      case None => List()
+      case Some(u) =>
+        storage.getCredentialIdsForUsername(u.username).map(_.asBase64).toList
+    }
+
+    val challenge = Bytes.cryptoRandom(32)
+    val id = Bytes.cryptoRandom(16)
+
+    val payload = AuthenticationPayload(challenge.asBase64, allowedKeys, rp)
+    AuthenticationCache.put(id.asUrlBase64, payload)
+
+    AuthenticationInfo(id.asUrlBase64, payload)
+  }
+
+  def completeAuthentication(user: Option[User], authenticationCompletionInfo: AuthenticationCompletionInfo): Boolean = {
+    ???
   }
 }
