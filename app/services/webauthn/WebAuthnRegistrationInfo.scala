@@ -1,5 +1,10 @@
 package services.webauthn
 
+import com.webauthn4j.authenticator.AuthenticatorImpl
+import com.webauthn4j.converter.AttestedCredentialDataConverter
+import com.webauthn4j.converter.util.ObjectConverter
+import com.webauthn4j.data.RegistrationData
+import com.webauthn4j.data.attestation.authenticator.AttestedCredentialData
 import play.api.libs.json.Json
 import util.Bytes
 
@@ -25,4 +30,23 @@ case class RegistrationCompletionInfo(id: String, keyId: String, attestationObje
 }
 object RegistrationCompletionInfo {
   implicit val format = Json.format[RegistrationCompletionInfo]
+}
+
+case class SavedKey(keyId: Bytes, attestedCredentialData: Bytes, statement: Bytes, counter: Long)
+object SavedKey {
+
+  private val ObjectConverter = new ObjectConverter()
+  private val AttestedDataConverter = new AttestedCredentialDataConverter(ObjectConverter)
+
+  def from(rd: RegistrationData): SavedKey = {
+    val keyId = Bytes.fromByteArray(rd.getAttestationObject.getAuthenticatorData.getAttestedCredentialData.getCredentialId)
+    val attestedData = Bytes.fromByteArray(AttestedDataConverter.convert(rd.getAttestationObject.getAuthenticatorData.getAttestedCredentialData))
+
+    val envelope = new AttestationStatementEnvelope(rd.getAttestationObject.getAttestationStatement)
+    val encodedEnvelope = Bytes.fromByteArray(ObjectConverter.getCborConverter.writeValueAsBytes(envelope))
+
+    // TODO: extensions? transports?
+
+    SavedKey(keyId, attestedData, encodedEnvelope, rd.getAttestationObject.getAuthenticatorData.getSignCount)
+  }
 }

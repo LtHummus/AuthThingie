@@ -26,9 +26,9 @@ create table keys
             primary key autoincrement,
     user           integer not null,
     keyId          string  not null,
-    transports     string,
-    publicKey      string not null,
-    signatureCount long default 0 not null
+    credentialData string not null,
+    statement      string not null,
+    counter        long default 0 not null
 );
 
 create index keys_keyId_index

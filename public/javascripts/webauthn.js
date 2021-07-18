@@ -17,6 +17,12 @@ const beginRegistration = async (residentKey) => {
             name: responseJson.registrationPayload.username,
             displayName: responseJson.registrationPayload.username
         },
+        excludeCredentials: responseJson.registrationPayload.registeredKeys.map((x) => {
+            return {
+                type: 'public-key',
+                id: base64Decode(x)
+            }
+        }),
         // EC + SHA256
         pubKeyCredParams: [{alg: -7, type: "public-key"}],
         timeout: 60000,
