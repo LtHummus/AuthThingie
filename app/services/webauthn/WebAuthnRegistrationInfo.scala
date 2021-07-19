@@ -4,8 +4,6 @@ import com.webauthn4j.authenticator.{Authenticator, AuthenticatorImpl}
 import com.webauthn4j.converter.AttestedCredentialDataConverter
 import com.webauthn4j.converter.util.ObjectConverter
 import com.webauthn4j.data.RegistrationData
-import com.webauthn4j.data.attestation.authenticator.AttestedCredentialData
-import com.webauthn4j.data.attestation.statement.AttestationStatement
 import play.api.libs.json.Json
 import util.Bytes
 
@@ -33,7 +31,7 @@ object RegistrationCompletionInfo {
   implicit val format = Json.format[RegistrationCompletionInfo]
 }
 
-case class AuthenticationPayload(challenge: String, allowedKeys: List[String], rp: RelayingParty)
+case class AuthenticationPayload(challenge: String, allowedKeys: Option[List[String]], rp: RelayingParty)
 object AuthenticationPayload {
   implicit val format = Json.format[AuthenticationPayload]
 }

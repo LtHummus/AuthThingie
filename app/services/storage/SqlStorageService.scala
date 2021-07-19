@@ -3,6 +3,7 @@ package services.storage
 import anorm._
 import anorm.SqlParser.{flatten, int, long, str}
 import play.api.db.Database
+import services.users.User
 import services.webauthn.SavedKey
 import util.{Bytes, DatabaseExecutionContext}
 
@@ -57,6 +58,14 @@ class SqlStorageService @Inject() (db: Database, dec: DatabaseExecutionContext) 
         ctr)
   }
 
+  def getKeyByIdAndUser(user: User, key: Array[Byte]): Option[SavedKey] = {
+    val keyIdStr = Bytes.fromByteArray(key).asBase64
+    db.withConnection { implicit c =>
+      SQL"SELECT keyId, credentialData, statement, counter FROM keys JOIN users ON keys.user = users.id WHERE keyId = $keyIdStr AND username = ${user.username}"
+        .as(keyParser.singleOpt)
+    }
+  }
+
   def getKeyById(key: Array[Byte]): Option[SavedKey] = {
     val keyIdStr = Bytes.fromByteArray(key).asBase64
     db.withConnection { implicit c =>
@@ -65,7 +74,14 @@ class SqlStorageService @Inject() (db: Database, dec: DatabaseExecutionContext) 
     }
   }
 
-  def updateSignCounter(key: Array[Byte], signCount: Long) = {
+  def findKeyByPotentialUserAndId(user: Option[User], key: Array[Byte]): Option[SavedKey] = {
+    user match {
+      case None    => getKeyById(key)
+      case Some(u) => getKeyByIdAndUser(u, key)
+    }
+  }
+
+  def updateSignCounter(key: Array[Byte], signCount: Long): Int = {
     val keyId = Bytes.fromByteArray(key).asBase64
     db.withConnection { implicit c =>
       SQL"UPDATE keys SET counter = $signCount WHERE keyId = $keyId".executeUpdate()

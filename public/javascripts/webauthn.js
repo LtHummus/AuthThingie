@@ -1,5 +1,9 @@
-const base64Decode = (x) => { return Uint8Array.from(atob(x), c => c.charCodeAt(0)) }
-const base64Encode = (x) => { return btoa(String.fromCharCode(...new Uint8Array(x))); }
+const base64Decode = (x) => {
+    return Uint8Array.from(atob(x), c => c.charCodeAt(0))
+}
+const base64Encode = (x) => {
+    return btoa(String.fromCharCode(...new Uint8Array(x)));
+}
 
 const beginRegistration = async (residentKey) => {
     const registrationResponse = await fetch(`/authn/register?residentKey=${residentKey}`)
@@ -12,6 +16,9 @@ const beginRegistration = async (residentKey) => {
     const registrationInfo = {
         challenge: base64Decode(responseJson.registrationPayload.challenge),
         rp: responseJson.registrationPayload.rp,
+        authenticatorSelection: {
+            requiresResidentKey: residentKey
+        },
         user: {
             id: base64Decode(responseJson.registrationPayload.userHandle),
             name: responseJson.registrationPayload.username,
@@ -68,7 +75,11 @@ const beginAuthentication = async () => {
     const registrationInfo = {
         challenge: base64Decode(responseJson.authenticationPayload.challenge),
         rp: responseJson.authenticationPayload.rp,
-        allowCredentials: responseJson.authenticationPayload.allowedKeys.map((x) => {
+        userVerification: "discouraged"
+    }
+
+    if (responseJson.authenticationPayload.allowedKeys) {
+        registrationInfo.allowCredentials = responseJson.authenticationPayload.allowedKeys.map((x) => {
             return {
                 type: 'public-key',
                 id: base64Decode(x)

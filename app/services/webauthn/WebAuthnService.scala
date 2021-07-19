@@ -2,25 +2,17 @@ package services.webauthn
 
 import com.github.blemale.scaffeine.Scaffeine
 import com.webauthn4j.WebAuthnManager
-import com.webauthn4j.anchor.{SimpleTrustAnchorsProvider, TrustAnchorsResolverImpl}
-import com.webauthn4j.data.{AuthenticationParameters, AuthenticationRequest, RegistrationParameters, RegistrationRequest}
 import com.webauthn4j.data.client.Origin
-import com.webauthn4j.data.client.challenge.{Challenge, DefaultChallenge}
+import com.webauthn4j.data.client.challenge.DefaultChallenge
+import com.webauthn4j.data.{AuthenticationParameters, AuthenticationRequest, RegistrationParameters, RegistrationRequest}
 import com.webauthn4j.server.ServerProperty
-import com.webauthn4j.validator.attestation.statement.AttestationStatementValidator
-import com.webauthn4j.validator.attestation.statement.packed.PackedAttestationStatementValidator
-import com.webauthn4j.validator.attestation.statement.tpm.TPMAttestationStatementValidator
-import com.webauthn4j.validator.attestation.trustworthiness.certpath.TrustAnchorCertPathTrustworthinessValidator
-import com.webauthn4j.validator.attestation.trustworthiness.self.DefaultSelfAttestationTrustworthinessValidator
 import config.AuthThingieConfig
 import services.storage.SqlStorageService
 import services.users.User
 import util.Bytes
 
-import java.util
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.DurationInt
-import scala.jdk.CollectionConverters.SeqHasAsJava
 
 @Singleton
 class WebAuthnService @Inject()(storage: SqlStorageService, config: AuthThingieConfig) {
@@ -39,6 +31,10 @@ class WebAuthnService @Inject()(storage: SqlStorageService, config: AuthThingieC
   private val AuthenticationCache = Scaffeine()
     .expireAfterWrite(5.minutes)
     .build[String, AuthenticationPayload]()
+
+  private def generateServerProperty(challenge: String): ServerProperty = {
+    new ServerProperty(new Origin("https://" + rp.id), rp.id, new DefaultChallenge(Bytes.fromBase64(challenge).byteArray), null)
+  }
 
   def generateRegistrationPayload(user: User, residentKey: Boolean): RegistrationInfo = {
     val u = storage.createOrGetUser(user.username)
@@ -65,8 +61,7 @@ class WebAuthnService @Inject()(storage: SqlStorageService, config: AuthThingieC
           false
         case Some(payload) =>
           val req = new RegistrationRequest(info.attestationObjectBytes, info.clientDataBytes)
-          val serverData = new ServerProperty(new Origin("https://" + rp.id), rp.id, new DefaultChallenge(Bytes.fromBase64(payload.challenge).byteArray), null)
-
+          val serverData = generateServerProperty(payload.challenge)
           val registrationData = manager.parse(req)
           val validationResult = manager.validate(registrationData, new RegistrationParameters(serverData, false, false))
           Logger.info(s"Validation result = ${validationResult}")
@@ -79,12 +74,7 @@ class WebAuthnService @Inject()(storage: SqlStorageService, config: AuthThingieC
   }
 
   def generateAuthenticationPayload(user: Option[User]): AuthenticationInfo = {
-    val allowedKeys = user match {
-      case None => List()
-      case Some(u) =>
-        storage.getCredentialIdsForUsername(u.username).map(_.asBase64).toList
-    }
-
+    val allowedKeys = user.map(x => storage.getCredentialIdsForUsername(x.username).map(_.asBase64).toList)
     val challenge = Bytes.cryptoRandom(32)
     val id = Bytes.cryptoRandom(16)
 
@@ -97,17 +87,17 @@ class WebAuthnService @Inject()(storage: SqlStorageService, config: AuthThingieC
   def completeAuthentication(user: Option[User], authenticationCompletionInfo: AuthenticationCompletionInfo): Boolean = {
     val dataNeeded = for {
       info <- AuthenticationCache.getIfPresent(authenticationCompletionInfo.id)
-      key  <- storage.getKeyById(authenticationCompletionInfo.keyIdBytes)
+      key  <- storage.findKeyByPotentialUserAndId(user, authenticationCompletionInfo.keyIdBytes)
     } yield (info, key)
 
     dataNeeded match {
-      case None => false
+      case None => throw new Exception("no user key found")
       case Some((payload, key)) =>
-        val serverData = new ServerProperty(new Origin("https://" + rp.id), rp.id, new DefaultChallenge(Bytes.fromBase64(payload.challenge).byteArray), null)
         val authReq = new AuthenticationRequest(authenticationCompletionInfo.keyIdBytes,
           authenticationCompletionInfo.authenticatorDataBytes,
           authenticationCompletionInfo.clientDataBytes,
           authenticationCompletionInfo.signatureBytes)
+        val serverData = generateServerProperty(payload.challenge)
         val params = new AuthenticationParameters(serverData, key.asAuthenticator, false)
 
         val authData = manager.parse(authReq)
