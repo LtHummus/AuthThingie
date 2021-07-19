@@ -49,5 +49,28 @@ class SqlStorageService @Inject() (db: Database, dec: DatabaseExecutionContext) 
     }
   }
 
+  private val keyParser = (str("keyId") ~ str("credentialData") ~ str("statement") ~ long("counter")).map {
+    case id ~ data ~ statement ~ ctr =>
+      SavedKey(Bytes.fromBase64(id),
+        Bytes.fromBase64(data),
+        Bytes.fromBase64(statement),
+        ctr)
+  }
+
+  def getKeyById(key: Array[Byte]): Option[SavedKey] = {
+    val keyIdStr = Bytes.fromByteArray(key).asBase64
+    db.withConnection { implicit c =>
+      SQL"SELECT keyId, credentialData, statement, counter FROM keys WHERE keyId = $keyIdStr"
+        .as(keyParser.singleOpt)
+    }
+  }
+
+  def updateSignCounter(key: Array[Byte], signCount: Long) = {
+    val keyId = Bytes.fromByteArray(key).asBase64
+    db.withConnection { implicit c =>
+      SQL"UPDATE keys SET counter = $signCount WHERE keyId = $keyId".executeUpdate()
+    }
+  }
+
 
 }

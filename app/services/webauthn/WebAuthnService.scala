@@ -3,7 +3,7 @@ package services.webauthn
 import com.github.blemale.scaffeine.Scaffeine
 import com.webauthn4j.WebAuthnManager
 import com.webauthn4j.anchor.{SimpleTrustAnchorsProvider, TrustAnchorsResolverImpl}
-import com.webauthn4j.data.{RegistrationParameters, RegistrationRequest}
+import com.webauthn4j.data.{AuthenticationParameters, AuthenticationRequest, RegistrationParameters, RegistrationRequest}
 import com.webauthn4j.data.client.Origin
 import com.webauthn4j.data.client.challenge.{Challenge, DefaultChallenge}
 import com.webauthn4j.server.ServerProperty
@@ -95,6 +95,28 @@ class WebAuthnService @Inject()(storage: SqlStorageService, config: AuthThingieC
   }
 
   def completeAuthentication(user: Option[User], authenticationCompletionInfo: AuthenticationCompletionInfo): Boolean = {
-    ???
+    val dataNeeded = for {
+      info <- AuthenticationCache.getIfPresent(authenticationCompletionInfo.id)
+      key  <- storage.getKeyById(authenticationCompletionInfo.keyIdBytes)
+    } yield (info, key)
+
+    dataNeeded match {
+      case None => false
+      case Some((payload, key)) =>
+        val serverData = new ServerProperty(new Origin("https://" + rp.id), rp.id, new DefaultChallenge(Bytes.fromBase64(payload.challenge).byteArray), null)
+        val authReq = new AuthenticationRequest(authenticationCompletionInfo.keyIdBytes,
+          authenticationCompletionInfo.authenticatorDataBytes,
+          authenticationCompletionInfo.clientDataBytes,
+          authenticationCompletionInfo.signatureBytes)
+        val params = new AuthenticationParameters(serverData, key.asAuthenticator, false)
+
+        val authData = manager.parse(authReq)
+        val res = manager.validate(authData, params)
+        storage.updateSignCounter(res.getCredentialId, res.getAuthenticatorData.getSignCount)
+
+        // TODO: additional checks here
+        true
+    }
+
   }
 }

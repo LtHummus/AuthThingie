@@ -63,6 +63,13 @@ class AuthnController @Inject() (authn: WebAuthnService, userMatcher: UserMatche
   }
 
   def completeAuthentication = Action(parse.json[AuthenticationCompletionInfo]) { implicit request: Request[AuthenticationCompletionInfo] =>
-    Ok("got something")
+    val user = for {
+      username <- request.session.get("user")  //TODO: switch to partial later
+      user    <- userMatcher.getUser(username)
+    } yield user
+
+    val res = authn.completeAuthentication(user, request.body)
+
+    Ok("ok")
   }
 }
