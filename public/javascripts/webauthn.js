@@ -17,7 +17,7 @@ const beginRegistration = async (residentKey) => {
         challenge: base64Decode(responseJson.registrationPayload.challenge),
         rp: responseJson.registrationPayload.rp,
         authenticatorSelection: {
-            requiresResidentKey: residentKey
+            requireResidentKey: residentKey
         },
         user: {
             id: base64Decode(responseJson.registrationPayload.userHandle),
@@ -33,7 +33,7 @@ const beginRegistration = async (residentKey) => {
         // EC + SHA256
         pubKeyCredParams: [{alg: -7, type: "public-key"}],
         timeout: 60000,
-        attestation: "none"
+        attestation: "indirect"
     }
 
     console.log(registrationInfo)

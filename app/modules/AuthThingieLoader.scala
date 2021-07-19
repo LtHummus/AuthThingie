@@ -49,7 +49,13 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
   override def builder(context: ApplicationLoader.Context): GuiceApplicationBuilder = {
     Logger.info("Starting config file parsing")
 
-    val additionalConfig = sys.env.get("AUTHTHINGIE_CONFIG_FILE_PATH") match {
+    // this fallback exists because there's a bug in IntelliJ where environment variables that are set in a run configuration
+    // for Play 2 are actually passed as Java System Properties. I have no idea why this is still a bug, but :shrug:
+    //
+    // https://youtrack.jetbrains.com/issue/SCL-11175
+    val potentialFile = Seq(sys.env.get("AUTHTHINGIE_CONFIG_FILE_PATH"), sys.props.get("AUTHTHINGIE_CONFIG_FILE_PATH")).flatten.headOption
+
+    val additionalConfig = potentialFile match {
       case Some(filePath) =>
         Logger.debug(s"Loading fallback config from $filePath")
         ConfigFactory.parseFile(new File(filePath))
