@@ -40,7 +40,7 @@ class EntryTicketService @Inject () () {
 
   def retrieveTicket(key: String): Option[EntryTicket] = {
     val ticket = Cache.getIfPresent(key)
-    ticket.foreach(_ => Cache.invalidate(key))
+    Cache.invalidate(key)
     ticket
   }
 

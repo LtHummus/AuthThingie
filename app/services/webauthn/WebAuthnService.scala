@@ -8,14 +8,14 @@ import com.webauthn4j.data.{AuthenticationParameters, AuthenticationRequest, Reg
 import com.webauthn4j.server.ServerProperty
 import config.AuthThingieConfig
 import services.storage.SqlStorageService
-import services.users.User
+import services.users.{User, UserMatcher}
 import util.Bytes
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.DurationInt
 
 @Singleton
-class WebAuthnService @Inject()(storage: SqlStorageService, config: AuthThingieConfig) {
+class WebAuthnService @Inject()(userMatcher: UserMatcher, storage: SqlStorageService, config: AuthThingieConfig) {
 
   private val Logger = play.api.Logger(this.getClass)
 
@@ -84,14 +84,14 @@ class WebAuthnService @Inject()(storage: SqlStorageService, config: AuthThingieC
     AuthenticationInfo(id.asUrlBase64, payload)
   }
 
-  def completeAuthentication(user: Option[User], authenticationCompletionInfo: AuthenticationCompletionInfo): Boolean = {
+  def completeAuthentication(user: Option[User], authenticationCompletionInfo: AuthenticationCompletionInfo): Either[String, User] = {
     val dataNeeded = for {
       info <- AuthenticationCache.getIfPresent(authenticationCompletionInfo.id)
       key  <- storage.findKeyByPotentialUserAndId(user, authenticationCompletionInfo.keyIdBytes)
     } yield (info, key)
 
     dataNeeded match {
-      case None => throw new Exception("no user key found")
+      case None => Left("Given key not found in database")
       case Some((payload, key)) =>
         val authReq = new AuthenticationRequest(authenticationCompletionInfo.keyIdBytes,
           authenticationCompletionInfo.authenticatorDataBytes,
@@ -100,12 +100,31 @@ class WebAuthnService @Inject()(storage: SqlStorageService, config: AuthThingieC
         val serverData = generateServerProperty(payload.challenge)
         val params = new AuthenticationParameters(serverData, key.asAuthenticator, false)
 
-        val authData = manager.parse(authReq)
-        val res = manager.validate(authData, params)
-        storage.updateSignCounter(res.getCredentialId, res.getAuthenticatorData.getSignCount)
+        try {
+          val authData = manager.parse(authReq)
+          val res = manager.validate(authData, params)
+          storage.updateSignCounter(res.getCredentialId, res.getAuthenticatorData.getSignCount)
 
-        // TODO: additional checks here
-        true
+          // TODO: additional checks here
+
+          val foundUser = for {
+            username <- storage.getUsernameForKeyId(authenticationCompletionInfo.keyIdBytes)
+            user <- userMatcher.getUser(username)
+          } yield user
+
+          foundUser match {
+            case None =>
+              Logger.warn("could not complete login as no user was found with that key (wtf!?")
+              Left("could not complete login as no user was found with that key (wtf!?)")
+            case Some(foundUser) =>
+              Right(foundUser)
+          }
+
+        } catch {
+          case e: Throwable =>
+            Logger.warn("could not complete authentication", e)
+            Left("authentication error")
+        }
     }
 
   }

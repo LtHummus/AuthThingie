@@ -88,5 +88,11 @@ class SqlStorageService @Inject() (db: Database, dec: DatabaseExecutionContext) 
     }
   }
 
+  def getUsernameForKeyId(key: Array[Byte]): Option[String] = {
+    db.withConnection { implicit c =>
+      SQL"SELECT username FROM users JOIN keys ON users.id = keys.user WHERE keyId = ${Bytes.fromByteArray(key).asBase64}"
+        .as(str("username").singleOpt)
+    }
+  }
 
 }

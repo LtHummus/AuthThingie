@@ -111,5 +111,12 @@ const beginAuthentication = async () => {
         }
     })
 
-    console.log(completionResponse)
+    const resultBody = await completionResponse.json()
+    if (!resultBody.successful) {
+        console.log("login failed")
+        return
+    }
+
+    const ticketId = resultBody.ticketId
+    window.location.replace(`/ticket?ticket=${ticketId}`)
 }

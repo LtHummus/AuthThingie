@@ -3,13 +3,14 @@ package controllers
 import config.AuthThingieConfig
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{AbstractController, AnyContent, ControllerComponents, Request}
+import services.ticket.EntryTicketService
 import services.users.{User, UserMatcher}
 import services.webauthn.{AuthenticationCompletionInfo, RegistrationCompletionInfo, WebAuthnService}
 
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class AuthnController @Inject() (authn: WebAuthnService, userMatcher: UserMatcher, config: AuthThingieConfig, cc: ControllerComponents) extends AbstractController(cc) {
+class AuthnController @Inject() (authn: WebAuthnService, userMatcher: UserMatcher, config: AuthThingieConfig, ticketCache: EntryTicketService, cc: ControllerComponents) extends AbstractController(cc) {
 
   private val Logger = play.api.Logger(this.getClass)
 
@@ -68,8 +69,14 @@ class AuthnController @Inject() (authn: WebAuthnService, userMatcher: UserMatche
       user    <- userMatcher.getUser(username)
     } yield user
 
-    val res = authn.completeAuthentication(user, request.body)
-
-    Ok("ok")
+    authn.completeAuthentication(user, request.body) match {
+      case Left(error) =>
+        Logger.warn(s"could not complete authentication: ${error}")
+        Forbidden(Json.obj("successful" -> false, "error" -> "could not complete authentication"))
+      case Right(user) =>
+        // TODO: finish generating ticket instead of using hardcoded siteurl
+        val ticketId = ticketCache.createTicket("ok", user, config.siteUrl)
+        Ok(Json.obj("ticketId" -> ticketId, "successful" -> true))
+    }
   }
 }
