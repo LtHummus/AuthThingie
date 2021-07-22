@@ -18,8 +18,12 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
   private val PlayDomainConfigPath = "play.http.session.domain"
   private val PlaySessionExpirationPath = "play.http.session.maxAge"
   private val PlayJwtExpirationPath = "play.http.session.jwt.expiresAfter"
+
   private val WebauthnDatabasePath = "auththingie.webauthn.database"
+
   private val PlayDatabasePath = "db.default.url"
+  private val PlayDatabaseDriverPath = "db.default.driver"
+  private val PlayDatabaseLogPath = "db.default.logSql"
 
 
   private val OneYear = "365d"
@@ -79,7 +83,7 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
       case None     => Seq()
       case Some(db) =>
         Logger.info(s"Using $db as database path")
-        Seq(PlayDatabasePath -> s"jdbc:sqlite:$db")
+        Seq(PlayDatabasePath -> s"jdbc:sqlite:$db", PlayDatabaseDriverPath -> "org.sqlite.JDBC", PlayDatabaseLogPath -> true)
     }
 
     val domain = combinedConfiguration.getOptional[String]("auththingie.domain").map { domain =>

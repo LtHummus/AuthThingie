@@ -27,17 +27,21 @@ class AuthnController @Inject() (authn: WebAuthnService, userMatcher: UserMatche
   }
 
   def generateRegistrationData = Action { implicit request: Request[AnyContent] =>
-    val user = for {
-      username <- request.session.get("user")
-      user     <- userMatcher.getUser(username)
-    } yield user
+    if (config.webauthn.isEmpty) {
+      Forbidden(Json.obj("error" -> "webauthn not enabled"))
+    } else {
+      val user = for {
+        username <- request.session.get("user")
+        user <- userMatcher.getUser(username)
+      } yield user
 
-    user match {
-      case None    => Forbidden("must be logged in")
-      case Some(u) =>
-        val useResidentKey = request.getQueryString("residentKey").contains("true")
-        val info = authn.generateRegistrationPayload(u, useResidentKey)
-        Ok(Json.toJson(info))
+      user match {
+        case None => Forbidden("must be logged in")
+        case Some(u) =>
+          val useResidentKey = request.getQueryString("residentKey").contains("true")
+          val info = authn.generateRegistrationPayload(u, useResidentKey)
+          Ok(Json.toJson(info))
+      }
     }
   }
 
@@ -53,20 +57,24 @@ class AuthnController @Inject() (authn: WebAuthnService, userMatcher: UserMatche
   }
 
   def beginAuthentication = Action { implicit request: Request[AnyContent] =>
-    val user = for {
-      username <- request.session.get("user")  //TODO: switch to partial later
-      user    <- userMatcher.getUser(username)
-    } yield user
+    if (config.webauthn.isEmpty) {
+      Forbidden(Json.obj("error" -> "webauthn not enabled"))
+    } else {
+      val user = for {
+        username <- request.session.get("user") //TODO: switch to partial later
+        user <- userMatcher.getUser(username)
+      } yield user
 
-    val info = authn.generateAuthenticationPayload(user)
+      val info = authn.generateAuthenticationPayload(user)
 
-    Ok(Json.toJson(info))
+      Ok(Json.toJson(info))
+    }
   }
 
   def completeAuthentication = Action(parse.json[AuthenticationCompletionInfo]) { implicit request: Request[AuthenticationCompletionInfo] =>
     val user = for {
       username <- request.session.get("user")  //TODO: switch to partial later
-      user    <- userMatcher.getUser(username)
+      user     <- userMatcher.getUser(username)
     } yield user
 
     authn.completeAuthentication(user, request.body) match {

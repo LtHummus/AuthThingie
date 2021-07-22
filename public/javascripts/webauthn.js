@@ -17,7 +17,8 @@ const beginRegistration = async (residentKey) => {
         challenge: base64Decode(responseJson.registrationPayload.challenge),
         rp: responseJson.registrationPayload.rp,
         authenticatorSelection: {
-            requireResidentKey: residentKey
+            requireResidentKey: residentKey,
+            userVerification: "discouraged"
         },
         user: {
             id: base64Decode(responseJson.registrationPayload.userHandle),
