@@ -1,10 +1,10 @@
 package controllers
 
 import java.time.Duration
-
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import config.AuthThingieConfig
+
 import javax.inject.Inject
 import play.api.data.Forms._
 import play.api.data._
@@ -12,6 +12,7 @@ import play.api.libs.json.Json
 import play.api.libs.streams.ActorFlow
 import play.api.mvc._
 import services.duo.{DuoAsyncActor, DuoAsyncAuthStatus, DuoWebAuth}
+import services.ticket.EntryTicketService
 import services.users.{User, UserMatcher}
 import util.CallImplicits._
 
@@ -21,7 +22,11 @@ import scala.concurrent.{ExecutionContext, Future}
 case class LoginData(username: String, password: String)
 case class TotpData(totpCode: String)
 
-class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMatcher, duoWebAuth: DuoWebAuth, cc: MessagesControllerComponents)(implicit ec: ExecutionContext, system: ActorSystem, mat: Materializer) extends MessagesAbstractController(cc) {
+class LoginController @Inject() (config: AuthThingieConfig,
+                                 userMatcher: UserMatcher,
+                                 duoWebAuth: DuoWebAuth,
+                                 ticketService: EntryTicketService,
+                                 cc: MessagesControllerComponents)(implicit ec: ExecutionContext, system: ActorSystem, mat: Materializer) extends MessagesAbstractController(cc) {
 
   private val PartialAuthUsername = "partialAuthUsername"
   private val Redirect = "redirect"
@@ -98,13 +103,13 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
       case Some(user) =>
         if (config.duoSecurity.isDefined && user.duoEnabled) {
           duoWebAuth.preauth(user.username).map{ di =>
-            Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), None, Some(di), routes.LoginController.duoPushStatus()))
+            Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), None, Some(di), routes.DuoController.duoPushStatus()))
           }.recover { error =>
             Logger.warn("Error contacting Duo", error)
             InternalServerError(views.html.config_errors(List("Duo credential errors")))
           }
         } else {
-          Future.successful(Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), None, None, routes.LoginController.duoPushStatus())))
+          Future.successful(Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), None, None, routes.DuoController.duoPushStatus())))
         }
 
     }
@@ -118,7 +123,7 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
           Logger.warn(s"${error.key} -> ${error.message}")
         }
         // we can assume true here since if they submitted the form, they must have totp enabled
-        Future.successful(BadRequest(views.html.totp(showTotp = true, formWithErrors, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), Some("Invalid Request"), None, routes.LoginController.duoPushStatus())))
+        Future.successful(BadRequest(views.html.totp(showTotp = true, formWithErrors, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), Some("Invalid Request"), None, routes.DuoController.duoPushStatus())))
     }
 
     val success = { data: TotpData =>
@@ -140,14 +145,14 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
             Logger.warn(s"Bad login attempt for user ${user.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}")
             if (user.duoEnabled) {
               duoWebAuth.preauth(user.username).map { di =>
-                Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), None, Some(di), routes.LoginController.duoPushStatus()))
+                Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), None, Some(di), routes.DuoController.duoPushStatus()))
               }.recover { error =>
                 Logger.warn("Error contacting Duo", error)
                 InternalServerError(views.html.config_errors(List("Duo credential errors")))
               }
 
             } else {
-              Future.successful(Unauthorized(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), Some("Invalid Auth Code"), None, routes.LoginController.duoPushStatus())).withSession(request.session))
+              Future.successful(Unauthorized(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), Some("Invalid Auth Code"), None, routes.DuoController.duoPushStatus())).withSession(request.session))
             }
           case None => Logger.warn("Couldn't find a partially authed username for validation"); Future.successful(BadRequest("Couldn't find a partially authed username for validation"))
         }
@@ -182,55 +187,4 @@ class LoginController @Inject() (config: AuthThingieConfig, userMatcher: UserMat
     loginForm.bindFromRequest.fold(error, success)
   }
 
-  def sendPush = Action.async{ request =>
-    val deviceName = request.queryString("device").head
-
-    for {
-      txid <- duoWebAuth.authAsync(request.session(PartialAuthUsername), "push", deviceName, request.headers.get(XForwardedFor))
-    } yield {
-      Ok(Json.obj("txId" -> txid.txid))
-    }
-  }
-
-  def duoPushStatus = WebSocket.acceptOrResult[String, String] { request =>
-    Future.successful( (request.queryString.get("txId"), request.queryString.get("redirectUrl"), request.session.get(PartialAuthUsername)) match {
-      case (Some(txId), Some(ru), Some(pau)) => Right(
-        ActorFlow.actorRef { out =>
-          DuoAsyncActor.props(out, duoWebAuth, txId.head, ru.head, pau, config.timeZone)
-        }
-      )
-      case _ =>
-        Logger.warn(s"Missing a param when attempting to listen to duo auth request. TXID = ${request.queryString.get("txId")}, redirect = ${request.queryString.get("redirectUrl")}, PAU = ${request.session.get(PartialAuthUsername)}")
-        Left(BadRequest(s"Missing a param"))
-    }
-
-    )
-  }
-
-  def duoRedirect = Action { implicit request =>
-    val payload = DuoAsyncAuthStatus(request.queryString("key").head)
-
-    val knownUser = for {
-      potentialUser <- request.session.get(PartialAuthUsername)
-      user          <- userMatcher.getUser(potentialUser)
-    } yield {
-      user
-    }
-    // time to do a bunch of checks
-    if (!payload.validateSignature) {
-      Unauthorized(views.html.totp(knownUser.exists(_.usesTotp), totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(payload.redirectUrl))), Some("Invalid Duo key signature"), None, routes.LoginController.duoPushStatus())).withSession(request.session)
-    } else if (payload.timeSinceSignature(config.timeZone).compareTo(Duration.ofSeconds(60)) > 0) {
-      Unauthorized(views.html.totp(knownUser.exists(_.usesTotp), totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(payload.redirectUrl))), Some("Duo Request timed out"), None, routes.LoginController.duoPushStatus())).withSession(request.session)
-    } else if (!request.session.get(PartialAuthUsername).contains(payload.username)) {
-      Unauthorized(views.html.totp(knownUser.exists(_.usesTotp), totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(payload.redirectUrl))), Some("Duo auth username does not match"), None, routes.LoginController.duoPushStatus())).withSession(request.session)
-    } else if (payload.status != "allow") {
-      Unauthorized(views.html.totp(knownUser.exists(_.usesTotp), totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(payload.redirectUrl))), Some("Duo Request Denied"), None, routes.LoginController.duoPushStatus())).withSession(request.session)
-    } else {
-      knownUser match {
-        case Some(user) => loginAndRedirect(user, payload.redirectUrl)
-        case None       => BadRequest(Json.obj("error" -> "no redirect url"))
-      }
-
-    }
-  }
 }

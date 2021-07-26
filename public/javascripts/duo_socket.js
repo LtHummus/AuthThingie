@@ -14,7 +14,7 @@ function initLogin(socketUrl) {
     const params = new URLSearchParams();
     params.append('device', deviceId);
 
-    const url = "/duoPush?" + params.toString();
+    const url = "/duo/push?" + params.toString();
     document.getElementById("duo_spinner").style.display = '';
     fetch(url).then(res => {
         return res.json();
@@ -50,8 +50,7 @@ function getStatus(txId, socketUrl) {
             document.getElementById("duo_spinner").style.display = 'none';
             socket.send("die");
 
-            const b64 = btoa(e.data).replace(/\+/g, '-').replace(/\//g, '_').replace(/\=+$/, '');
-            const dest = "/duoPostCheck?key=" + b64;
+            const dest = "/ticket?ticket=" + data.ticket;
             window.location.href = dest;
         } else {
             socket.send("check");

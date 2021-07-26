@@ -13,9 +13,8 @@ GET     /totp                       controllers.LoginController.showTotpForm
 POST    /totp                       controllers.LoginController.totp
 GET     /test                       controllers.AuthController.testUrl
 
-GET     /duoPush                    controllers.LoginController.sendPush
-GET     /duoStatus                  controllers.LoginController.duoPushStatus
-GET     /duoPostCheck               controllers.LoginController.duoRedirect
+GET     /duo/push                   controllers.DuoController.sendPush
+GET     /duo/status                 controllers.DuoController.duoPushStatus
 
 GET     /ticket                     controllers.TicketController.validateTicket
 
