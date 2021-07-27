@@ -8,6 +8,7 @@ import play.api.libs.streams.ActorFlow
 import play.api.mvc.{AbstractController, ControllerComponents, WebSocket}
 import services.duo.{DuoAsyncActor, DuoWebAuth}
 import services.ticket.EntryTicketService
+import util.Constants._
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -17,9 +18,6 @@ class DuoController @Inject()(duoWebAuth: DuoWebAuth,
                               ticketService: EntryTicketService,
                               config: AuthThingieConfig,
                               cc: ControllerComponents)(implicit ec: ExecutionContext, system: ActorSystem, mat: Materializer) extends AbstractController(cc) {
-
-  private val PartialAuthUsername = "partialAuthUsername"
-  private val XForwardedFor = "X-Forwarded-For"
 
   private val Logger = play.api.Logger(this.getClass)
 

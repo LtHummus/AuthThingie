@@ -15,6 +15,7 @@ import services.duo.{DuoAsyncActor, DuoAsyncAuthStatus, DuoWebAuth}
 import services.ticket.EntryTicketService
 import services.users.{User, UserMatcher}
 import util.CallImplicits._
+import util.Constants._
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -27,12 +28,6 @@ class LoginController @Inject() (config: AuthThingieConfig,
                                  duoWebAuth: DuoWebAuth,
                                  ticketService: EntryTicketService,
                                  cc: MessagesControllerComponents)(implicit ec: ExecutionContext, system: ActorSystem, mat: Materializer) extends MessagesAbstractController(cc) {
-
-  private val PartialAuthUsername = "partialAuthUsername"
-  private val Redirect = "redirect"
-  private val XForwardedFor = "X-Forwarded-For"
-  private val PartialAuthTimeout = "partialAuthTimeout"
-
 
   private val Logger = play.api.Logger(this.getClass)
   private val PartialAuthExpirationTime = 5.minutes.toMillis
@@ -65,7 +60,7 @@ class LoginController @Inject() (config: AuthThingieConfig,
   }
 
   private def redirectUrl[T](implicit request: Request[T]): String = {
-    request.queryString.get(Redirect).flatMap(_.headOption).getOrElse(config.siteUrl)
+    request.queryString.get(RedirectString).flatMap(_.headOption).getOrElse(config.siteUrl)
   }
 
   def logout() = Action { implicit request: MessagesRequest[AnyContent] =>
@@ -82,7 +77,7 @@ class LoginController @Inject() (config: AuthThingieConfig,
       redirectUrl,
       routes.LoginController
         .login()
-        .appendQueryString(Map(Redirect -> Seq(redirectUrl))), config.siteName, None
+        .appendQueryString(Map(RedirectString -> Seq(redirectUrl))), config.siteName, None
     )).withSession(request.session - PartialAuthUsername)
   }
 
@@ -102,16 +97,20 @@ class LoginController @Inject() (config: AuthThingieConfig,
       case None => Future.successful(Unauthorized(views.html.denied("Error: No partially authed username.")))
       case Some(user) =>
         if (config.duoSecurity.isDefined && user.duoEnabled) {
-          duoWebAuth.preauth(user.username).map{ di =>
-            Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), None, Some(di), routes.DuoController.duoPushStatus()))
-          }.recover { error =>
-            Logger.warn("Error contacting Duo", error)
-            InternalServerError(views.html.config_errors(List("Duo credential errors")))
-          }
+          renderDuoTotp(user)
         } else {
-          Future.successful(Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), None, None, routes.DuoController.duoPushStatus())))
+          Future.successful(Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(RedirectString -> Seq(redirectUrl))), None, None, routes.DuoController.duoPushStatus())))
         }
 
+    }
+  }
+
+  private def renderDuoTotp(user: User)(implicit request: MessagesRequest[_]) = {
+    duoWebAuth.preauth(user.username).map{ di =>
+      Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(RedirectString -> Seq(redirectUrl))), None, Some(di), routes.DuoController.duoPushStatus()))
+    }.recover { error =>
+      Logger.warn("Error contacting Duo", error)
+      InternalServerError(views.html.config_errors(List("Duo credential errors")))
     }
   }
 
@@ -123,7 +122,7 @@ class LoginController @Inject() (config: AuthThingieConfig,
           Logger.warn(s"${error.key} -> ${error.message}")
         }
         // we can assume true here since if they submitted the form, they must have totp enabled
-        Future.successful(BadRequest(views.html.totp(showTotp = true, formWithErrors, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), Some("Invalid Request"), None, routes.DuoController.duoPushStatus())))
+        Future.successful(BadRequest(views.html.totp(showTotp = true, formWithErrors, routes.LoginController.totp().appendQueryString(Map(RedirectString -> Seq(redirectUrl))), Some("Invalid Request"), None, routes.DuoController.duoPushStatus())))
     }
 
     val success = { data: TotpData =>
@@ -144,15 +143,9 @@ class LoginController @Inject() (config: AuthThingieConfig,
           case Some(user) =>
             Logger.warn(s"Bad login attempt for user ${user.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}")
             if (user.duoEnabled) {
-              duoWebAuth.preauth(user.username).map { di =>
-                Ok(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), None, Some(di), routes.DuoController.duoPushStatus()))
-              }.recover { error =>
-                Logger.warn("Error contacting Duo", error)
-                InternalServerError(views.html.config_errors(List("Duo credential errors")))
-              }
-
+              renderDuoTotp(user)
             } else {
-              Future.successful(Unauthorized(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl))), Some("Invalid Auth Code"), None, routes.DuoController.duoPushStatus())).withSession(request.session))
+              Future.successful(Unauthorized(views.html.totp(user.usesTotp, totpForm, routes.LoginController.totp().appendQueryString(Map(RedirectString -> Seq(redirectUrl))), Some("Invalid Auth Code"), None, routes.DuoController.duoPushStatus())).withSession(request.session))
             }
           case None => Logger.warn("Couldn't find a partially authed username for validation"); Future.successful(BadRequest("Couldn't find a partially authed username for validation"))
         }
@@ -166,7 +159,7 @@ class LoginController @Inject() (config: AuthThingieConfig,
   def login() = Action.async { implicit request: MessagesRequest[AnyContent] =>
     val error = {
       formWithErrors: Form[LoginData] =>
-        Future.successful(BadRequest(views.html.login(formWithErrors, redirectUrl, routes.LoginController.login().appendQueryString(Map(Redirect -> Seq(redirectUrl))), config.siteName, Some("Invalid form input"))))
+        Future.successful(BadRequest(views.html.login(formWithErrors, redirectUrl, routes.LoginController.login().appendQueryString(Map(RedirectString -> Seq(redirectUrl))), config.siteName, Some("Invalid form input"))))
     }
 
 
@@ -175,11 +168,11 @@ class LoginController @Inject() (config: AuthThingieConfig,
         case Some(user) if shouldShowTotpPage(user) =>
           Logger.info(s"Successful username/password combo for ${user.username}. Forwarding for 2FA")
           val timeout = System.currentTimeMillis() + PartialAuthExpirationTime
-          Future.successful(Redirect(routes.LoginController.totp().appendQueryString(Map(Redirect -> Seq(redirectUrl)))).withSession(PartialAuthUsername -> user.username, PartialAuthTimeout -> timeout.toString))
+          Future.successful(Redirect(routes.LoginController.totp().appendQueryString(Map(RedirectString -> Seq(redirectUrl)))).withSession(PartialAuthUsername -> user.username, PartialAuthTimeout -> timeout.toString))
         case Some(user) => loginAndRedirect(user)
         case None =>
           Logger.warn(s"Bad login attempt for user ${data.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}")
-          Future.successful(Unauthorized(views.html.login(loginForm.fill(data.copy(password = "")), request.session.get(Redirect + "Url").getOrElse(""), routes.LoginController.login().appendQueryString(Map(Redirect -> Seq(redirectUrl))), config.siteName, Some("Invalid username or password"))))
+          Future.successful(Unauthorized(views.html.login(loginForm.fill(data.copy(password = "")), request.session.get(RedirectString + "Url").getOrElse(""), routes.LoginController.login().appendQueryString(Map(RedirectString -> Seq(redirectUrl))), config.siteName, Some("Invalid username or password"))))
       }
 
     }
