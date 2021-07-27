@@ -80,7 +80,7 @@ class AuthnController @Inject() (authn: WebAuthnService, userMatcher: UserMatche
     authn.completeAuthentication(user, request.body) match {
       case Left(error) =>
         Logger.warn(s"could not complete authentication: ${error}")
-        Forbidden(Json.obj("successful" -> false, "error" -> "could not complete authentication"))
+        Forbidden(Json.obj("successful" -> false, "error" -> error))
       case Right(user) =>
         // TODO: finish generating ticket instead of using hardcoded siteurl
         val ticketId = ticketCache.createTicket("ok", user, config.siteUrl)

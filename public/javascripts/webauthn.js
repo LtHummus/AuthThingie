@@ -88,13 +88,17 @@ const beginAuthentication = async () => {
         })
     }
 
-    console.log(registrationInfo)
+    let credential;
+    try {
+        credential = await navigator.credentials.get({
+            publicKey: registrationInfo
+        })
+    } catch (e) {
+        console.log(`Could not authenticate: ${e}`)
+        document.getElementById('webauthn_status').innerText = 'Authentication cancelled.'
+        return
+    }
 
-    const credential = await navigator.credentials.get({
-        publicKey: registrationInfo
-    })
-
-    console.log(credential)
 
     const packedResponse = {
         id: responseJson.authId,
@@ -115,6 +119,7 @@ const beginAuthentication = async () => {
     const resultBody = await completionResponse.json()
     if (!resultBody.successful) {
         console.log("login failed")
+        document.getElementById('webauthn_status').innerText = resultBody.error
         return
     }
 

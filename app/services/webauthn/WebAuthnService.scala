@@ -91,7 +91,7 @@ class WebAuthnService @Inject()(userMatcher: UserMatcher, storage: SqlStorageSer
     } yield (info, key)
 
     dataNeeded match {
-      case None => Left("Given key not found in database")
+      case None => Left("Could not find authenticator key in database")
       case Some((payload, key)) =>
         val authReq = new AuthenticationRequest(authenticationCompletionInfo.keyIdBytes,
           authenticationCompletionInfo.authenticatorDataBytes,

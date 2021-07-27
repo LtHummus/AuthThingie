@@ -80,7 +80,7 @@ class LoginController @Inject() (config: AuthThingieConfig,
       redirectUrl,
       routes.LoginController
         .login()
-        .appendQueryString(Map(RedirectString -> Seq(redirectUrl))), config.siteName, None
+        .appendQueryString(Map(RedirectString -> Seq(redirectUrl))), config.siteName, None, config.webauthn.isDefined
     )).withSession(request.session - PartialAuthUsername)
   }
 
@@ -162,7 +162,7 @@ class LoginController @Inject() (config: AuthThingieConfig,
   def login() = Action.async { implicit request: MessagesRequest[AnyContent] =>
     val error = {
       formWithErrors: Form[LoginData] =>
-        Future.successful(BadRequest(views.html.login(formWithErrors, redirectUrl, routes.LoginController.login().appendQueryString(Map(RedirectString -> Seq(redirectUrl))), config.siteName, Some("Invalid form input"))))
+        Future.successful(BadRequest(views.html.login(formWithErrors, redirectUrl, routes.LoginController.login().appendQueryString(Map(RedirectString -> Seq(redirectUrl))), config.siteName, Some("Invalid form input"), config.webauthn.isDefined)))
     }
 
 
@@ -175,7 +175,7 @@ class LoginController @Inject() (config: AuthThingieConfig,
         case Some(user) => loginAndRedirect(user)
         case None =>
           Logger.warn(s"Bad login attempt for user ${data.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}")
-          Future.successful(Unauthorized(views.html.login(loginForm.fill(data.copy(password = "")), request.session.get(RedirectString + "Url").getOrElse(""), routes.LoginController.login().appendQueryString(Map(RedirectString -> Seq(redirectUrl))), config.siteName, Some("Invalid username or password"))))
+          Future.successful(Unauthorized(views.html.login(loginForm.fill(data.copy(password = "")), request.session.get(RedirectString + "Url").getOrElse(""), routes.LoginController.login().appendQueryString(Map(RedirectString -> Seq(redirectUrl))), config.siteName, Some("Invalid username or password"), config.webauthn.isDefined)))
       }
 
     }
