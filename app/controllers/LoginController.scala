@@ -45,16 +45,19 @@ class LoginController @Inject() (config: AuthThingieConfig,
     )(LoginData.apply)(LoginData.unapply)
   )
 
+  private def successfulLoginMessage(user: User, request: Request[_]): String = s"Successful auth for ${user.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}"
+  private def badLoginMessage(user: User, request: Request[_]): String = s"Bad login attempt for user ${user.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}"
+
   private def shouldShowTotpPage(user: User): Boolean = user.usesTotp || (user.duoEnabled && config.duoSecurity.isDefined)
 
   private def loginAndRedirect(user: User)(implicit request: Request[_]): Future[Result] = {
-    Logger.info(s"Successful auth for ${user.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}")
+    Logger.info(successfulLoginMessage(user, request))
     Logger.debug(s"Redirecting to $redirectUrl")
     Future.successful(Redirect(redirectUrl, FOUND).withSession("user" -> user.username, "authTime" -> System.currentTimeMillis().toString))
   }
 
   private def loginAndRedirect(user: User, redirectUrl: String)(implicit request: Request[_]): Result = {
-    Logger.info(s"Successful auth for ${user.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}")
+    Logger.info(successfulLoginMessage(user, request))
     Logger.debug(s"Redirecting to $redirectUrl")
     Redirect(redirectUrl, FOUND).withSession("user" -> user.username, "authTime" -> System.currentTimeMillis().toString)
   }
@@ -141,7 +144,7 @@ class LoginController @Inject() (config: AuthThingieConfig,
         knownUser match {
           case Some(user) if user.totpCorrect(data.totpCode) => loginAndRedirect(user)
           case Some(user) =>
-            Logger.warn(s"Bad login attempt for user ${user.username} from ${request.headers.get(XForwardedFor).getOrElse("Unknown")}")
+            Logger.warn(badLoginMessage(user, request))
             if (user.duoEnabled) {
               renderDuoTotp(user)
             } else {
