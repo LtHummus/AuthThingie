@@ -6,6 +6,7 @@ import play.api.mvc.{AbstractController, AnyContent, ControllerComponents, Reque
 import services.ticket.EntryTicketService
 import services.users.{User, UserMatcher}
 import services.webauthn.{AuthenticationCompletionInfo, RegistrationCompletionInfo, WebAuthnService}
+import util.Constants.RedirectString
 
 import javax.inject.{Inject, Singleton}
 
@@ -66,7 +67,6 @@ class AuthnController @Inject() (authn: WebAuthnService, userMatcher: UserMatche
       } yield user
 
       val info = authn.generateAuthenticationPayload(user)
-
       Ok(Json.toJson(info))
     }
   }
@@ -77,13 +77,13 @@ class AuthnController @Inject() (authn: WebAuthnService, userMatcher: UserMatche
       user     <- userMatcher.getUser(username)
     } yield user
 
+    val redirectUrl = request.session.get(RedirectString).getOrElse(config.siteUrl)
     authn.completeAuthentication(user, request.body) match {
       case Left(error) =>
         Logger.warn(s"could not complete authentication: ${error}")
         Forbidden(Json.obj("successful" -> false, "error" -> error))
       case Right(user) =>
-        // TODO: finish generating ticket instead of using hardcoded siteurl
-        val ticketId = ticketCache.createTicket("ok", user, config.siteUrl)
+        val ticketId = ticketCache.createTicket("ok", user, redirectUrl)
         Ok(Json.obj("ticketId" -> ticketId, "successful" -> true))
     }
   }
