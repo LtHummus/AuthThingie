@@ -39,13 +39,12 @@ class WebAuthnService @Inject()(userMatcher: UserMatcher, storage: SqlStorageSer
   def getKeysForUser(user: User): Set[Bytes] = storage.getCredentialIdsForUsername(user.username)
 
   def generateRegistrationPayload(user: User, residentKey: Boolean): RegistrationInfo = {
-    val u = storage.createOrGetUser(user.username)
     val challengeBytes = Bytes.cryptoRandom(32)
     val id = Bytes.cryptoRandom(16)
 
     val currentKeys = storage.getCredentialIdsForUsername(user.username).map(_.asBase64)
 
-    val payload = RegistrationPayload(u.handle.asBase64, user.username, challengeBytes.asBase64, residentKey, currentKeys.toList, rp)
+    val payload = RegistrationPayload(user.handle.asBase64, user.username, challengeBytes.asBase64, residentKey, currentKeys.toList, rp)
     RegistrationCacheChallenge.put(id.asUrlBase64, payload)
 
     RegistrationInfo(id.asUrlBase64, payload)
