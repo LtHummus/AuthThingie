@@ -1,7 +1,7 @@
 package services.storage
 
 import anorm._
-import anorm.SqlParser.{bool, flatten, int, long, str}
+import anorm.SqlParser.{bool, flatten, int, long, str, get}
 import play.api.db.Database
 import services.users.User
 import services.webauthn.SavedKey
@@ -33,13 +33,30 @@ class SqlStorageService @Inject() (db: Database, dec: DatabaseExecutionContext) 
     }
   }
 
-  private val userObjectRowParser = (str("username") ~ str("password") ~ int("isAdmin")).map {
-    case username ~ password ~ isAdmin => User(s"${username}:${password}", isAdmin == 1, None, List(), false) // TODO: replace with actual values
+  private val userObjectRowParser = (str("username") ~ str("password") ~ str("handle") ~ int("isAdmin") ~ int("duo_enabled") ~ get[Option[String]]("totp_secret") ~ get[Option[String]]("roles")).map {
+    case username ~ password ~ handle ~ isAdmin ~ duoEnabled ~ totpSecret ~ roles =>
+      val roleList = roles.map(l => l.split('|').toList).getOrElse(List())
+      User(s"${username}:${password}", Bytes.fromBase64(handle), isAdmin == 1, totpSecret, roleList, duoEnabled == 1) // TODO: replace with actual values
   }
 
   def getUser(username: String): Option[User] = {
     db.withConnection { implicit c =>
-      SQL"SELECT username, password, isAdmin FROM users WHERE username = $username".as(userObjectRowParser.singleOpt)
+      SQL"""SELECT username, password, handle, isAdmin, duo_enabled, totp_secret, GROUP_CONCAT(r.role, '|') AS roles
+                      FROM users
+                               LEFT JOIN users_x_role uxr on users.id = uxr.user
+                               LEFT JOIN roles r on uxr.role = r.id
+                      WHERE username = 'ben'
+                      GROUP BY users.id""".as(userObjectRowParser.singleOpt)
+    }
+  }
+
+  def getAllUsers(): List[User] = {
+    db.withConnection { implicit c =>
+      SQL"""SELECT username, password, handle, isAdmin, duo_enabled, totp_secret, GROUP_CONCAT(r.role, '|') AS roles
+            FROM users
+              LEFT JOIN users_x_role uxr on users.id = uxr.user
+              LEFT JOIN roles r on uxr.role = r.id
+            GROUP BY users.id""".as(userObjectRowParser.*)
     }
   }
 

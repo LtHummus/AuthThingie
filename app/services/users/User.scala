@@ -5,6 +5,7 @@ import play.api.ConfigLoader
 import services.rules.PathRule
 import services.totp.TotpUtil
 import services.validator.HashValidator
+import util.Bytes
 
 import scala.jdk.CollectionConverters._
 import scala.util.Try
@@ -18,12 +19,12 @@ object User {
       val roles = Try(curr.getStringList("roles").asScala.toList).getOrElse(List.empty[String])
       val duoEnabled = Try(curr.getBoolean("duoEnabled")).getOrElse(false)
 
-      User(passwdLine, admin, totpSecret, roles, duoEnabled)
+      User(passwdLine, Bytes.cryptoRandom(1), admin, totpSecret, roles, duoEnabled)
     }.toList
   }
 }
 
-case class User(htpasswdLine: String, admin: Boolean, totpSecret: Option[String], roles: List[String], duoEnabled: Boolean) {
+case class User(htpasswdLine: String, handle: Bytes, admin: Boolean, totpSecret: Option[String], roles: List[String], duoEnabled: Boolean) {
 
   private val Logger = play.api.Logger(this.getClass)
 

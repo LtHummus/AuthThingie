@@ -8,6 +8,7 @@ import javax.inject.{Inject, Singleton}
 @Singleton
 class UserMatcher @Inject()(storage: SqlStorageService) {
 
+  def allUsers(): List[User] = storage.getAllUsers()
   def validUser(username: String, password: String): Option[User] = {
     getUser(username) match {
       case Some(user) if user.passwordCorrect(password) => Some(user)
