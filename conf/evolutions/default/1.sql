@@ -1,11 +1,13 @@
 -- !Ups
-
+-- auto-generated definition
 create table users
 (
     id       integer not null
         constraint users_pk
             primary key autoincrement,
     username string  not null,
+    password string  not null,
+    isAdmin  boolean default false,
     handle   string  not null
 );
 
@@ -18,7 +20,8 @@ create unique index users_id_uindex
 create unique index users_username_uindex
     on users (username);
 
--- auto-generated definition
+
+
 create table keys
 (
     id             integer not null
@@ -36,8 +39,6 @@ create index keys_keyId_index
 
 create unique index keys_keyId_uindex
     on keys (keyId);
-
-
 
 
 -- !Downs

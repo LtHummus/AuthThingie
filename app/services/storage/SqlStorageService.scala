@@ -1,7 +1,7 @@
 package services.storage
 
 import anorm._
-import anorm.SqlParser.{flatten, int, long, str}
+import anorm.SqlParser.{bool, flatten, int, long, str}
 import play.api.db.Database
 import services.users.User
 import services.webauthn.SavedKey
@@ -17,6 +17,29 @@ class SqlStorageService @Inject() (db: Database, dec: DatabaseExecutionContext) 
         .as(SqlParser.str("keyId").map{ x =>
           Bytes.fromBase64(x)
         }.*).toSet
+    }
+  }
+
+  def setupNeeded(): Boolean = {
+    db.withConnection { implicit c =>
+      SQL"SELECT COUNT(*) AS userCount FROM users".as(int("userCount").single) == 0
+    }
+  }
+
+  def createUser(username: String, passwordHash: String, isAdmin: Boolean) = {
+    val generatedHandle = Bytes.cryptoRandom(16).asBase64
+    db.withConnection { implicit c =>
+      SQL"INSERT INTO users (username, password, handle, isAdmin) VALUES ($username, $passwordHash, $generatedHandle, $isAdmin)".executeInsert()
+    }
+  }
+
+  private val userObjectRowParser = (str("username") ~ str("password") ~ int("isAdmin")).map {
+    case username ~ password ~ isAdmin => User(s"${username}:${password}", isAdmin == 1, None, List(), false) // TODO: replace with actual values
+  }
+
+  def getUser(username: String): Option[User] = {
+    db.withConnection { implicit c =>
+      SQL"SELECT username, password, isAdmin FROM users WHERE username = $username".as(userObjectRowParser.singleOpt)
     }
   }
 

@@ -16,6 +16,9 @@ GET     /test                       controllers.AuthController.testUrl
 GET     /2fa                        controllers.MultiFactorConfigController.index
 GET     /2fa/delete_key             controllers.MultiFactorConfigController.deleteKey
 
+GET     /setup                      controllers.FirstTimeSetupController.index
+POST    /setup                      controllers.FirstTimeSetupController.completeSetup
+
 GET     /duo/push                   controllers.DuoController.sendPush
 GET     /duo/status                 controllers.DuoController.duoPushStatus
 

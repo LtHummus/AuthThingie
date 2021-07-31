@@ -1,0 +1,25 @@
+@(form: Form[SetupData])(implicit request: MessagesRequestHeader)
+
+@main("First Time Setup") {
+    <div class="jumbotron mt-3">
+        <h1>AuthThingie Setup</h1>
+        <div>
+            <p>AuthThingie needs an admin account to get started! Set one up now!</p>
+        </div>
+    </div>
+
+    <div>
+        <p>
+            Create an admin account to get started!
+        </p>
+        @b4.vertical.formCSRF(routes.FirstTimeSetupController.completeSetup()) { implicit vfc =>
+            @b4.text(form("username"), Symbol("_label") -> "Username", Symbol("autofocus") -> "autofocus")
+            @b4.password(form("password"), Symbol("_label") -> "Password", Symbol("autofocus") -> "autofocus")
+            @b4.password(form("passwordConfirm"), Symbol("_label") -> "PasswordConfirm", Symbol("autofocus") -> "autofocus")
+            @b4.submit(Symbol("class") -> "btn btn-primary") {
+                <i class="fa fa-ok btn-submit"></i> Setup
+            }
+        }
+    </div>
+
+}
