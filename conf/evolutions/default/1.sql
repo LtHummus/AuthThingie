@@ -17,7 +17,6 @@ create index keys_keyId_index
 create unique index keys_keyId_uindex
     on keys (keyId);
 
-
 create table roles
 (
     id integer not null
@@ -28,6 +27,30 @@ create table roles
 
 create unique index roles_role_uindex
     on roles (role);
+
+create table rules
+(
+    id integer not null
+        constraint rules_pk
+            primary key autoincrement,
+    name string not null,
+    protocol_pattern string,
+    host_pattern string,
+    path_pattern string,
+    is_public boolean default false not null,
+    timeout int default 0
+);
+
+create table rules_x_role
+(
+    id integer not null
+        constraint rules_x_role_pk
+            primary key autoincrement,
+    rule int not null
+        references rules,
+    role int not null
+        references roles
+);
 
 create table users
 (
@@ -71,4 +94,6 @@ DROP TABLE users;
 DROP TABLE keys;
 DROP TABLE roles;
 DROP TABLE users_x_role;
+DROP TABLE rules_x_role;
+DROP TABLE rules;
 

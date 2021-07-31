@@ -5,6 +5,7 @@ import controllers.routes
 import play.api.mvc.{Filter, RequestHeader, Result, Results}
 import services.storage.SqlStorageService
 
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 

@@ -5,12 +5,14 @@ import config.AuthThingieConfig
 
 import javax.inject._
 import play.api.mvc._
+import services.rules.PathMatcher
 import services.users.UserMatcher
 import services.webauthn.WebAuthnService
 import util.SessionImplicits._
 
 @Singleton
 class HomeController @Inject()(userMatcher: UserMatcher,
+                               pathMatcher: PathMatcher,
                                webauthn: WebAuthnService,
                                cc: MessagesControllerComponents)(implicit config: AuthThingieConfig) extends MessagesAbstractController(cc) {
 
@@ -21,7 +23,7 @@ class HomeController @Inject()(userMatcher: UserMatcher,
     } yield knownUser
 
     val isAdmin = loggedInUser.exists(_.admin)
-    val rules = if (isAdmin) config.pathRules else List()
+    val rules = if (isAdmin) pathMatcher.allRules() else List()
     val allUsers = if (isAdmin) userMatcher.allUsers() else List()
     val settings = if (isAdmin) Some(config.asEntries) else None
     val loginTime = request.session.get("authTime").flatMap(_.toLongOption).map(x => ZonedDateTime.ofInstant(Instant.ofEpochMilli(x), config.timeZone))

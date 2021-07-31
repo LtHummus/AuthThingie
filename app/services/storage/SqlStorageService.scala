@@ -1,12 +1,14 @@
 package services.storage
 
 import anorm._
-import anorm.SqlParser.{bool, flatten, int, long, str, get}
+import anorm.SqlParser.{bool, flatten, get, int, long, str}
 import play.api.db.Database
+import services.rules.PathRule
 import services.users.User
 import services.webauthn.SavedKey
 import util.{Bytes, DatabaseExecutionContext}
 
+import java.time.Duration
 import javax.inject.{Inject, Singleton}
 
 @Singleton
@@ -63,18 +65,6 @@ class SqlStorageService @Inject() (db: Database, dec: DatabaseExecutionContext) 
   def deleteCredentialForUsername(username: String, keyId: String): Int = {
     db.withConnection { implicit c =>
       SQL"DELETE FROM keys WHERE ROWID IN (SELECT keys.ROWID FROM keys JOIN users ON users.id = keys.user WHERE keyId = $keyId AND users.username = $username)".executeUpdate()
-    }
-  }
-
-  def createOrGetUser(username: String): UserEntry = {
-    val generatedHandle = Bytes.cryptoRandom(16).asBase64
-    db.withConnection { implicit c =>
-      SQL"INSERT OR IGNORE INTO users(username, handle) VALUES ($username, $generatedHandle)".executeInsert()
-    }
-
-    getUserByUsername(username) match {
-      case Some(u) => u
-      case None    => ???
     }
   }
 
@@ -138,6 +128,24 @@ class SqlStorageService @Inject() (db: Database, dec: DatabaseExecutionContext) 
     db.withConnection { implicit c =>
       SQL"SELECT username FROM users JOIN keys ON users.id = keys.user WHERE keyId = ${Bytes.fromByteArray(key).asBase64}"
         .as(str("username").singleOpt)
+    }
+  }
+
+  private val ruleObjectParser = (str("name") ~ get[Option[String]]("protocol_pattern") ~ get[Option[String]]("host_pattern") ~ get[Option[String]]("path_pattern") ~ int("is_public") ~ get[Option[Long]]("timeout") ~ get[Option[String]]("roles")).map {
+    case name ~ protocolPattern ~ hostPattern ~ pathPattern ~ isPublic ~ timeout ~ roles =>
+      val roleList = roles.map(r => r.split('|').toList).getOrElse(List())
+      val duration = timeout.map(Duration.ofSeconds)
+      PathRule(name, protocolPattern, hostPattern, pathPattern, isPublic == 1, roleList, duration)
+  }
+
+  def getRules(): List[PathRule] = {
+    db.withConnection { implicit c =>
+      SQL"""SELECT name, protocol_pattern, host_pattern, path_pattern, is_public, timeout, GROUP_CONCAT(r.role, '|') AS roles
+           FROM rules
+                    LEFT JOIN rules_x_role uxr on rules.id = uxr.rule
+                    LEFT JOIN roles r on uxr.role = r.id
+           GROUP BY rules.id
+           """.as(ruleObjectParser.*)
     }
   }
 
