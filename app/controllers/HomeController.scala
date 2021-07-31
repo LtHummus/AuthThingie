@@ -1,15 +1,17 @@
 package controllers
 
 import java.time.{Duration, Instant, ZonedDateTime}
-
 import config.AuthThingieConfig
+
 import javax.inject._
 import play.api.mvc._
 import services.users.UserMatcher
+import services.webauthn.WebAuthnService
 import util.SessionImplicits._
 
 @Singleton
 class HomeController @Inject()(userMatcher: UserMatcher,
+                               webauthn: WebAuthnService,
                                cc: MessagesControllerComponents)(implicit config: AuthThingieConfig) extends MessagesAbstractController(cc) {
 
   def index() = Action { implicit request: Request[AnyContent] =>
@@ -25,7 +27,7 @@ class HomeController @Inject()(userMatcher: UserMatcher,
     val loginTime = request.session.get("authTime").flatMap(_.toLongOption).map(x => ZonedDateTime.ofInstant(Instant.ofEpochMilli(x), config.timeZone))
     val loginDuration = loginTime.map(x => Duration.between(x, ZonedDateTime.now(config.timeZone)))
 
-    Ok(views.html.index(loggedInUser, rules, allUsers, isAdmin && !config.isUsingNewConfig, config.siteName, !config.hasTimeoutSetProperly, loginTime, settings, loginDuration))
+    Ok(views.html.index(loggedInUser, rules, allUsers, isAdmin && !config.isUsingNewConfig, config.siteName, !config.hasTimeoutSetProperly, loginTime, settings, loginDuration, /* TODO: fix this stupidity */ true))
   }
 
 

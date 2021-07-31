@@ -36,6 +36,8 @@ class WebAuthnService @Inject()(userMatcher: UserMatcher, storage: SqlStorageSer
     new ServerProperty(new Origin("https://" + rp.id), rp.id, new DefaultChallenge(Bytes.fromBase64(challenge).byteArray), null)
   }
 
+  def getKeysForUser(user: User): Set[Bytes] = storage.getCredentialIdsForUsername(user.username)
+
   def generateRegistrationPayload(user: User, residentKey: Boolean): RegistrationInfo = {
     val u = storage.createOrGetUser(user.username)
     val challengeBytes = Bytes.cryptoRandom(32)
@@ -49,16 +51,16 @@ class WebAuthnService @Inject()(userMatcher: UserMatcher, storage: SqlStorageSer
     RegistrationInfo(id.asUrlBase64, payload)
   }
 
-  def completeRegistration(user: User, info: RegistrationCompletionInfo): Boolean = {
+  def completeRegistration(user: User, info: RegistrationCompletionInfo): Either[String, String] = {
     val u = storage.getUserByUsername(user.username)
     if (u.isEmpty) {
-      false
+      Left("user not found")
     } else {
       val registrationPayload = RegistrationCacheChallenge.getIfPresent(info.id)
       registrationPayload match {
         case None =>
           Logger.warn(s"could not find challenge info ${info.id}")
-          false
+          Left("could not find challenge info for registration")
         case Some(payload) =>
           val req = new RegistrationRequest(info.attestationObjectBytes, info.clientDataBytes)
           val serverData = generateServerProperty(payload.challenge)
@@ -67,7 +69,7 @@ class WebAuthnService @Inject()(userMatcher: UserMatcher, storage: SqlStorageSer
           Logger.info(s"Validation result = ${validationResult}")
 
           storage.persistKey(u.get.id, SavedKey.from(validationResult))
-          true
+          Right("ok")
       }
 
     }

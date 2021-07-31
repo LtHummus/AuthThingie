@@ -37,13 +37,9 @@ const beginRegistration = async (residentKey) => {
         attestation: "indirect"
     }
 
-    console.log(registrationInfo)
-
     const credential = await navigator.credentials.create({
         publicKey: registrationInfo,
     })
-
-    console.log(credential)
 
     const response = {
         id: responseJson.registrationId,
@@ -61,7 +57,12 @@ const beginRegistration = async (residentKey) => {
         }
     })
 
-    console.log(completionResponse)
+    const completionJson = await completionResponse.json()
+    if (completionJson.success) {
+        window.location.href = '/2fa'
+    } else {
+        document.getElementById('enrollment-status').innerText = completionJson.message
+    }
 
 }
 

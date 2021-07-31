@@ -6,7 +6,16 @@
 @import java.time.ZonedDateTime
 @import java.time.format.FormatStyle
 @import java.time.Duration
-@(user: Option[User], rules: List[PathRule], users: List[User], showConfigWarning: Boolean, siteName: String, showTimeoutWarning: Boolean, loginTime: Option[ZonedDateTime], settings: Option[List[(String, String)]], loginDuration: Option[Duration])
+@(user: Option[User],
+        rules: List[PathRule],
+        users: List[User],
+        showConfigWarning: Boolean,
+        siteName: String,
+        showTimeoutWarning: Boolean,
+        loginTime: Option[ZonedDateTime],
+        settings: Option[List[(String, String)]],
+        loginDuration: Option[Duration],
+        twoFaEnabled: Boolean)
 
     @main("Authentication") {
         <div class="jumbotron mt-3">
@@ -32,7 +41,10 @@
         </div>
         @if(user.isDefined) {
             <div>
-                <h3><a class="btn btn-danger" href="@routes.LoginController.logout()">Logout</a></h3>
+            @if(twoFaEnabled) {
+                <a class="btn btn-secondary" href="@routes.MultiFactorConfigController.index()">Configure Auth Factors</a>
+            }
+                <a class="btn btn-danger" href="@routes.LoginController.logout()">Logout</a>
             </div>
         }
 

@@ -1,12 +1,19 @@
 package util
 
 import java.time.{Duration, Instant, ZonedDateTime}
-
 import config.AuthThingieConfig
-import play.api.mvc.Session
+import play.api.mvc.{Request, Session}
+import services.users.{User, UserMatcher}
 
 object SessionImplicits {
   implicit class RichSession(s: Session) {
+    def getAuthuedUser(implicit userMatcher: UserMatcher): Option[User] = {
+      for {
+        username <- s.get("user")
+        user     <- userMatcher.getUser(username)
+      } yield user
+    }
+
     def isAuthTimeWithinDuration(d: Duration)(implicit config: AuthThingieConfig): Boolean = {
       s.get("authTime") match {
         case None => false

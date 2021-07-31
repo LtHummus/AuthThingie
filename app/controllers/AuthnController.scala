@@ -52,8 +52,8 @@ class AuthnController @Inject() (authn: WebAuthnService, userMatcher: UserMatche
       user     <- userMatcher.getUser(username)
     } yield user
 
-    authn.completeRegistration(user.get, request.body)
-    Ok("ok")
+    val res = authn.completeRegistration(user.get, request.body)
+    Ok(Json.obj("success" -> res.isRight, "message" -> res.merge))
 
   }
 

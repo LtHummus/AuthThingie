@@ -20,6 +20,12 @@ class SqlStorageService @Inject() (db: Database, dec: DatabaseExecutionContext) 
     }
   }
 
+  def deleteCredentialForUsername(username: String, keyId: String): Int = {
+    db.withConnection { implicit c =>
+      SQL"DELETE FROM keys WHERE ROWID IN (SELECT keys.ROWID FROM keys JOIN users ON users.id = keys.user WHERE keyId = $keyId AND users.username = $username)".executeUpdate()
+    }
+  }
+
   def createOrGetUser(username: String): UserEntry = {
     val generatedHandle = Bytes.cryptoRandom(16).asBase64
     db.withConnection { implicit c =>

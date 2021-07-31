@@ -13,6 +13,9 @@ GET     /totp                       controllers.LoginController.showTotpForm
 POST    /totp                       controllers.LoginController.totp
 GET     /test                       controllers.AuthController.testUrl
 
+GET     /2fa                        controllers.MultiFactorConfigController.index
+GET     /2fa/delete_key             controllers.MultiFactorConfigController.deleteKey
+
 GET     /duo/push                   controllers.DuoController.sendPush
 GET     /duo/status                 controllers.DuoController.duoPushStatus
 

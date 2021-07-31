@@ -1,0 +1,44 @@
+@import util.Bytes
+@(keys: Set[Bytes])
+
+@main("Denied") {
+    <div class="">
+        <h1>2FA Configuration</h1>
+        <div>
+            <h2>WebAuthn Keys</h2>
+            You have @(keys.size) key(s) enrolled
+            @if(keys.nonEmpty) {
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th scope="col">Key ID (Base64)</th>
+                                <th scope="col">Key ID (Hex)</th>
+                                <th scope="col">Options</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for(key <- keys) {
+                                <tr>
+                                    <td>@key.asBase64</td>
+                                    <td>@key.asHexString</td>
+                                    <td><a href="/2fa/delete_key?key=@(key.asUrlBase64)"><button type="button" class="btn btn-danger">Delete</button></a></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            <div>
+                <button type="button" class="btn btn-primary" onclick="beginRegistration(true)">Enroll New Key with Resident Key</button>
+                <button type="button" class="btn btn-secondary" onclick="beginRegistration(false)">Enroll New Key without Resident Key</button>
+                <div id="enrollment-status"></div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <a class="btn btn-link" href="@routes.HomeController.index()">Back</a>
+    </div>
+
+    <script src="@routes.Assets.versioned("javascripts/webauthn.js")" type="text/javascript"></script>
+}
