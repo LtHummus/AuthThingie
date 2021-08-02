@@ -6,7 +6,7 @@ import services.storage.SqlStorageService
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class UserMatcher @Inject()(storage: SqlStorageService) {
+class UserMatcher @Inject()(storage: UserDatabase) {
 
   def allUsers(): List[User] = storage.getAllUsers()
   def validUser(username: String, password: String): Option[User] = {

@@ -18,6 +18,7 @@ GET     /2fa/delete_key             controllers.MultiFactorConfigController.dele
 
 GET     /setup                      controllers.FirstTimeSetupController.index
 POST    /setup                      controllers.FirstTimeSetupController.completeSetup
+GET     /setup/migrate              controllers.FirstTimeSetupController.completeMigration
 
 GET     /duo/push                   controllers.DuoController.sendPush
 GET     /duo/status                 controllers.DuoController.duoPushStatus

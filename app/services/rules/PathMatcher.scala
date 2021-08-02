@@ -8,7 +8,7 @@ import services.decoding.RequestInfo
 import services.storage.SqlStorageService
 
 @Singleton
-class PathMatcher @Inject() (storage: SqlStorageService) {
+class PathMatcher @Inject() (storage: RuleDatabase) {
 
   private val Logger = play.api.Logger(this.getClass)
 
