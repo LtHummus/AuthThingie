@@ -21,6 +21,7 @@ class FirstTimeSetupController @Inject() (storage: SqlStorageService,
                                           roleDatabase: RoleDatabase,
                                           config: AuthThingieConfig,
                                           cc: MessagesControllerComponents) extends MessagesAbstractController(cc) {
+  private val Logger = play.api.Logger(this.getClass)
   private val DefaultCost = 10
 
   val setupForm: Form[SetupData] = Form(
@@ -44,6 +45,7 @@ class FirstTimeSetupController @Inject() (storage: SqlStorageService,
     // this is going to have a lot of "sub-optimal" queries and batching, but two things: 1) it's SQLite, so who cares,
     // 2) this is only run (ideally) once per setup
     if (userDatabase.getAllUsers().nonEmpty || ruleDatabase.getRules().nonEmpty || roleDatabase.listRoles().nonEmpty) {
+      Logger.warn("Database contains stuff, but migration requested. Not migrating.")
       Forbidden(views.html.denied("Database currently has users and rules in it. Will not do migration unless database is empty"))
     } else {
       val rules = config.pathRules
@@ -51,18 +53,27 @@ class FirstTimeSetupController @Inject() (storage: SqlStorageService,
 
       val allRoles = rules.flatMap(_.permittedRoles).toSet ++ users.flatMap(_.roles).toSet
 
+      Logger.info("inserting roles")
       allRoles.foreach(roleDatabase.createRole)
+      Logger.info("roles inserted")
 
+      Logger.info("inserting rules")
       rules.foreach(rule => {
         ruleDatabase.createRule(rule)
         rule.permittedRoles.foreach(role => roleDatabase.attachRoleToRule(rule.name, role))
+        Logger.info(s"Inserted rule ${rule.name}")
       })
+      Logger.info("rules inserted")
 
+      Logger.info("inserting users")
       users.foreach(user => {
         userDatabase.createUser(user)
         user.roles.foreach(role => roleDatabase.attachRoleToUser(user.username, role))
+        Logger.info(s"Inserted user ${user.username}")
       })
+      Logger.info("users inserted")
 
+      Logger.info("Migration successful. Returning user to home page")
       Redirect(routes.HomeController.index())
     }
 

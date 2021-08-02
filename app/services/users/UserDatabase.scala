@@ -16,14 +16,17 @@ class UserDatabase @Inject() (db: Database) {
   }
 
   // TODO: this should not return Nothing
-  def createUser(username: String, passwordHash: String, isAdmin: Boolean, duoEnabled: Boolean = false, totpSecret: Option[String] = None): Any = {
+  def createUser(username: String, passwordHash: String, isAdmin: Boolean, duoEnabled: Boolean = false, totpSecret: Option[String] = None): Option[Long] = {
     val generatedHandle = Bytes.cryptoRandom(16).asBase64
     db.withConnection { implicit c =>
-      SQL"INSERT INTO users (username, password, handle, isAdmin, duo_enabled, totp_secret) VALUES ($username, $passwordHash, $generatedHandle, $isAdmin, $duoEnabled, $totpSecret)".executeInsert()
+      SQL"""INSERT INTO users (username, password, handle, isAdmin, duo_enabled, totp_secret)
+           VALUES ($username, $passwordHash, $generatedHandle, $isAdmin, $duoEnabled, $totpSecret)
+         """.executeInsert()
     }
+
   }
 
-  def createUser(user: User): Any = createUser(user.username, user.passwordHash, user.admin, user.duoEnabled, user.totpSecret)
+  def createUser(user: User): Option[Long] = createUser(user.username, user.passwordHash, user.admin, user.duoEnabled, user.totpSecret)
 
   def getUser(username: String): Option[User] = {
     db.withConnection { implicit c =>

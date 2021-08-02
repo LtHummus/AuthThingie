@@ -84,7 +84,7 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
       case None     => Seq()
       case Some(db) =>
         Logger.info(s"Using $db as database path")
-        Seq(PlayDatabasePath -> s"jdbc:sqlite:$db", PlayDatabaseDriverPath -> "org.sqlite.JDBC", PlayDatabaseLogPath -> true, PlayDatabaseInitSqlPath -> "PRAGMA foreign_keys = true")
+        Seq(PlayDatabasePath -> s"jdbc:sqlite:$db", PlayDatabaseDriverPath -> "org.sqlite.JDBC", PlayDatabaseLogPath -> false, PlayDatabaseInitSqlPath -> "PRAGMA foreign_keys = true")
     }
 
     val domain = combinedConfiguration.getOptional[String]("auththingie.domain").map { domain =>
