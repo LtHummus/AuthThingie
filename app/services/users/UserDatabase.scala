@@ -11,20 +11,23 @@ import javax.inject.{Inject, Singleton}
 class UserDatabase @Inject() (db: Database) {
   private val userObjectRowParser = (str("username") ~ str("password") ~ str("handle") ~ int("isAdmin") ~ int("duo_enabled") ~ get[Option[String]]("totp_secret") ~ get[Option[String]]("roles")).map {
     case username ~ password ~ handle ~ isAdmin ~ duoEnabled ~ totpSecret ~ roles =>
-      val roleList = roles.map(l => l.split('|').toList).getOrElse(List())
+      val roleList = roles.map(l => l.split(31.toChar).toList).getOrElse(List())
       User(s"${username}:${password}", Bytes.fromBase64(handle), isAdmin == 1, totpSecret, roleList, duoEnabled == 1) // TODO: replace with actual values
   }
 
-  def createUser(username: String, passwordHash: String, isAdmin: Boolean, duoEnabled: Boolean = false, totpSecret: Option[String] = None) = {
+  // TODO: this should not return Nothing
+  def createUser(username: String, passwordHash: String, isAdmin: Boolean, duoEnabled: Boolean = false, totpSecret: Option[String] = None): Any = {
     val generatedHandle = Bytes.cryptoRandom(16).asBase64
     db.withConnection { implicit c =>
       SQL"INSERT INTO users (username, password, handle, isAdmin, duo_enabled, totp_secret) VALUES ($username, $passwordHash, $generatedHandle, $isAdmin, $duoEnabled, $totpSecret)".executeInsert()
     }
   }
 
+  def createUser(user: User): Any = createUser(user.username, user.passwordHash, user.admin, user.duoEnabled, user.totpSecret)
+
   def getUser(username: String): Option[User] = {
     db.withConnection { implicit c =>
-      SQL"""SELECT username, password, handle, isAdmin, duo_enabled, totp_secret, GROUP_CONCAT(r.role, '|') AS roles
+      SQL"""SELECT username, password, handle, isAdmin, duo_enabled, totp_secret, GROUP_CONCAT(r.role, CHAR(31)) AS roles
                       FROM users
                                LEFT JOIN users_x_role uxr on users.id = uxr.user
                                LEFT JOIN roles r on uxr.role = r.id
@@ -35,7 +38,7 @@ class UserDatabase @Inject() (db: Database) {
 
   def getAllUsers(): List[User] = {
     db.withConnection { implicit c =>
-      SQL"""SELECT username, password, handle, isAdmin, duo_enabled, totp_secret, GROUP_CONCAT(r.role, '|') AS roles
+      SQL"""SELECT username, password, handle, isAdmin, duo_enabled, totp_secret, GROUP_CONCAT(r.role, CHAR(31)) AS roles
             FROM users
               LEFT JOIN users_x_role uxr on users.id = uxr.user
               LEFT JOIN roles r on uxr.role = r.id

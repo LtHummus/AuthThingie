@@ -5,6 +5,7 @@ import config.AuthThingieConfig
 import play.api.data.Form
 import play.api.data.Forms.{mapping, nonEmptyText}
 import play.api.mvc.{AbstractController, AnyContent, ControllerComponents, MessagesAbstractController, MessagesControllerComponents, MessagesRequest, Request}
+import services.role.RoleDatabase
 import services.rules.RuleDatabase
 import services.storage.SqlStorageService
 import services.users.UserDatabase
@@ -17,6 +18,7 @@ case class SetupData(username: String, password: String, passwordConfirm: String
 class FirstTimeSetupController @Inject() (storage: SqlStorageService,
                                           userDatabase: UserDatabase,
                                           ruleDatabase: RuleDatabase,
+                                          roleDatabase: RoleDatabase,
                                           config: AuthThingieConfig,
                                           cc: MessagesControllerComponents) extends MessagesAbstractController(cc) {
   private val DefaultCost = 10
@@ -41,19 +43,27 @@ class FirstTimeSetupController @Inject() (storage: SqlStorageService,
   def completeMigration() = Action { implicit request: MessagesRequest[AnyContent] =>
     // this is going to have a lot of "sub-optimal" queries and batching, but two things: 1) it's SQLite, so who cares,
     // 2) this is only run (ideally) once per setup
-    if (userDatabase.getAllUsers().nonEmpty || ruleDatabase.getRules().nonEmpty) {
+    if (userDatabase.getAllUsers().nonEmpty || ruleDatabase.getRules().nonEmpty || roleDatabase.listRoles().nonEmpty) {
       Forbidden(views.html.denied("Database currently has users and rules in it. Will not do migration unless database is empty"))
     } else {
       val rules = config.pathRules
       val users = config.users
 
-      rules.foreach(ruleDatabase.createRule)
+      val allRoles = rules.flatMap(_.permittedRoles).toSet ++ users.flatMap(_.roles).toSet
 
-      users.foreach(u => {
-        userDatabase.createUser(u.username, u.passwordHash, u.admin, u.duoEnabled, u.totpSecret)
+      allRoles.foreach(roleDatabase.createRole)
+
+      rules.foreach(rule => {
+        ruleDatabase.createRule(rule)
+        rule.permittedRoles.foreach(role => roleDatabase.attachRoleToRule(rule.name, role))
       })
 
-      Ok("this is here to keep the compiler happy")
+      users.foreach(user => {
+        userDatabase.createUser(user)
+        user.roles.foreach(role => roleDatabase.attachRoleToUser(user.username, role))
+      })
+
+      Redirect(routes.HomeController.index())
     }
 
 

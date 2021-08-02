@@ -52,6 +52,9 @@ create table rules_x_role
         references roles
 );
 
+create unique index rules_x_role_rule_role_uindex
+    on rules_x_role (rule, role);
+
 create table users
 (
     id integer not null
@@ -81,12 +84,12 @@ create table users_x_role
             primary key autoincrement,
     user integer not null
         references users,
-    role int not null,
-    constraint UsersXRole_roles_id_id_fk
-        foreign key (id, role) references roles (id, id)
+    role int not null
+        references roles
 );
 
-
+create unique index users_x_role_role_user_uindex
+    on users_x_role (role, user);
 
 -- !Downs
 
@@ -96,4 +99,3 @@ DROP TABLE roles;
 DROP TABLE users_x_role;
 DROP TABLE rules_x_role;
 DROP TABLE rules;
-
