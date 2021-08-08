@@ -28,6 +28,12 @@ class UserDatabase @Inject() (db: Database) {
 
   def createUser(user: User): Option[Long] = createUser(user.username, user.passwordHash, user.admin, user.duoEnabled, user.totpSecret)
 
+  def updatePassword(user: User, newPasswordHash: String) = {
+    db.withConnection { implicit c =>
+      SQL"UPDATE users SET password = $newPasswordHash WHERE username = ${user.username}".executeUpdate()
+    }
+  }
+
   def getUser(username: String): Option[User] = {
     db.withConnection { implicit c =>
       SQL"""SELECT username, password, handle, isAdmin, duo_enabled, totp_secret, GROUP_CONCAT(r.role, CHAR(31)) AS roles

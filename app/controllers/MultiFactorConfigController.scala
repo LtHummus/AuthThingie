@@ -5,6 +5,7 @@ import services.storage.SqlStorageService
 import services.users.UserMatcher
 import services.webauthn.WebAuthnService
 import util.Bytes
+import util.RequestImplicits.withLoggedInUser
 import util.SessionImplicits._
 
 import javax.inject.Inject
@@ -16,11 +17,9 @@ class MultiFactorConfigController @Inject() (webAuthn: WebAuthnService,
   private val Logger = play.api.Logger(this.getClass)
 
   def index = Action { implicit request: Request[AnyContent] =>
-    request.session.getAuthuedUser match {
-      case None => Forbidden(views.html.denied("Must be logged in"))
-      case Some(user) =>
-        val keyIds = webAuthn.getKeysForUser(user)
-        Ok(views.html.multi_factor_config(keyIds))
+    withLoggedInUser { user =>
+      val keyIds = webAuthn.getKeysForUser(user)
+      Ok(views.html.multi_factor_config(keyIds))
     }
   }
 

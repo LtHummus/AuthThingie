@@ -41,6 +41,7 @@
         </div>
         @if(user.isDefined) {
             <div>
+                <a class="btn btn-secondary" href="@routes.ChangePasswordController.renderForm()">Change Password</a>
             @if(twoFaEnabled) {
                 <a class="btn btn-secondary" href="@routes.MultiFactorConfigController.index()">Configure Auth Factors</a>
             }
