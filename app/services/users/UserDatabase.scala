@@ -26,7 +26,14 @@ class UserDatabase @Inject() (db: Database) {
 
   }
 
+  def deleteUser(username: String) = {
+    db.withConnection { implicit c =>
+      SQL"DELETE FROM users WHERE username = $username".execute()
+    }
+  }
+
   def createUser(user: User): Option[Long] = createUser(user.username, user.passwordHash, user.admin, user.duoEnabled, user.totpSecret)
+
 
   def updatePassword(user: User, newPasswordHash: String) = {
     db.withConnection { implicit c =>

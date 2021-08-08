@@ -23,6 +23,9 @@ GET     /setup/migrate              controllers.FirstTimeSetupController.complet
 GET     /password                   controllers.ChangePasswordController.renderForm
 POST    /password                   controllers.ChangePasswordController.completePasswordChange
 
+GET     /users                      controllers.UserAdminController.index
+POST    /users/delete               controllers.UserAdminController.deleteUser
+
 GET     /duo/push                   controllers.DuoController.sendPush
 GET     /duo/status                 controllers.DuoController.duoPushStatus
 

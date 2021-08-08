@@ -39,8 +39,12 @@ class ChangePasswordController @Inject()(userDatabase: UserDatabase,
 
       // Ok(views.html.first_time_setup(setupForm.fill(data)))
       val successful = { data: ChangePasswordData =>
-        if (!u.passwordCorrect(data.currentPassword) || data.newPassword != data.newPasswordConfirm) {
-          UnprocessableEntity(views.html.change_password(changePasswordForm))
+        if (!u.passwordCorrect(data.currentPassword)) {
+          UnprocessableEntity(views.html.change_password(changePasswordForm.withError("curr_password", "Password is incorrect")))
+        } else if (data.newPassword != data.newPasswordConfirm) {
+          UnprocessableEntity(views.html.change_password(changePasswordForm
+            .withError("new_password", "Passwords do not match")
+            .withError("new_password_confirm", "Passwords do not match")))
         } else {
           userDatabase.updatePassword(u, HashValidator.hashPassword(data.newPassword))
           Redirect(routes.HomeController.index())

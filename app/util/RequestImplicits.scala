@@ -13,4 +13,11 @@ object RequestImplicits {
       case Some(u) => f(u)
     }
   }
+
+  def withAdminUser(f: User => Result)(implicit request: Request[_], userMatcher: UserMatcher): Result = {
+    request.session.getAuthuedUser match {
+      case Some(u) if u.admin => f(u)
+      case _                  => Forbidden(views.html.denied("You must be logged in to access this page"))
+    }
+  }
 }
