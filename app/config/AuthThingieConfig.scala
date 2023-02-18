@@ -2,10 +2,11 @@ package config
 
 import java.time.temporal.TemporalAmount
 import java.time.{Duration, ZoneId}
-
 import cats.data.{Validated, ValidatedNec}
 import cats.data.Validated.Valid
-import cats.implicits._
+import cats._
+import cats.data._
+import cats.syntax.all._
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.mvc.Http.HeaderNames
@@ -23,18 +24,18 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
   type ValidationResult[T] = ValidatedNec[String, T]
 
   private implicit class RichTry[T](x: Try[T]) {
-    def toValidated: ValidationResult[T] = x match {
+    def toRichValidated: ValidationResult[T] = x match {
       case Failure(e) => s"${e.getClass.getSimpleName}:${e.getMessage}".invalidNec
       case Success(value) => value.validNec
     }
   }
 
   private def loadPathRules: ValidationResult[List[PathRule]] = {
-    Try(baseConfig.getDeprecated[List[PathRule]]("auththingie.rules", "rules")).toValidated
+    Try(baseConfig.getDeprecated[List[PathRule]]("auththingie.rules", "rules")).toRichValidated
   }
 
   private def loadUsers: ValidationResult[List[User]] = {
-    Try(baseConfig.getDeprecated[List[User]]("auththingie.users", "users")).toValidated
+    Try(baseConfig.getDeprecated[List[User]]("auththingie.users", "users")).toRichValidated
   }
 
   private def loadForceRedirect: ValidationResult[Boolean] = {
@@ -42,30 +43,30 @@ class AuthThingieConfig @Inject() (baseConfig: Configuration) {
   }
 
   private val loadSiteUrl: ValidationResult[String] = {
-    Try(baseConfig.getDeprecated[String]("auththingie.authSiteUrl", "auth_site_url", "authSiteUrl")).toValidated
+    Try(baseConfig.getDeprecated[String]("auththingie.authSiteUrl", "auth_site_url", "authSiteUrl")).toRichValidated
   }
 
   private val loadSiteName: ValidationResult[String] = {
-    Try(baseConfig.getOptional[String]("auththingie.siteName").getOrElse("AuthThingie")).toValidated
+    Try(baseConfig.getOptional[String]("auththingie.siteName").getOrElse("AuthThingie")).toRichValidated
   }
 
   private val authHeaderName: ValidationResult[String] = {
-    Try(baseConfig.getOptional[String]("auththingie.authHeader").getOrElse(HeaderNames.AUTHORIZATION)).toValidated
+    Try(baseConfig.getOptional[String]("auththingie.authHeader").getOrElse(HeaderNames.AUTHORIZATION)).toRichValidated
   }
 
   private val readTimeZone: ValidationResult[ZoneId] = {
-    Try(baseConfig.getOptional[String]("auththingie.timeZone").map(ZoneId.of).getOrElse(ZoneId.systemDefault())).toValidated
+    Try(baseConfig.getOptional[String]("auththingie.timeZone").map(ZoneId.of).getOrElse(ZoneId.systemDefault())).toRichValidated
   }
 
   private val loadTimeout: ValidationResult[Duration] = {
     val auththingieTimeout = baseConfig.getOptional[TemporalAmount]("auththingie.timeout")
     val playMaxAge = baseConfig.getOptional[TemporalAmount]("play.http.session.maxAge")
     val playJwtExpire = baseConfig.getOptional[TemporalAmount]("play.http.session.jwt.expiresAfter")
-    Try(List(auththingieTimeout, playMaxAge, playJwtExpire).flatten.head).map(Duration.from).toValidated
+    Try(List(auththingieTimeout, playMaxAge, playJwtExpire).flatten.head).map(Duration.from).toRichValidated
   }
 
   private val loadDuoSecurity: ValidationResult[Option[DuoSecurityConfig]] = {
-    Try(baseConfig.getOptional[DuoSecurityConfig]("auththingie.duo")).toValidated
+    Try(baseConfig.getOptional[DuoSecurityConfig]("auththingie.duo")).toRichValidated
   }
 
   private val Logger = play.api.Logger(this.getClass)

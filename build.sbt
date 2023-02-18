@@ -19,7 +19,7 @@ libraryDependencies ++= List(
   ws,
 
   //cats (meow)
-  "org.typelevel" %% "cats-core" % "2.0.0",
+  "org.typelevel" %% "cats-core" % "2.9.0",
 
   //testing
   "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % Test,
