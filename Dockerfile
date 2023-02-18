@@ -8,6 +8,6 @@ RUN mkdir /svc
 COPY --from=0 /root/target/universal/auththingie-0.2.2.tgz /svc
 ADD scripts/generate_totp.sh /usr/local/bin/generate_totp
 EXPOSE 9000
-RUN cd /svc && tar xvf auththingie-0.2.2.tgz && chmod +x /svc/auththingie-0.2.2/bin/auththingie
+RUN cd /svc && tar xvf auththingie-0.2.2.tgz && rm auththingie-0.2.2.tgz && chmod +x /svc/auththingie-0.2.2/bin/auththingie
 CMD /svc/auththingie-0.2.2/bin/auththingie
 
