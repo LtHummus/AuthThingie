@@ -41,6 +41,11 @@ libraryDependencies ++= List(
 
 )
 
+// needed for Play + Java 17 ... see https://github.com/playframework/playframework/releases/tag/2.8.15
+libraryDependencies ++= Seq(
+  "com.google.inject" % "guice" % "5.1.0",
+  "com.google.inject.extensions" % "guice-assistedinject" % "5.1.0"
+)
 
 // Adds additional packages into Twirl
 //TwirlKeys.templateImports += "com.lthummus.controllers._"
