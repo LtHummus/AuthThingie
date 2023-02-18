@@ -5,7 +5,7 @@ version := "0.2.2"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
-scalaVersion := "2.13.3"
+scalaVersion := "2.13.10"
 //scalacOptions := Seq("-target:jvm-11")
 
 //javacOptions ++= Seq("-source", "11", "-target", "11", "-Xlint")

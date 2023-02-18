@@ -44,9 +44,14 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
   }
 
   override def builder(context: ApplicationLoader.Context): GuiceApplicationBuilder = {
+    Logger.info("Hello World!")
     Logger.info("Starting config file parsing")
     Logger.info(s"Running ${System.getProperty("os.name")}/${System.getProperty("os.arch")}")
-    Logger.info(s"Using java version ${System.getProperty("java.version")}")
+    Logger.info(s"Using ${System.getProperty("java.vendor")} ${System.getProperty("java.version")}")
+    Logger.info(s"Running on Play Framework ${play.core.PlayVersion.current}")
+    Logger.info(s"Running on Scala Version ${play.core.PlayVersion.scalaVersion}")
+    Logger.info(s"Built with SBT ${play.core.PlayVersion.sbtVersion}")
+    Logger.info(s"Underlying Akka Version ${play.core.PlayVersion.akkaVersion} w/ Akka-Http ${play.core.PlayVersion.akkaHttpVersion}")
 
     val additionalConfig = sys.env.get("AUTHTHINGIE_CONFIG_FILE_PATH") match {
       case Some(filePath) =>
