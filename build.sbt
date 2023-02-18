@@ -3,12 +3,14 @@ organization := "com.lthummus"
 
 version := "0.2.2"
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala)
+lazy val root = (project in file(".")).enablePlugins(PlayScala).enablePlugins(BuildInfoPlugin).settings(
+  buildInfoKeys := Seq[BuildInfoKey](name, version),
+  buildInfoPackage := "auththingieversion"
+)
+
+buildInfoOptions += BuildInfoOption.BuildTime
 
 scalaVersion := "2.13.10"
-//scalacOptions := Seq("-target:jvm-11")
-
-//javacOptions ++= Seq("-source", "11", "-target", "11", "-Xlint")
 
 javaOptions in Universal ++= Seq(
   "-Dpidfile.path=/dev/null"

@@ -1,7 +1,8 @@
 package modules
 
-import java.io.File
+import auththingieversion.BuildInfo
 
+import java.io.File
 import com.typesafe.config.ConfigFactory
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
@@ -45,6 +46,8 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
 
   override def builder(context: ApplicationLoader.Context): GuiceApplicationBuilder = {
     Logger.info("Hello World!")
+    Logger.info(s"Starting AuthThingie version ${BuildInfo.version}")
+    Logger.info(s"AuthThingie was compiled with care on ${BuildInfo.builtAtString}")
     Logger.info("Starting config file parsing")
     Logger.info(s"Running ${System.getProperty("os.name")}/${System.getProperty("os.arch")}")
     Logger.info(s"Using ${System.getProperty("java.vendor")} ${System.getProperty("java.version")}")
