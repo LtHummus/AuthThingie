@@ -1,6 +1,6 @@
 package services.duo
 
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import services.hmac.HmacUtils
 
