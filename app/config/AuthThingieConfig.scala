@@ -4,8 +4,6 @@ import java.time.temporal.TemporalAmount
 import java.time.{Duration, ZoneId}
 import cats.data.{Validated, ValidatedNec}
 import cats.data.Validated.Valid
-import cats._
-import cats.data._
 import cats.syntax.all._
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
