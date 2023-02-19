@@ -5,14 +5,13 @@ version := "0.2.2"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala).enablePlugins(BuildInfoPlugin).settings(
   buildInfoKeys := Seq[BuildInfoKey](name, version),
-  buildInfoPackage := "auththingieversion"
+  buildInfoPackage := "auththingieversion",
+  buildInfoOptions := Seq(BuildInfoOption.BuildTime)
 )
-
-buildInfoOptions += BuildInfoOption.BuildTime
 
 scalaVersion := "2.13.10"
 
-javaOptions in Universal ++= Seq(
+Universal / javaOptions ++= Seq(
   "-Dpidfile.path=/dev/null"
 )
 

@@ -1,7 +1,7 @@
 FROM --platform=$BUILDPLATFORM sbtscala/scala-sbt:eclipse-temurin-11.0.17_8_1.8.2_2.13.10
 
 COPY . .
-RUN sbt universal:packageZipTarball
+RUN sbt 'Universal / packageZipTarball'
 
 FROM eclipse-temurin:11
 RUN mkdir /svc

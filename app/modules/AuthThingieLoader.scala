@@ -53,7 +53,6 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
     Logger.info(s"Using ${System.getProperty("java.vendor")} ${System.getProperty("java.version")}")
     Logger.info(s"Running on Play Framework ${play.core.PlayVersion.current}")
     Logger.info(s"Running on Scala Version ${play.core.PlayVersion.scalaVersion}")
-    Logger.info(s"Built with SBT ${play.core.PlayVersion.sbtVersion}")
     Logger.info(s"Underlying Akka Version ${play.core.PlayVersion.akkaVersion} w/ Akka-Http ${play.core.PlayVersion.akkaHttpVersion}")
 
     val additionalConfig = sys.env.get("AUTHTHINGIE_CONFIG_FILE_PATH") match {
