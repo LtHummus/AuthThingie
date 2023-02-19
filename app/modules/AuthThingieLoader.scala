@@ -49,7 +49,7 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
     Logger.info(s"Starting AuthThingie version ${BuildInfo.version}")
     Logger.info(s"AuthThingie was compiled with care on ${BuildInfo.builtAtString}")
     Logger.info("Starting config file parsing")
-    Logger.info(s"Running ${System.getProperty("os.name")}/${System.getProperty("os.arch")}")
+    Logger.info(s"Running on ${System.getProperty("os.name").toLowerCase}/${System.getProperty("os.arch").toLowerCase}")
     Logger.info(s"Using ${System.getProperty("java.vendor")} ${System.getProperty("java.version")}")
     Logger.info(s"Running on Play Framework ${play.core.PlayVersion.current}")
     Logger.info(s"Running on Scala Version ${play.core.PlayVersion.scalaVersion}")
