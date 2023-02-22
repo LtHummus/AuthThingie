@@ -1,6 +1,6 @@
 package services.hmac
 
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 
 class HmacUtilsSpec extends PlaySpec with MockitoSugar{

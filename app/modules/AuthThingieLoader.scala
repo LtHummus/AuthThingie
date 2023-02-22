@@ -1,7 +1,8 @@
 package modules
 
-import java.io.File
+import auththingieversion.BuildInfo
 
+import java.io.File
 import com.typesafe.config.ConfigFactory
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
@@ -44,7 +45,15 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
   }
 
   override def builder(context: ApplicationLoader.Context): GuiceApplicationBuilder = {
+    Logger.info("Hello World!")
+    Logger.info(s"Starting AuthThingie version ${BuildInfo.version} (${BuildInfo.commit})")
+    Logger.info(s"AuthThingie was compiled with care on ${BuildInfo.builtAtString}")
     Logger.info("Starting config file parsing")
+    Logger.info(s"Running on ${System.getProperty("os.name").toLowerCase}/${System.getProperty("os.arch").toLowerCase}")
+    Logger.info(s"Using ${System.getProperty("java.vendor")} ${System.getProperty("java.version")}")
+    Logger.info(s"Running on Play Framework ${play.core.PlayVersion.current}")
+    Logger.info(s"Running on Scala Version ${play.core.PlayVersion.scalaVersion}")
+    Logger.info(s"Underlying Akka Version ${play.core.PlayVersion.akkaVersion} w/ Akka-Http ${play.core.PlayVersion.akkaHttpVersion}")
 
     val additionalConfig = sys.env.get("AUTHTHINGIE_CONFIG_FILE_PATH") match {
       case Some(filePath) =>

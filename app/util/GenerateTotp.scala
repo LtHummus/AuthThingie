@@ -1,5 +1,6 @@
 package util
 
+import auththingieversion.BuildInfo
 import services.totp.{QrUtil, TotpUtil}
 
 import scala.concurrent.duration._
@@ -34,7 +35,7 @@ object GenerateTotp  {
 
   def main(args: Array[String]): Unit = {
     val parser = new scopt.OptionParser[GeneratorConfig]("auth_thingie_initializer") {
-      head("auth_thingie_totp_initializer", "0.2.1")
+      head("auth_thingie_totp_initializer", BuildInfo.version)
 
       opt[String]("force-secret")
         .action((x, c) => c.copy(forcedSecret = Some(x)))

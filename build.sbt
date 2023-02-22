@@ -1,16 +1,23 @@
 name := """auththingie"""
 organization := "com.lthummus"
 
-version := "0.2.1"
+version := "0.2.2"
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala)
+lazy val root = (project in file(".")).enablePlugins(PlayScala).enablePlugins(BuildInfoPlugin).settings(
+  buildInfoKeys := Seq[BuildInfoKey](
+    name,
+    version,
+    BuildInfoKey.action("commit") {
+      scala.sys.process.Process("git rev-parse --short HEAD").!!.trim
+    }
+  ),
+  buildInfoPackage := "auththingieversion",
+  buildInfoOptions := Seq(BuildInfoOption.BuildTime)
+)
 
-scalaVersion := "2.13.3"
-scalacOptions := Seq("-target:jvm-1.8")
+scalaVersion := "2.13.10"
 
-javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint")
-
-javaOptions in Universal ++= Seq(
+Universal / javaOptions ++= Seq(
   "-Dpidfile.path=/dev/null"
 )
 
@@ -19,20 +26,20 @@ libraryDependencies ++= List(
   ws,
 
   //cats (meow)
-  "org.typelevel" %% "cats-core" % "2.0.0",
+  "org.typelevel" %% "cats-core" % "2.9.0",
 
   //testing
-  "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.3" % Test,
-  "org.mockito" %% "mockito-scala" % "1.5.11" % "test",
+  "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % Test,
+  "org.mockito" %% "mockito-scala" % "1.17.12" % "test",
 
-  "commons-codec" % "commons-codec" % "1.13",
-  "commons-io" % "commons-io" % "2.6",
-  "org.apache.commons" % "commons-lang3" % "3.9",
+  "commons-codec" % "commons-codec" % "1.15",
+  "commons-io" % "commons-io" % "2.11.0",
+  "org.apache.commons" % "commons-lang3" % "3.12.0",
 
   //TOTP + QR
-  "at.favre.lib" % "bcrypt" % "0.8.0",
-  "com.google.zxing" % "core" % "3.4.0",
-  "com.github.scopt" %% "scopt" % "3.7.1",
+  "at.favre.lib" % "bcrypt" % "0.10.2",
+  "com.google.zxing" % "core" % "3.5.1",
+  "com.github.scopt" %% "scopt" % "4.1.0",
 
   //look nice
   "com.adrianhurt" %% "play-bootstrap" % "1.6.1-P28-B4"
