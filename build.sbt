@@ -4,7 +4,13 @@ organization := "com.lthummus"
 version := "0.2.2"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala).enablePlugins(BuildInfoPlugin).settings(
-  buildInfoKeys := Seq[BuildInfoKey](name, version),
+  buildInfoKeys := Seq[BuildInfoKey](
+    name,
+    version,
+    BuildInfoKey.action("commit") {
+      scala.sys.process.Process("git rev-parse --short HEAD").!!.trim
+    }
+  ),
   buildInfoPackage := "auththingieversion",
   buildInfoOptions := Seq(BuildInfoOption.BuildTime)
 )

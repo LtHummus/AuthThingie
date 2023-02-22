@@ -46,7 +46,7 @@ class AuthThingieLoader extends GuiceApplicationLoader() {
 
   override def builder(context: ApplicationLoader.Context): GuiceApplicationBuilder = {
     Logger.info("Hello World!")
-    Logger.info(s"Starting AuthThingie version ${BuildInfo.version}")
+    Logger.info(s"Starting AuthThingie version ${BuildInfo.version} (${BuildInfo.commit})")
     Logger.info(s"AuthThingie was compiled with care on ${BuildInfo.builtAtString}")
     Logger.info("Starting config file parsing")
     Logger.info(s"Running on ${System.getProperty("os.name").toLowerCase}/${System.getProperty("os.arch").toLowerCase}")
