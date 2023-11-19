@@ -1,7 +1,7 @@
 name := """auththingie"""
 organization := "com.lthummus"
 
-version := "0.2.2"
+version := "0.2.3"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala).enablePlugins(BuildInfoPlugin).settings(
   buildInfoKeys := Seq[BuildInfoKey](
@@ -35,6 +35,7 @@ libraryDependencies ++= List(
   "commons-codec" % "commons-codec" % "1.15",
   "commons-io" % "commons-io" % "2.11.0",
   "org.apache.commons" % "commons-lang3" % "3.12.0",
+  "joda-time" % "joda-time" % "2.12.5",
 
   //TOTP + QR
   "at.favre.lib" % "bcrypt" % "0.10.2",
